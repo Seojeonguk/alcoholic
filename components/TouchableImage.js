@@ -10,7 +10,7 @@ const TouchableImage = ({ onPress, style, uri }) => {
   }, [onPress]);
   return (
     <TouchableOpacity onPress={handleonPress} style={style}>
-      <Image source={{ uri: uri, cache: 'cacheOnly' }} contentFit="cover" style={{ flex: 1 }} />
+      <Image source={{ uri: uri }} cachePolicy="memory" contentFit="cover" style={{ flex: 1 }} />
     </TouchableOpacity>
   );
 };
