@@ -23,6 +23,26 @@ const firebaseConfig = {
   measurementId: Constants.expoConfig.extra.firebaseMeasurementId,
 };
 
+// .env를 읽지 못하면 Firebase 에러(auth/invalid-api-key) 대신 빠진 키를 알려줌
+const REQUIRED_ENV_KEYS = {
+  apiKey: 'EXPO_PUBLIC_FIREBASE_API_KEY',
+  authDomain: 'EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN',
+  projectId: 'EXPO_PUBLIC_FIREBASE_PROJECT_ID',
+  storageBucket: 'EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET',
+  messagingSenderId: 'EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
+  appId: 'EXPO_PUBLIC_FIREBASE_APP_ID',
+};
+const missingEnvKeys = Object.entries(REQUIRED_ENV_KEYS)
+  .filter(([configKey]) => !firebaseConfig[configKey])
+  .map(([, envKey]) => envKey);
+if (missingEnvKeys.length > 0) {
+  throw new Error(
+    `Firebase 설정 값이 없어요: ${missingEnvKeys.join(', ')}\n` +
+      '프로젝트 루트(package.json이 있는 폴더)의 .env를 확인하고 개발 서버를 다시 켜 주세요. ' +
+      '자세한 방법은 docs/firebase-setup.md를 보세요.'
+  );
+}
+
 let app;
 let auth;
 let db;

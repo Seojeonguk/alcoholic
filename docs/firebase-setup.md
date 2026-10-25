@@ -29,6 +29,16 @@ const firebaseConfig = {
 
 ## `.env`에 옮기기
 
+> **`.env`는 반드시 프로젝트 루트(`package.json`이 있는 폴더)에 만들어요.** `docs` 같은 하위 폴더에 두면 Expo가 읽지 못해서, 앱이 "Firebase 설정 값이 없어요" 에러를 띄우거나 Expo Go에서 스피너만 돌아요.
+
+```text
+alcoholic/
+├── .env          ← 여기
+├── package.json
+├── app.config.js
+└── docs/
+```
+
 프로젝트 루트의 `.env`에 아래처럼 옮겨 적어요.
 
 | `firebaseConfig` 항목 | `.env` 키                                  |
@@ -53,7 +63,8 @@ EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=G-XXXXXXX
 
 - 값에 따옴표를 붙이지 않아요.
 - `measurementId`는 Google Analytics를 켠 프로젝트에만 있어요. 없으면 비워 둬도 돼요.
-- `.env`를 고친 뒤에는 개발 서버를 껐다가 다시 켜야 반영돼요.
+- `.env`는 **개발 서버를 켤 때만 읽어요.** 만들거나 고친 뒤에는 서버를 끄고(`Ctrl+C`) `npx expo start -c`로 다시 켜요. 앱을 새로 고치는 것만으로는 반영되지 않아요.
+- 제대로 읽혔는지는 `npx expo config --type public`의 `extra`에 `firebaseApiKey` 등이 들어 있는지로 확인할 수 있어요.
 - `.env`는 git에 올리지 않아요(`.gitignore`에 들어 있어요).
 
 ## 켜 둬야 하는 Firebase 기능
@@ -70,9 +81,11 @@ EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=G-XXXXXXX
 
 ## 문제가 생기면
 
-| 증상                                       | 확인할 것                                                            |
-| ------------------------------------------ | -------------------------------------------------------------------- |
-| `auth/invalid-api-key`                     | `EXPO_PUBLIC_FIREBASE_API_KEY` 값과, 개발 서버를 다시 켰는지         |
-| `auth/operation-not-allowed`               | Authentication에서 이메일/비밀번호 로그인이 켜져 있는지              |
-| 게시글 저장 · 조회에서 `permission-denied` | Firestore · Storage 보안 규칙 (#216에서 정리할 예정)                 |
-| 사진 업로드가 실패해요                     | `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET` 값과 Storage가 만들어져 있는지 |
+| 증상                                       | 확인할 것                                                                         |
+| ------------------------------------------ | --------------------------------------------------------------------------------- |
+| "Firebase 설정 값이 없어요: …" 에러        | `.env`가 프로젝트 루트에 있는지, 에러에 나온 키가 있는지, 개발 서버를 다시 켰는지 |
+| Expo Go에서 스피너만 계속 돌아요           | 위와 같아요. 그래도 그렇다면 README의 "문제가 생기면"을 봐요                      |
+| `auth/invalid-api-key`                     | `EXPO_PUBLIC_FIREBASE_API_KEY` 값이 콘솔의 웹 앱 `apiKey`와 같은지                |
+| `auth/operation-not-allowed`               | Authentication에서 이메일/비밀번호 로그인이 켜져 있는지                           |
+| 게시글 저장 · 조회에서 `permission-denied` | Firestore · Storage 보안 규칙 (#216에서 정리할 예정)                              |
+| 사진 업로드가 실패해요                     | `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET` 값과 Storage가 만들어져 있는지              |
