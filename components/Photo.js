@@ -3,11 +3,9 @@ import { Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-na
 
 import { getDeviceSize, showToast } from '../lib';
 import { addPhoto, deletePhoto } from '../redux';
-import DeviceGalleryModal from './DeviceGalleryModal';
 
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import * as MediaLibrary from 'expo-media-library';
 import { useDispatch, useSelector } from 'react-redux';
 
 const { width } = getDeviceSize();
@@ -19,7 +17,6 @@ const MEDIA_ICON_COLOR = 'black';
 export default function Photo() {
   const dispatch = useDispatch();
   const photos = useSelector((state) => state.gallery.photos);
-  const [visibleDeviceGalleryModal, setVisibleDeviceGalleryModal] = useState(false);
   const [visibleMediaSourceConfirmationModal, setVisibleMediaSourceConfirmationModal] =
     useState(false);
 
@@ -27,23 +24,24 @@ export default function Photo() {
     setVisibleMediaSourceConfirmationModal(false);
   };
 
+  // 시스템 사진 선택기를 써서 사진 권한 없이 고른 사진만 받아옴
   const showDeviceGallery = async () => {
-    const { status } = await MediaLibrary.requestPermissionsAsync(false, ['photo']);
-    if (status !== MediaLibrary.PermissionStatus.GRANTED) {
-      showToast('error', '사진 접근 권한이 필요해요.', '설정에서 사진 권한을 허용해 주세요.');
-      return;
-    }
     hideMediaSourceConfirmationModal();
-    setVisibleDeviceGalleryModal(true);
-  };
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsMultipleSelection: true,
+        orderedSelection: true,
+      });
 
-  const hideDeviceGalleryModal = () => {
-    setVisibleDeviceGalleryModal(false);
-  };
+      if (result.canceled) {
+        return;
+      }
 
-  const applySelectedPhotos = (selectedPhotos) => {
-    dispatch(addPhoto(selectedPhotos));
-    hideDeviceGalleryModal();
+      dispatch(addPhoto(result.assets.map((asset) => asset.uri)));
+    } catch (e) {
+      showToast('error', '사진을 불러오지 못했어요.', '잠시 후 다시 시도해 주세요.');
+    }
   };
 
   const removePhoto = (index) => {
@@ -114,13 +112,6 @@ export default function Photo() {
           </View>
         </View>
       </Modal>
-
-      <DeviceGalleryModal
-        visible={visibleDeviceGalleryModal}
-        addedPhotos={photos}
-        onClose={hideDeviceGalleryModal}
-        onApply={applySelectedPhotos}
-      />
     </View>
   );
 }
