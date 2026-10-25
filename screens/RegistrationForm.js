@@ -93,8 +93,11 @@ export default function RegistrationForm({ navigation }) {
               inputMode="email"
               keyboardType="email-address"
               onChangeText={handleChangeEmail}
+              onSubmitEditing={() => passwordRef.current.focus()}
               placeholder="이메일을 입력해 주세요"
               ref={emailRef}
+              returnKeyType="next"
+              submitBehavior="submit"
               style={styles.input}
               value={email}
             />
@@ -107,8 +110,11 @@ export default function RegistrationForm({ navigation }) {
               onChangeText={handleChangePassword}
               onPressIn={() => setSecurePassword(false)}
               onPressOut={() => setSecurePassword(true)}
+              onSubmitEditing={() => confirmPasswordRef.current.focus()}
               placeholder="비밀번호를 입력해 주세요"
               ref={passwordRef}
+              returnKeyType="next"
+              submitBehavior="submit"
               secureTextEntry={isSecurePassword}
               style={styles.input}
               value={password}
@@ -122,8 +128,10 @@ export default function RegistrationForm({ navigation }) {
               onChangeText={handleChangeConfirmPassword}
               onPressIn={() => setIsSecurePasswordConfirm(false)}
               onPressOut={() => setIsSecurePasswordConfirm(true)}
+              onSubmitEditing={handleRegistration}
               placeholder="비밀번호(확인)를 입력해 주세요"
               ref={confirmPasswordRef}
+              returnKeyType="done"
               secureTextEntry={isSecurePasswordConfirm}
               style={styles.input}
               value={confirmPassword}
