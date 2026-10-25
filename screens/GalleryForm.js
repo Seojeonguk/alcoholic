@@ -18,7 +18,7 @@ export default function GalleryForm({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
   const gallery = useSelector((state) => state.gallery);
-  const docId = route.params;
+  const docId = route.params?.docId;
 
   useEffect(() => {
     if (docId) {
@@ -94,7 +94,7 @@ export default function GalleryForm({ navigation, route }) {
       initForm();
 
       showToast('success', '정상적으로 작성이 완료되었습니다.');
-      navigation.navigate(NAVIGATOR.GALLERY);
+      navigation.popTo(NAVIGATOR.BOTTOM_TAB_NAV, { screen: NAVIGATOR.GALLERY });
     } catch (e) {
       showToast(
         null,

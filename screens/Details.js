@@ -55,7 +55,7 @@ function Details({ route, navigation }) {
 
   const onPressRight = () => {
     dispatch(updateGallery(myPost));
-    navigation.navigate(NAVIGATOR.GALLERY_FORM, docId);
+    navigation.navigate(NAVIGATOR.GALLERY_FORM, { docId: docId });
   };
 
   return (

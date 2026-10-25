@@ -1,9 +1,14 @@
-import { createMaterialBottomTabNavigator } from '@react-navigation/material-bottom-tabs';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { COLORS, NAVIGATOR } from '../constants';
 import { Gallery, Settings } from '../screens';
 import { Entypo, FontAwesome } from '@expo/vector-icons';
 
-const Tab = createMaterialBottomTabNavigator();
+const Tab = createBottomTabNavigator();
+
+const TAB_BAR_COLORS = {
+  [NAVIGATOR.GALLERY]: COLORS.BOTTOM_TAB_GALLERY_COLOR,
+  [NAVIGATOR.SETTINGS]: COLORS.BOTTOM_TAB_SETTINGS_COLOR,
+};
 
 export default function BottomTabNav() {
   const galleryIcon = ({ color }) => {
@@ -17,10 +22,12 @@ export default function BottomTabNav() {
   return (
     <Tab.Navigator
       initialRouteName={NAVIGATOR.GALLERY}
-      screenOptions={{ headerShown: false }}
-      shifting
-      activeColor={COLORS.BOTTOM_TAB_ACTIVE_COLOR}
-      inactiveColor={COLORS.BOTTOM_TAB_INACTIVE_COLOR}
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: COLORS.BOTTOM_TAB_ACTIVE_COLOR,
+        tabBarInactiveTintColor: COLORS.BOTTOM_TAB_INACTIVE_COLOR,
+        tabBarStyle: { backgroundColor: TAB_BAR_COLORS[route.name] },
+      })}
     >
       <Tab.Screen
         name={NAVIGATOR.GALLERY}
@@ -28,7 +35,6 @@ export default function BottomTabNav() {
         options={{
           tabBarLabel: NAVIGATOR.GALLERY,
           tabBarIcon: galleryIcon,
-          tabBarColor: COLORS.BOTTOM_TAB_GALLERY_COLOR,
         }}
       />
       <Tab.Screen
@@ -37,7 +43,6 @@ export default function BottomTabNav() {
         options={{
           tabBarLabel: NAVIGATOR.SETTINGS,
           tabBarIcon: settingsIcon,
-          tabBarColor: COLORS.BOTTOM_TAB_SETTINGS_COLOR,
         }}
       />
     </Tab.Navigator>
