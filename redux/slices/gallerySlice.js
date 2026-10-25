@@ -45,8 +45,11 @@ export const gallerySlice = createSlice({
       state.day = action.payload;
     },
     addPhoto: (state, action) => {
-      const newPhotos = state.photos.concat(action.payload);
-      state.photos = newPhotos;
+      // 이미 추가한 사진은 다시 넣지 않음
+      const addedPhotos = []
+        .concat(action.payload)
+        .filter((photo) => !state.photos.includes(photo));
+      state.photos = state.photos.concat(addedPhotos);
     },
     deletePhoto: (state, action) => {
       const newPhotos = state.photos.filter((photo, idx) => idx !== action.payload);

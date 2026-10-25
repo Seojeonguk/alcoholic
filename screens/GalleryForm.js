@@ -22,17 +22,19 @@ export default function GalleryForm({ navigation, route }) {
 
   useEffect(() => {
     if (docId) {
-      return;
+      // 수정하다 나가면 그 내용이 새 글 작성 폼에 남지 않게 비움
+      return () => dispatch(init());
     }
     if (existInput()) {
-      Alert.alert('Previous data exits.', 'Would you like to initialize it?', [
+      Alert.alert('작성하던 기록이 있어요.', '이어서 작성할까요?', [
         {
-          text: 'Cancel',
-          style: 'cancel',
+          text: '새로 작성',
+          style: 'destructive',
+          onPress: () => initForm(),
         },
         {
-          text: 'OK',
-          onPress: () => initForm(),
+          text: '이어서 작성',
+          style: 'cancel',
         },
       ]);
     }
