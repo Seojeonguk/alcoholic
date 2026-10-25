@@ -81,7 +81,7 @@ npx expo export --platform android --output-dir <scratchpad>/export   # 번들�
 
 - **`.env` · `eas.json`은 git에 올리지 않음**(`.gitignore`, #197). Firebase 키를 코드에 직접 쓰지 않음.
 - **React Navigation 7**: 이미 스택에 있는 화면으로 돌아갈 때는 `navigate`가 아니라 `popTo`를 씀. 부모 스택에서 탭 안의 화면으로 갈 때는 `{ screen: ... }` 파라미터로 중첩해서 지정함. 화면 파라미터는 객체로 넘김(`{ docId }`).
-- **expo-media-library**: SDK 58에서 기존 함수형 API는 루트 import로 부르면 런타임에 에러가 남. 지금은 `expo-media-library/legacy`를 쓰고, 새 API로 옮기는 건 #202에서 함.
+- **expo-media-library**: SDK 58에서 기존 함수형 API(`getAssetsAsync` 등)는 루트 import로 부르면 런타임에 에러가 남. 새 `Query` API(`new Query().eq(...).orderBy(...).limit().offset().exe()` → `asset.getUri()`)를 씀(`components/DeviceGalleryModal.js`).
 - **expo-image**: 캐시는 `source.cache`가 아니라 `cachePolicy` prop으로 지정함(#214).
 - **아이콘**: `@expo/vector-icons` 15에서 이름이 바뀐 아이콘이 있음(`ios-*` 접두사 제거, `pluscircleo` → `plus-circle` 등). 새 아이콘 이름은 `node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/*.json`에서 확인함.
 - **ESLint 설정이 깨져 있음**: `.eslintrc.json`이 설치되지 않은 `airbnb` 프리셋을 씀. 고치기 전까지 lint 결과를 믿지 않음.

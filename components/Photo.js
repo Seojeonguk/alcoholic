@@ -1,96 +1,49 @@
-import { useState, memo } from 'react';
-import {
-  ActivityIndicator,
-  Dimensions,
-  FlatList,
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  Image,
-} from 'react-native';
+import { useState } from 'react';
+import { Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { debounce } from 'lodash';
-
+import { getDeviceSize, showToast } from '../lib';
 import { addPhoto, deletePhoto } from '../redux';
+import DeviceGalleryModal from './DeviceGalleryModal';
 
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
-import * as MediaLibrary from 'expo-media-library/legacy';
-import { useDispatch, useSelector } from 'react-redux';
-
 import * as ImagePicker from 'expo-image-picker';
-import { getDeviceSize } from '../lib';
-import TouchableImage from './TouchableImage';
+import * as MediaLibrary from 'expo-media-library';
+import { useDispatch, useSelector } from 'react-redux';
 
 const { width } = getDeviceSize();
 const COLUMN_SIZE = 3;
 const contentPaddingHorizontal = 25;
 const MEDIA_ICON_SIZE = 24;
 const MEDIA_ICON_COLOR = 'black';
-const LOAD_IMAGE_COUNT = 60;
 
 export default function Photo() {
-  const [hasNextPage, setHasNextPage] = useState(true);
   const dispatch = useDispatch();
-  const [visibleDeviceGalleryModal, setVisibleDeviceGalleryModal] = useState(false);
   const photos = useSelector((state) => state.gallery.photos);
-  const [deviceStoredPhotos, setDeviceStoredPhotos] = useState([]);
-  const [selectedPhotos, setSelectedPhotos] = useState([]);
+  const [visibleDeviceGalleryModal, setVisibleDeviceGalleryModal] = useState(false);
   const [visibleMediaSourceConfirmationModal, setVisibleMediaSourceConfirmationModal] =
     useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const [lastAsset, setLastAsset] = useState(null);
 
   const hideMediaSourceConfirmationModal = () => {
     setVisibleMediaSourceConfirmationModal(false);
   };
 
   const showDeviceGallery = async () => {
-    const { status } = await MediaLibrary.requestPermissionsAsync();
+    const { status } = await MediaLibrary.requestPermissionsAsync(false, ['photo']);
     if (status !== MediaLibrary.PermissionStatus.GRANTED) {
+      showToast('error', '사진 접근 권한이 필요해요.', '설정에서 사진 권한을 허용해 주세요.');
       return;
     }
-    setVisibleMediaSourceConfirmationModal(false);
-    await showMediaLibrary();
+    hideMediaSourceConfirmationModal();
     setVisibleDeviceGalleryModal(true);
-  };
-
-  const applySelectedMedia = () => {
-    dispatch(addPhoto(selectedPhotos));
-    setSelectedPhotos([]);
-    hideDeviceGalleryModal();
   };
 
   const hideDeviceGalleryModal = () => {
     setVisibleDeviceGalleryModal(false);
   };
 
-  const handleSelectPhoto = (photo) => {
-    setSelectedPhotos(selectedPhotos.concat(photo));
-  };
-
-  const showMediaLibrary = async () => {
-    setLoading(true);
-    if (!hasNextPage) {
-      setLoading(false);
-      return;
-    }
-    const getPhotos = await MediaLibrary.getAssetsAsync({
-      mediaType: ['photo'],
-      after: lastAsset,
-      sortBy: ['creationTime'],
-      first: LOAD_IMAGE_COUNT,
-    });
-
-    setHasNextPage(getPhotos.hasNextPage);
-    setLastAsset(getPhotos.endCursor);
-
-    setDeviceStoredPhotos((prevDeviceStoredPhotos) => [
-      ...prevDeviceStoredPhotos,
-      ...getPhotos.assets.map((asset) => asset.uri),
-    ]);
+  const applySelectedPhotos = (selectedPhotos) => {
+    dispatch(addPhoto(selectedPhotos));
+    hideDeviceGalleryModal();
   };
 
   const removePhoto = (index) => {
@@ -100,6 +53,7 @@ export default function Photo() {
   const showCamera = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== ImagePicker.PermissionStatus.GRANTED) {
+      showToast('error', '카메라 권한이 필요해요.', '설정에서 카메라 권한을 허용해 주세요.');
       return;
     }
     hideMediaSourceConfirmationModal();
@@ -111,8 +65,6 @@ export default function Photo() {
 
     dispatch(addPhoto(result.assets[0].uri));
   };
-
-  const debouncedLoadMoreImages = debounce(showMediaLibrary, 1000);
 
   return (
     <View style={styles.photosContainer}>
@@ -126,7 +78,7 @@ export default function Photo() {
       </View>
 
       {photos.map((photo, index) => (
-        <View key={index} style={styles.photosWrapper}>
+        <View key={photo} style={styles.photosWrapper}>
           <Image source={{ uri: photo }} style={styles.photo} />
           <TouchableOpacity style={styles.removeBtnWrap} onPress={() => removePhoto(index)}>
             <View style={styles.removeBtn}>
@@ -150,59 +102,25 @@ export default function Photo() {
             <View style={styles.mediaBtn}>
               <TouchableOpacity onPress={showCamera} style={styles.media}>
                 <FontAwesome name="camera-retro" size={MEDIA_ICON_SIZE} color={MEDIA_ICON_COLOR} />
-                <Text style={styles.typeLabel}>Camera</Text>
+                <Text style={styles.typeLabel}>카메라</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.mediaBtn}>
               <TouchableOpacity onPress={showDeviceGallery} style={styles.media}>
                 <FontAwesome name="photo" size={MEDIA_ICON_SIZE} color={MEDIA_ICON_COLOR} />
-                <Text>Gallery</Text>
+                <Text>갤러리</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
-      <Modal onRequestClose={hideDeviceGalleryModal} visible={visibleDeviceGalleryModal}>
-        <FlatList
-          data={deviceStoredPhotos}
-          keyExtractor={(item, index) => index.toString()}
-          ListEmptyComponent={
-            <Text style={{ textAlign: 'center', padding: 10 }}>
-              There is no photo in your gallery.
-            </Text>
-          }
-          numColumns={COLUMN_SIZE}
-          onEndReached={debouncedLoadMoreImages}
-          onEndReachedThreshold={0.5}
-          disableVirtualization={false}
-          removeClippedSubviews={true}
-          ListFooterComponent={
-            loading && <ActivityIndicator size={'large'} style={{ marginVertical: 10 }} />
-          }
-          maxToRenderPerBatch={LOAD_IMAGE_COUNT}
-          getItemLayout={(data, index) => ({
-            length: width / COLUMN_SIZE,
-            offset: (width / COLUMN_SIZE) * index,
-            index,
-          })}
-          renderItem={({ item, index }) => (
-            <TouchableImage
-              onPress={() => handleSelectPhoto(item)}
-              style={[styles.deviceStoredPhotoWrap, { marginHorizontal: index % 3 === 1 ? 1 : 0 }]}
-              uri={item}
-            />
-          )}
-        />
-        <View style={styles.modalMenu}>
-          <TouchableOpacity onPress={hideDeviceGalleryModal} style={styles.modalMenuBtn}>
-            <Text>Close</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={applySelectedMedia} style={styles.modalMenuBtn}>
-            <Text>Apply</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
+      <DeviceGalleryModal
+        visible={visibleDeviceGalleryModal}
+        addedPhotos={photos}
+        onClose={hideDeviceGalleryModal}
+        onApply={applySelectedPhotos}
+      />
     </View>
   );
 }
@@ -216,25 +134,6 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     width: '100%',
-  },
-  modalMenu: {
-    flexDirection: 'row',
-    height: 50,
-  },
-  modalMenuBtn: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-    borderTopWidth: 1,
-    borderColor: 'grey',
-  },
-  deviceStoredPhoto: {
-    flex: 1,
-  },
-  deviceStoredPhotoWrap: {
-    height: width / COLUMN_SIZE,
-    width: width / COLUMN_SIZE,
-    marginBottom: 1,
   },
   photo: {
     height: '100%',
