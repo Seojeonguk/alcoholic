@@ -110,8 +110,11 @@ export default function Login({ navigation }) {
               inputMode="email"
               keyboardType="email-address"
               onChangeText={handleChangeEmail}
+              onSubmitEditing={() => passwordRef.current.focus()}
               placeholder="이메일을 입력해 주세요"
               ref={emailRef}
+              returnKeyType="next"
+              submitBehavior="submit"
               style={styles.input}
               value={email}
             />
@@ -124,8 +127,10 @@ export default function Login({ navigation }) {
               onChangeText={handleChangePassword}
               onPressIn={() => setSecurePassword(false)}
               onPressOut={() => setSecurePassword(true)}
+              onSubmitEditing={handleLogin}
               placeholder="비밀번호를 입력해 주세요"
               ref={passwordRef}
+              returnKeyType="done"
               secureTextEntry={isSecurePassword}
               style={styles.input}
               value={password}
