@@ -1,0 +1,52 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null && request.auth.token.email != null;
+    }
+
+    function myEmail() {
+      return request.auth.token.email;
+    }
+
+    function verified() {
+      return signedIn() && request.auth.token.email_verified == true;
+    }
+
+    // 사용자 정보: 문서 ID가 이메일. 회원가입 직후(인증 전)에 만들어짐
+    match /users/{email} {
+      allow read: if signedIn() && myEmail() == email;
+      allow create: if signedIn() && myEmail() == email
+        && request.resource.data.keys().hasOnly(['userEmail', 'posts'])
+        && request.resource.data.userEmail == email
+        && request.resource.data.posts is list;
+      // 글을 쓸 때 posts 배열에 글 ID를 추가하는 것만 허용
+      allow update: if verified() && myEmail() == email
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['posts'])
+        && request.resource.data.posts is list;
+      allow delete: if false;
+    }
+
+    function validPost(data) {
+      return data.keys().hasOnly(['title', 'day', 'photos', 'content', 'location', 'tags', 'writer', 'createdAt'])
+        && data.writer == myEmail()
+        && data.title is string
+        && data.day is string
+        && data.photos is list
+        && data.content is string
+        && data.location is string
+        && data.tags is list
+        && data.createdAt is timestamp;
+    }
+
+    // 게시글: writer 필드의 이메일 주인만 읽고 쓸 수 있음
+    match /posts/{postId} {
+      allow read: if verified() && resource.data.writer == myEmail();
+      allow create: if verified() && validPost(request.resource.data);
+      allow update: if verified() && resource.data.writer == myEmail()
+        && validPost(request.resource.data);
+      allow delete: if verified() && resource.data.writer == myEmail();
+    }
+  }
+}

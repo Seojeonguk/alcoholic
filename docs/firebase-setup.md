@@ -79,6 +79,40 @@ EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=G-XXXXXXX
 
 새로 만드는 Storage 버킷은 Blaze(종량제) 요금제가 필요할 수 있어요. 가능하면 이미 만들어 둔 프로젝트를 그대로 써요.
 
+## 보안 규칙
+
+Firestore · Storage 보안 규칙은 저장소의 `firestore.rules` · `storage.rules`에서 관리해요(설정은 `firebase.json`, 프로젝트는 `.firebaserc`).
+
+| 대상                                     | 규칙                                                                                                                     |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `users/{이메일}`                         | 내 이메일 문서만 읽고 만들 수 있어요(회원가입 직후 인증 전에도 만들 수 있음). 수정은 이메일 인증 후 `posts` 배열만 돼요. |
+| `posts/{글 ID}`                          | 이메일 인증한 사용자가 `writer`가 내 이메일인 글만 읽고 쓰고 지울 수 있어요. 필드와 타입을 검사해요.                     |
+| Storage `posts/{uid}/…`                  | 이메일 인증한 사용자가 내 uid 폴더에만 10MB 미만 이미지를 올릴 수 있어요. 덮어쓰기 · 삭제는 안 돼요.                     |
+| Storage `posts/…`(예전) · `default.jfif` | 로그인한 사용자가 읽기만 할 수 있어요.                                                                                   |
+
+### 테스트
+
+```bash
+npm run test:rules
+```
+
+Firestore · Storage 에뮬레이터를 띄워 `tests/rules/`의 테스트를 돌려요. Java 11 이상이 필요해요. 실제 프로젝트가 아니라 `demo-alcoholic` 에뮬레이터 프로젝트를 써요.
+
+Windows에서는 테스트가 끝나도 Firestore 에뮬레이터(`java.exe`)가 꺼지지 않고 남을 수 있어요. 다음 실행에서 "port taken" 에러가 나면 작업 관리자에서 `cloud-firestore-emulator`를 실행 중인 `java.exe`를 끄거나, PowerShell에서 아래 명령으로 꺼요.
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name='java.exe'" | Where-Object CommandLine -like '*cloud-firestore-emulator*' | ForEach-Object { Stop-Process -Id $_.ProcessId }
+```
+
+### 배포
+
+규칙을 바꾸면 테스트를 통과한 뒤 배포해요. 처음 배포하기 전에는 Firebase 콘솔의 Firestore · Storage **규칙** 탭에서 지금 규칙을 복사해 백업해 둬요.
+
+```bash
+npx firebase login
+npx firebase deploy --only firestore:rules,storage
+```
+
 ## 문제가 생기면
 
 | 증상                                       | 확인할 것                                                                         |
@@ -87,5 +121,5 @@ EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=G-XXXXXXX
 | Expo Go에서 스피너만 계속 돌아요           | 위와 같아요. 그래도 그렇다면 README의 "문제가 생기면"을 봐요                      |
 | `auth/invalid-api-key`                     | `EXPO_PUBLIC_FIREBASE_API_KEY` 값이 콘솔의 웹 앱 `apiKey`와 같은지                |
 | `auth/operation-not-allowed`               | Authentication에서 이메일/비밀번호 로그인이 켜져 있는지                           |
-| 게시글 저장 · 조회에서 `permission-denied` | Firestore · Storage 보안 규칙 (#216에서 정리할 예정)                              |
+| 게시글 저장 · 조회에서 `permission-denied` | 위 [보안 규칙](#보안-규칙) 표와, 규칙을 배포했는지(콘솔의 규칙 탭)                |
 | 사진 업로드가 실패해요                     | `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET` 값과 Storage가 만들어져 있는지              |

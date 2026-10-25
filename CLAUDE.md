@@ -23,7 +23,7 @@ firebaseConfig.js    # Firebase 초기화 (Auth는 AsyncStorage persistence)
 navigation/          # 루트 native stack + 하단 탭(Gallery · Settings)
 screens/             # 화면 (MainPage, Login, RegistrationForm, ForgotPassword, Gallery, GalleryForm, Details, Settings)
 components/          # 화면에서 쓰는 컴포넌트 (Photo, Carousel, Tags, Header, TouchableImage …)
-firebase/            # Firestore 문서 읽기 · 쓰기 함수
+services/            # Firestore 문서 읽기 · 쓰기 함수 (firebase.json과 이름이 겹치지 않게 firebase/가 아닌 services/)
 redux/               # store, gallerySlice (게시글 작성 폼 상태)
 constants/           # 네비게이션 이름(NAVIGATOR), 색상(COLORS), 에러 메시지
 lib/                 # 공용 유틸 (showToast, 에러 메시지 변환, 이메일 재전송 제한)
@@ -37,11 +37,14 @@ npx expo start                     # 개발 서버, 최신 Expo Go로 확인
 npx expo-doctor                    # 의존성 · 설정 검사
 npx expo install --check           # SDK와 맞지 않는 패키지 확인 (고치려면 --fix)
 npx expo export --platform android --output-dir <scratchpad>/export   # 번들이 만들어지는지 확인
+npm run test:rules                 # Firestore · Storage 보안 규칙 테스트 (에뮬레이터, Java 필요)
 ```
 
 - 루트에 `.env`가 있어야 함(git에 올리지 않음): `EXPO_PUBLIC_FIREBASE_API_KEY`, `_AUTH_DOMAIN`, `_PROJECT_ID`, `_STORAGE_BUCKET`, `_MESSAGING_SENDER_ID`, `_APP_ID`, `_MEASUREMENT_ID`. Expo CLI가 자동으로 읽음(`dotenv` 쓰지 않음).
 - 패키지는 `npm install` 대신 **`npx expo install <패키지>`**로 넣어서 SDK에 맞는 버전을 받음.
 - `export` 결과물은 저장소 안에 두지 않고 scratchpad에 만듦.
+- 보안 규칙(`firestore.rules` · `storage.rules`)을 바꾸면 `tests/rules/`에 테스트를 먼저 쓰고 `npm run test:rules`로 확인함. 배포(`npx firebase deploy --only firestore:rules,storage`)는 사용자가 함.
+- Windows에서는 `npm run test:rules`가 끝나도 Firestore 에뮬레이터(`java.exe`)가 남아 다음 실행이 "port taken"으로 실패함. 이 환경에서는 프로세스를 끄는 명령이 막혀 있으므로, 남은 프로세스를 사용자에게 알리고 끄도록 요청함(방법은 `docs/firebase-setup.md`).
 
 ## 코드 스타일 및 컨벤션
 
