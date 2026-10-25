@@ -16,7 +16,7 @@ import { debounce } from 'lodash';
 import { addPhoto, deletePhoto } from '../redux';
 
 import { AntDesign, FontAwesome } from '@expo/vector-icons';
-import * as MediaLibrary from 'expo-media-library';
+import * as MediaLibrary from 'expo-media-library/legacy';
 import { useDispatch, useSelector } from 'react-redux';
 
 import * as ImagePicker from 'expo-image-picker';
@@ -121,7 +121,7 @@ export default function Photo() {
           onPress={() => setVisibleMediaSourceConfirmationModal(true)}
           style={styles.addBtn}
         >
-          <AntDesign color="grey" name="pluscircleo" size={24} />
+          <AntDesign color="grey" name="plus-circle" size={24} />
         </TouchableOpacity>
       </View>
 

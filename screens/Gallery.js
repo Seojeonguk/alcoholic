@@ -34,7 +34,7 @@ export default function Gallery({ navigation }) {
         title={'Gallery'}
         visibleLeftIcon={false}
         visibleRightIcon={true}
-        rightIconName={'ios-add-outline'}
+        rightIconName={'add-outline'}
         iconSize={24}
         onPressRight={() => moveGalleryForm()}
       />
