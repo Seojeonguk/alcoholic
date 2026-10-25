@@ -64,6 +64,7 @@ npx expo export --platform android --output-dir <scratchpad>/export   # 번들�
 - `master`에서 브랜치를 따서 PR을 염. 브랜치 이름은 영어 snake_case(예: `upgrade_expo_sdk`, `focus_out_tag`).
 - 커밋은 `git commit -s`(Signed-off-by)로 하고 GPG 서명(`commit.gpgsign=true`)을 건너뛰지 않음. 서명이 가끔 멈추므로 `timeout 60 git commit -s ...`처럼 시간 제한을 둠.
 - **커밋 메시지**: 짧은 한국어 제목 + 본문 **한 줄** `~합니다.` 형식으로 커밋이 미치는 결과를 씀(예: 제목 `Expo SDK 업그레이드`, 본문 `Expo SDK와 의존성을 최신 버전으로 올립니다.`). 자세한 이유 · 확인 내용은 PR 본문에 씀.
+- squash merge 기본 메시지는 PR 본문이 아니라 **커밋 메시지**를 쓰도록 설정돼 있음(`squash_merge_commit_title=COMMIT_OR_PR_TITLE`, `squash_merge_commit_message=COMMIT_MESSAGES`). 그래서 PR 하나에 커밋 하나를 유지함. 리뷰 반영 등으로 커밋이 늘면 머지 전에 하나로 합침.
 - **Claude attribution 금지**: `Co-Authored-By: Claude`나 "Generated with Claude Code"를 커밋 · PR에 넣지 않음.
 - **PR 본문**: 맨 위에 `Closes #N` → `## 요약` → `## 확인한 것`(실행한 명령과 결과) → 마지막에 **`## 기기에서 확인해 주세요`** 체크리스트(사용자가 직접 확인할 동작을 "행동 → 기대 결과" 형식으로. `.env` · 설정 단계도 포함).
 - **PR · 이슈 생성 시**: 레이블(`feat`, `fix`, `bug`, `delete`, `documentation`, `plan`, `question`), `--assignee @me`, 맞는 마일스톤을 항상 지정함. 여러 이슈를 묶는 상위 이슈에는 `plan` 레이블을 붙이고 하위 이슈를 체크리스트로 적음.
