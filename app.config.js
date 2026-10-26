@@ -6,11 +6,6 @@ export default {
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
-    splash: {
-      image: './assets/splash.png',
-      resizeMode: 'contain',
-      backgroundColor: '#ffffff',
-    },
     updates: {
       fallbackToCacheTimeout: 0,
     },
@@ -22,7 +17,7 @@ export default {
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#F6E8D8',
       },
       package: 'com.seojeonguk.alcoholic',
     },
@@ -42,6 +37,15 @@ export default {
       firebaseMeasurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
     },
     plugins: [
+      [
+        'expo-splash-screen',
+        {
+          image: './assets/splash.png',
+          imageWidth: 200,
+          // 앱 배경색(COLORS.BACKGROUND_COLOR)과 같게 맞춤
+          backgroundColor: '#F6E8D8',
+        },
+      ],
       [
         'expo-image-picker',
         {
