@@ -16,7 +16,7 @@
 | 화면 이동 | React Navigation 7 (native stack + bottom tabs)          |
 | 상태 관리 | Redux Toolkit 2                                          |
 | 백엔드    | Firebase 13 (Authentication · Cloud Firestore · Storage) |
-| 이미지    | expo-image, expo-image-picker, expo-media-library        |
+| 이미지    | expo-image, expo-image-picker (시스템 사진 선택기)       |
 
 ## 로컬에서 실행하기
 

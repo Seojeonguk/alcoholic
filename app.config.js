@@ -43,17 +43,11 @@ export default {
     },
     plugins: [
       [
-        'expo-media-library',
-        {
-          photosPermission: 'Allow $(PRODUCT_NAME) to access your photos.',
-          savePhotosPermission: 'Allow $(PRODUCT_NAME) to save photos.',
-          isAccessMediaLocationEnabled: true,
-        },
-      ],
-      [
         'expo-image-picker',
         {
           photosPermission: 'Allow $(PRODUCT_NAME) to access your photos.',
+          // 사진만 찍으므로 동영상 녹화용 마이크 권한은 요청하지 않음
+          microphonePermission: false,
         },
       ],
     ],
