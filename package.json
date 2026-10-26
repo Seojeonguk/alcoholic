@@ -7,7 +7,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test:rules": "firebase emulators:exec --only firestore,storage --project demo-alcoholic \"node --test tests/rules/*.test.mjs\""
+    "test:rules": "node tests/rules/run.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
