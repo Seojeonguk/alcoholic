@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
+import { toLocalDateString } from '../lib';
 import { updateDay } from '../redux';
 
 import { AntDesign } from '@expo/vector-icons';
@@ -14,8 +15,7 @@ export default function Day() {
 
   const handleChangeDate = (e, newDate) => {
     hideDatePicker();
-    const truncatedDate = newDate.toJSON().substring(0, 10);
-    dispatch(updateDay(truncatedDate));
+    dispatch(updateDay(toLocalDateString(newDate)));
   };
 
   const hideDatePicker = () => {
@@ -32,7 +32,13 @@ export default function Day() {
       <TextInput onPressIn={showDatePicker} placeholder="날짜" style={styles.input} value={date} />
 
       {isShowDatePicker && (
-        <DateTimePicker mode="date" onChange={handleChangeDate} value={new Date(date)} />
+        <DateTimePicker
+          mode="date"
+          onDismiss={hideDatePicker}
+          onValueChange={handleChangeDate}
+          // 'YYYY-MM-DD'만 넘기면 UTC로 해석되므로 기기 시간대의 자정으로 만듦
+          value={new Date(`${date}T00:00:00`)}
+        />
       )}
     </View>
   );

@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Carousel, Header } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
+import { showToast } from '../lib';
 import { updateGallery } from '../redux';
 
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -32,7 +33,17 @@ function Details({ route, navigation }) {
 
   useEffect(() => {
     const getPosting = async () => {
-      const post = await getPost(docId);
+      let post;
+      try {
+        post = await getPost(docId);
+      } catch (e) {
+        post = null;
+      }
+      if (!post) {
+        showToast('error', '글을 불러오지 못했어요.', '잠시 후 다시 시도해 주세요.');
+        navigation.goBack();
+        return;
+      }
       const currentPostInfo = {
         title: post.title,
         location: post.location,

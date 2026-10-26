@@ -5,11 +5,9 @@ import {
   doc,
   getDoc,
   getDocs,
-  limit,
   orderBy,
   query,
   setDoc,
-  startAt,
   updateDoc,
   where,
 } from 'firebase/firestore';
@@ -36,23 +34,9 @@ const createNewPost = async (data, email) => {
   });
 };
 
-const getPosts = async (lastSnapShot, email) => {
-  if (!lastSnapShot) {
-    const q = query(postsRef, where('writer', '==', email), orderBy('createdAt', 'desc'), limit(1));
-    const snapShotList = await getDocs(q);
-    lastSnapShot = snapShotList.docs[0];
-  }
-
-  if (!lastSnapShot) {
-    lastSnapShot = null;
-  }
-
-  const q = query(
-    postsRef,
-    where('writer', '==', email),
-    orderBy('createdAt', 'desc'),
-    startAt(lastSnapShot)
-  );
+// 내 글 전체를 최신순으로 한 번에 불러옴
+const getPosts = async (email) => {
+  const q = query(postsRef, where('writer', '==', email), orderBy('createdAt', 'desc'));
 
   const docs = await getDocs(q);
 
