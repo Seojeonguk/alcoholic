@@ -85,4 +85,43 @@ npx expo start
 
 ## 빌드 · 배포
 
-EAS Build로 Google Play에 배포하는 방법은 [#219](https://github.com/Seojeonguk/alcoholic/issues/219)에서 준비하면서 정리할 예정이에요.
+[EAS Build](https://docs.expo.dev/build/introduction/)로 빌드하고 Google Play에 올려요. 빌드 프로필은 `eas.json`에 있어요.
+
+| 프로필       | 결과물 | 쓰는 곳                              |
+| ------------ | ------ | ------------------------------------ |
+| `preview`    | APK    | 기기에 바로 설치해서 확인            |
+| `production` | AAB    | Google Play 업로드(내부 테스트 트랙) |
+
+### 1. 처음 한 번 준비하기
+
+```bash
+npx eas-cli login
+npx eas-cli env:push --environment production --path .env
+npx eas-cli env:push --environment preview --path .env
+```
+
+- `.env`는 git에 올리지 않아서 EAS 서버에 올라가지 않아요. 그래서 Firebase 키를 **EAS 환경 변수**로 따로 넣어요. 각 프로필은 `eas.json`의 `environment`에 맞는 변수를 써요.
+- 값이 바뀌면 같은 명령에 `--force`를 붙여 다시 넣어요. 넣은 값은 `npx eas-cli env:list --environment production`이나 [expo.dev](https://expo.dev) 프로젝트의 **Environment variables**에서 확인해요.
+
+### 2. 빌드하기
+
+```bash
+npx eas-cli build --platform android --profile preview      # 설치용 APK
+npx eas-cli build --platform android --profile production   # 스토어용 AAB
+```
+
+- 처음 `production` 빌드할 때 업로드 키(keystore)를 EAS가 만들도록 해요. 키는 EAS 서버에 보관되고, 잃어버리면 같은 앱으로 업데이트할 수 없으니 `npx eas-cli credentials`로 백업해 둬요.
+- 스토어에 새로 올릴 때마다 `app.config.js`의 `android.versionCode`를 1씩 올려요. 버전 규칙은 `CLAUDE.md`의 "버전 · 릴리스"를 봐요.
+
+### 3. Google Play에 올리기
+
+1. **처음 한 번은 직접 올려요.** Play Console에서 앱을 만들고 **테스트 및 출시 → 내부 테스트**에 `production` 빌드의 AAB를 올려요(Google Play API는 처음 업로드를 받지 않아요).
+2. 그다음부터는 `eas submit`으로 올려요. Google Cloud 서비스 계정 키(JSON)가 필요해요. 만드는 방법은 [Expo 문서](https://github.com/expo/fyi/blob/main/creating-google-service-account.md)를 봐요.
+
+   ```bash
+   npx eas-cli submit --platform android --profile production --latest
+   ```
+
+   `eas.json`의 `submit.production` 설정대로 **내부 테스트** 트랙에 **초안**으로 올라가요. Play Console에서 확인하고 출시해요.
+
+3. 내부 테스트에서 확인한 빌드를 Play Console에서 **프로덕션**으로 승격해요.
