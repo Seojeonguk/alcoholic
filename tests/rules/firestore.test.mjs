@@ -9,6 +9,7 @@ import {
 } from '@firebase/rules-unit-testing';
 import {
   addDoc,
+  arrayRemove,
   arrayUnion,
   collection,
   deleteDoc,
@@ -110,6 +111,14 @@ describe('users/{email}', () => {
 
     await assertSucceeds(
       updateDoc(doc(verifiedDb(ME), 'users', ME.email), { posts: arrayUnion('post-1') })
+    );
+  });
+
+  test('글을 지울 때 내 문서의 posts에서 글 ID를 뺄 수 있어요', async () => {
+    await seed(`users/${ME.email}`, { userEmail: ME.email, posts: ['post-1', 'post-2'] });
+
+    await assertSucceeds(
+      updateDoc(doc(verifiedDb(ME), 'users', ME.email), { posts: arrayRemove('post-1') })
     );
   });
 
@@ -231,6 +240,12 @@ describe('posts/{postId}', () => {
     const updated = await getDoc(doc(db, 'posts', 'mine'));
     assert.equal(updated.data().title, '수정');
     assert.equal(updated.data().createdAt.toMillis(), createdAt.getTime());
+  });
+
+  test('내 글 하나를 지울 수 있어요', async () => {
+    await seed('posts/mine', newPost(ME.email));
+
+    await assertSucceeds(deleteDoc(doc(verifiedDb(ME), 'posts', 'mine')));
   });
 
   test('다른 사람 글은 수정 · 삭제할 수 없어요', async () => {

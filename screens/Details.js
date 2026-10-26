@@ -1,5 +1,5 @@
 import { memo, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { Carousel, Header } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
@@ -7,10 +7,11 @@ import { showToast } from '../lib';
 import { updateGallery } from '../redux';
 
 import { FontAwesome5 } from '@expo/vector-icons';
+import { getAuth } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { getPost } from '../services';
+import { deletePost, getPost } from '../services';
 
 const DEFAULT_NUMBER_OF_LINES = 3;
 
@@ -20,6 +21,7 @@ function Details({ route, navigation }) {
 
   const [numberOfLines, setNumberOfLines] = useState(DEFAULT_NUMBER_OF_LINES);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [myPost, setMyPost] = useState({
     title: '',
     photos: [],
@@ -62,6 +64,32 @@ function Details({ route, navigation }) {
     const newNumberOfLines =
       numberOfLines === DEFAULT_NUMBER_OF_LINES ? 0 : DEFAULT_NUMBER_OF_LINES;
     setNumberOfLines(newNumberOfLines);
+  };
+
+  const removePost = async () => {
+    setIsDeleting(true);
+    try {
+      const { email, uid } = getAuth().currentUser;
+      await deletePost(docId, email, uid, photos);
+      showToast('success', '글을 삭제했습니다.');
+      // 갤러리는 화면에 들어올 때마다 목록을 다시 불러옴
+      navigation.goBack();
+    } catch (e) {
+      setIsDeleting(false);
+      showToast('error', '글을 삭제하지 못했습니다.', '잠시 후 다시 시도해 주세요.');
+    }
+  };
+
+  const handleDeletePost = () => {
+    Alert.alert(
+      '글 삭제',
+      '이 글과 사진이 삭제되며 되돌릴 수 없습니다. 삭제하시겠습니까?',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '삭제', style: 'destructive', onPress: removePost },
+      ],
+      { cancelable: true }
+    );
   };
 
   const onPressRight = () => {
@@ -121,9 +149,19 @@ function Details({ route, navigation }) {
                 ))}
               </View>
             )}
+
+            <TouchableOpacity
+              disabled={isDeleting}
+              onPress={handleDeletePost}
+              style={styles.deleteBtn}
+            >
+              <Text style={styles.deleteBtnText}>글 삭제</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       )}
+
+      {isDeleting && <LoadingSpinner isOverlay={true} />}
     </SafeAreaView>
   );
 }
@@ -143,6 +181,16 @@ const styles = StyleSheet.create({
   },
   day: {
     fontSize: 10,
+  },
+  deleteBtn: {
+    alignSelf: 'center',
+    marginBottom: 30,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  deleteBtnText: {
+    color: '#ff0000',
+    textDecorationLine: 'underline',
   },
   location: {
     fontSize: 13,
