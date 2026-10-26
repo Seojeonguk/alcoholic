@@ -119,6 +119,8 @@ npx eas-cli build --platform android --profile production   # 스토어용 AAB
 
 ### 3. Google Play에 올리기
 
+Play Console의 앱 콘텐츠(데이터 보안 · 콘텐츠 등급 등)와 스토어 등록정보에 넣을 답은 [Google Play Console 등록](docs/play-console.md)에 정리했어요.
+
 1. **처음 한 번은 직접 올려요.** Play Console에서 앱을 만들고 **테스트 및 출시 → 내부 테스트**에 `production` 빌드의 AAB를 올려요(Google Play API는 처음 업로드를 받지 않아요).
 2. 그다음부터는 `eas submit`으로 올려요. Google Cloud 서비스 계정 키(JSON)가 필요해요. 만드는 방법은 [Expo 문서](https://github.com/expo/fyi/blob/main/creating-google-service-account.md)를 봐요.
 
