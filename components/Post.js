@@ -1,44 +1,41 @@
-import { Dimensions, StyleSheet, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+
+import { NAVIGATOR } from '../constants';
+import { PressableScale, Skeleton } from './ui';
 
 import { Image } from 'expo-image';
 
-const COLUMN_SIZE = 3;
-const GAP = 2;
-
-export default function Post({ item, isMiddle, navigation }) {
+// 갤러리의 사진 한 칸. 크기는 갤러리가 화면 너비로 계산해서 넘김
+export default function Post({ item, navigation, size }) {
   const { presentivePhoto, docId } = item;
-  const { width } = Dimensions.get('window');
-  // 네트워크 이미지는 크기를 직접 정해야 보임. 한 줄에 3개, 가운데 칸 양옆 간격을 뺀 정사각형
-  const imgSize = (width - GAP * 2) / COLUMN_SIZE;
-
-  const movedetial = () => {
-    navigation.navigate('Details', { docId: docId });
-  };
+  // 사진을 다 받기 전까지 회색 자리 표시를 보여 줌. 캐시에 있는 사진은 바로 떠서 새 기록만 보임
+  const [isPhotoLoaded, setIsPhotoLoaded] = useState(false);
 
   return (
-    <TouchableOpacity activeOpacity={0.2} onPress={movedetial}>
-      <Image
-        cachePolicy="memory-disk"
-        contentFit="cover"
-        // FlatList가 칸을 재사용할 때 이전 글의 사진이 잠깐 보이지 않게 함
-        recyclingKey={docId}
-        source={{ uri: presentivePhoto }}
-        style={[
-          styles.itemPhoto,
-          {
-            height: imgSize,
-            marginHorizontal: isMiddle ? GAP : 0,
-            width: imgSize,
-          },
-        ]}
-        transition={150}
-      />
-    </TouchableOpacity>
+    <PressableScale onPress={() => navigation.navigate(NAVIGATOR.DETAILS, { docId })}>
+      <View style={{ height: size, width: size }}>
+        {!isPhotoLoaded && <Skeleton height={size} style={styles.placeholder} width={size} />}
+        <Image
+          cachePolicy="memory-disk"
+          contentFit="cover"
+          onLoad={() => setIsPhotoLoaded(true)}
+          // FlatList가 칸을 재사용할 때 이전 글의 사진이 잠깐 보이지 않게 함
+          recyclingKey={docId}
+          source={{ uri: presentivePhoto }}
+          style={[styles.photo, { height: size, width: size }]}
+          transition={150}
+        />
+      </View>
+    </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
-  itemPhoto: {
-    marginBottom: GAP,
+  photo: {
+    borderRadius: 12,
+  },
+  placeholder: {
+    position: 'absolute',
   },
 });
