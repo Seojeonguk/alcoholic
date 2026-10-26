@@ -3,7 +3,7 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-nativ
 
 import { Header } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
-import { createUserInfo } from '../firebase';
+import { createUserInfo } from '../services';
 import { auth } from '../firebaseConfig';
 import { getKorErrorMsg, setEmailRequestLimit, showToast } from '../lib';
 
@@ -58,7 +58,8 @@ export default function RegistrationForm({ navigation }) {
       await createUserWithEmailAndPassword(auth, email, password);
       await sendEmailVerification(auth.currentUser);
       await setEmailRequestLimit();
-      await createUserInfo(email);
+      // 문서 ID는 보안 규칙이 비교하는 로그인 토큰의 이메일(소문자)과 같아야 함
+      await createUserInfo(auth.currentUser.email);
       showSuccessToastForEmailSending();
       navigation.replace(NAVIGATOR.LOGIN);
     } catch (e) {

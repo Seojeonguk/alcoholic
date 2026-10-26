@@ -9,7 +9,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { getPost } from '../firebase';
+import { getPost } from '../services';
 
 const DEFAULT_NUMBER_OF_LINES = 3;
 

@@ -1,0 +1,30 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // 게시글 사진: posts/{uid}/{파일}. 본인 폴더에만 이미지를 올릴 수 있음
+    match /posts/{uid}/{fileId} {
+      allow read: if request.auth != null;
+      // 같은 경로의 파일을 덮어쓰지 못하게 기존 파일이 없을 때만 허용
+      allow create: if request.auth != null
+        && resource == null
+        && request.auth.uid == uid
+        && request.auth.token.email_verified == true
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow update, delete: if false;
+    }
+
+    // 경로에 uid가 없던 예전 사진(posts/{파일})은 읽기만 허용
+    match /posts/{fileId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // 사진이 없는 글에 쓰는 기본 이미지
+    match /default.jfif {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+  }
+}

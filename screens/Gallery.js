@@ -3,7 +3,7 @@ import { FlatList, StyleSheet } from 'react-native';
 
 import { Header, Post } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
-import { getPosts } from '../firebase';
+import { getPosts } from '../services';
 
 import { getAuth } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';

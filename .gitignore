@@ -15,3 +15,6 @@ web-build/
 .env
 eas.json
 .idea/
+
+# Firebase emulator
+*-debug.log

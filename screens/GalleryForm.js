@@ -3,7 +3,7 @@ import { Alert, ScrollView, StyleSheet } from 'react-native';
 
 import { Content, Day, Header, Location, Photo, Tags, Title } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
-import { createNewPost, updateDocForId } from '../firebase';
+import { createNewPost, updateDocForId } from '../services';
 import { showToast } from '../lib';
 import { init } from '../redux';
 
@@ -88,7 +88,7 @@ export default function GalleryForm({ navigation, route }) {
       };
 
       if (docId) {
-        updateDocForId(docId, data);
+        await updateDocForId(docId, data);
       } else {
         await createNewPost(data, email);
       }
@@ -125,8 +125,12 @@ export default function GalleryForm({ navigation, route }) {
       xhr.send(null);
     });
 
-    const fileRef = ref(getStorage(), `posts/${uuid.v4()}`);
-    const result = await uploadBytes(fileRef, blob);
+    // storage.rules: 본인 uid 폴더에 이미지 타입으로만 올릴 수 있음
+    const uid = getAuth().currentUser.uid;
+    const fileRef = ref(getStorage(), `posts/${uid}/${uuid.v4()}`);
+    await uploadBytes(fileRef, blob, {
+      contentType: blob.type?.startsWith('image/') ? blob.type : 'image/jpeg',
+    });
 
     const downloadURL = await getDownloadURL(fileRef);
 
