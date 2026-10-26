@@ -37,14 +37,15 @@ npx expo start                     # 개발 서버, 최신 Expo Go로 확인
 npx expo-doctor                    # 의존성 · 설정 검사
 npx expo install --check           # SDK와 맞지 않는 패키지 확인 (고치려면 --fix)
 npx expo export --platform android --output-dir <scratchpad>/export   # 번들이 만들어지는지 확인
-npm run test:rules                 # Firestore · Storage 보안 규칙 테스트 (에뮬레이터, Java 필요)
+npm run test:rules                 # Firestore · Storage 보안 규칙 테스트 (에뮬레이터, Java 21 이상)
 ```
 
 - 루트에 `.env`가 있어야 함(git에 올리지 않음): `EXPO_PUBLIC_FIREBASE_API_KEY`, `_AUTH_DOMAIN`, `_PROJECT_ID`, `_STORAGE_BUCKET`, `_MESSAGING_SENDER_ID`, `_APP_ID`, `_MEASUREMENT_ID`. Expo CLI가 자동으로 읽음(`dotenv` 쓰지 않음).
 - 패키지는 `npm install` 대신 **`npx expo install <패키지>`**로 넣어서 SDK에 맞는 버전을 받음.
 - `export` 결과물은 저장소 안에 두지 않고 scratchpad에 만듦.
 - 보안 규칙(`firestore.rules` · `storage.rules`)을 바꾸면 `tests/rules/`에 테스트를 먼저 쓰고 `npm run test:rules`로 확인함. 배포(`npx firebase deploy --only firestore:rules,storage`)는 사용자가 함.
-- Windows에서는 `npm run test:rules`가 끝나도 Firestore 에뮬레이터(`java.exe`)가 남아 다음 실행이 "port taken"으로 실패함. 이 환경에서는 프로세스를 끄는 명령이 막혀 있으므로, 남은 프로세스를 사용자에게 알리고 끄도록 요청함(방법은 `docs/firebase-setup.md`).
+- `npm run test:rules`는 `tests/rules/run.mjs`가 진짜 Java 경로로 에뮬레이터를 띄워서 끝나면 함께 꺼짐(Oracle `javapath` 중계 프로그램 때문에 남던 문제). 그래도 "port taken"이 나면 이 환경에서는 프로세스를 끄는 명령이 막혀 있으므로, 남은 프로세스를 사용자에게 알리고 끄도록 요청함(방법은 `docs/firebase-setup.md`).
+- 규칙 테스트 결과는 `ℹ pass` · `ℹ fail` 숫자로 판단함. 거절 로그는 `setLogLevel('error')`로 숨겨 둠.
 
 ## 코드 스타일 및 컨벤션
 

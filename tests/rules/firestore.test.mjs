@@ -18,6 +18,7 @@ import {
   orderBy,
   query,
   setDoc,
+  setLogLevel,
   updateDoc,
   where,
 } from 'firebase/firestore';
@@ -50,6 +51,8 @@ const seed = (path, data) =>
   testEnv.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), path), data));
 
 before(async () => {
+  // assertFails로 일부러 거절당하는 요청마다 SDK가 PERMISSION_DENIED 경고를 찍어 출력을 가림. 결과는 node:test가 알려 줌
+  setLogLevel('error');
   testEnv = await initializeTestEnvironment({
     projectId: 'demo-alcoholic',
     firestore: { rules: readFileSync('firestore.rules', 'utf8') },

@@ -123,9 +123,12 @@ Firestore · Storage 보안 규칙은 저장소의 `firestore.rules` · `storage
 npm run test:rules
 ```
 
-Firestore · Storage 에뮬레이터를 띄워 `tests/rules/`의 테스트를 돌려요. Java 11 이상이 필요해요. 실제 프로젝트가 아니라 `demo-alcoholic` 에뮬레이터 프로젝트를 써요.
+Firestore · Storage 에뮬레이터를 띄워 `tests/rules/`의 테스트를 돌려요(`tests/rules/run.mjs`). **Java 21 이상**이 필요해요(firebase-tools 요구 사항). 실제 프로젝트가 아니라 `demo-alcoholic` 에뮬레이터 프로젝트를 써요.
 
-Windows에서는 테스트가 끝나도 Firestore 에뮬레이터(`java.exe`)가 꺼지지 않고 남을 수 있어요. 다음 실행에서 "port taken" 에러가 나면 작업 관리자에서 `cloud-firestore-emulator`를 실행 중인 `java.exe`를 끄거나, PowerShell에서 아래 명령으로 꺼요.
+- 결과는 마지막의 `ℹ pass` · `ℹ fail` 숫자로 봐요. 접근이 거절돼야 통과하는 테스트가 많아서, 거절 로그는 숨겨 뒀어요.
+- Windows에서 `java`가 Oracle의 `javapath\java.exe`(진짜 java를 다시 띄우는 중계 프로그램)로 잡히면, 예전에는 테스트가 끝나도 Firestore 에뮬레이터가 꺼지지 않았어요. 지금은 `run.mjs`가 진짜 Java 경로(`java.home`)로 에뮬레이터를 띄워서 함께 꺼져요.
+
+그래도 이전에 남은 에뮬레이터 때문에 "port taken" 에러가 나면 작업 관리자에서 `cloud-firestore-emulator`를 실행 중인 `java.exe`를 끄거나, PowerShell에서 아래 명령으로 꺼요.
 
 ```powershell
 Get-CimInstance Win32_Process -Filter "Name='java.exe'" | Where-Object CommandLine -like '*cloud-firestore-emulator*' | ForEach-Object { Stop-Process -Id $_.ProcessId }
