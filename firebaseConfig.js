@@ -62,4 +62,7 @@ if (getApps().length === 0) {
   db = getFirestore(app);
 }
 
+// 인증 · 비밀번호 재설정 메일을 한국어 템플릿으로 보냄
+auth.languageCode = 'ko';
+
 export { auth, db };

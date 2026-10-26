@@ -4,10 +4,16 @@ import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'reac
 import { Header } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
-import { emailRequestLimitKey, getKorErrorMsg, setEmailRequestLimit, showToast } from '../lib';
+import {
+  emailRequestLimitKey,
+  getKorErrorMsg,
+  sendVerificationEmail,
+  setEmailRequestLimit,
+  showToast,
+} from '../lib';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { sendEmailVerification, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Login({ navigation }) {
@@ -43,7 +49,7 @@ export default function Login({ navigation }) {
           {
             text: 'Send',
             onPress: async () => {
-              await sendEmailVerification(user);
+              await sendVerificationEmail(user);
               await setEmailRequestLimit();
             },
           },

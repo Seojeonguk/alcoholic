@@ -79,6 +79,33 @@ EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=G-XXXXXXX
 
 새로 만드는 Storage 버킷은 Blaze(종량제) 요금제가 필요할 수 있어요. 가능하면 이미 만들어 둔 프로젝트를 그대로 써요.
 
+## 인증 메일 설정
+
+회원가입 인증 메일과 비밀번호 재설정 메일은 Firebase Authentication이 보내요. 앱은 메일을 한국어 템플릿으로 보내고(`auth.languageCode = 'ko'`), 사용자 이름이 없으면 이메일 앞부분을 이름으로 넣어서 템플릿의 `%DISPLAY_NAME%`이 비지 않게 해요. 나머지는 콘솔에서 설정해요.
+
+### 메일에 나오는 앱 이름(`%APP_NAME%`)
+
+템플릿의 `%APP_NAME%`에는 **프로젝트 설정 → 일반 → 공개용 이름**이 들어가요. 여기가 `project-1234…` 같은 값이면 메일에도 그대로 나오므로 `alcoholic`처럼 사용자에게 보여 줄 이름으로 바꿔요.
+
+### 템플릿
+
+**Authentication → 템플릿**에서 **이메일 주소 인증**과 **비밀번호 재설정**을 확인해요.
+
+1. 템플릿 언어를 **한국어**로 바꿔요(앱이 `ko`로 요청하므로 한국어 템플릿이 쓰여요).
+2. 연필 아이콘으로 **보낸 사람 이름**을 `alcoholic`으로 정해요.
+3. 제목과 본문에 `%APP_NAME%` · `%DISPLAY_NAME%`이 제대로 들어가는지 확인해요. 본문은 짧게, 링크는 `%LINK%` 하나만 두는 게 스팸 분류에 유리해요.
+
+### 스팸함으로 가지 않게 하기
+
+기본 설정에서는 `noreply@<프로젝트 ID>.firebaseapp.com`에서 메일이 나가요. 이 공용 도메인은 받는 쪽(Gmail · 네이버 등)에서 평판이 낮아 스팸으로 분류되기 쉬워요. 가장 확실한 방법은 **내 도메인에서 보내는 것**이에요.
+
+1. **Authentication → 템플릿 → 이메일 주소 인증 → 연필 아이콘 → 도메인 맞춤설정**을 눌러요.
+2. 가진 도메인(예: `mail.example.com`)을 넣으면 Firebase가 DNS 레코드(TXT · CNAME)를 알려 줘요.
+3. 도메인 DNS에 그 레코드를 추가하고 확인될 때까지 기다려요(최대 48시간). SPF · DKIM이 설정돼서 받는 쪽이 보낸 곳을 믿을 수 있게 돼요.
+4. 확인되면 보낸 사람 주소를 `noreply@<내 도메인>`으로 바꾸고, 다른 템플릿에도 같은 도메인을 써요.
+
+도메인이 없으면 공개용 이름 · 보낸 사람 이름 · 한국어 템플릿만 맞추고, 앱의 안내 문구(회원가입 후 토스트)에서 스팸함도 확인하라고 알려요.
+
 ## 보안 규칙
 
 Firestore · Storage 보안 규칙은 저장소의 `firestore.rules` · `storage.rules`에서 관리해요(설정은 `firebase.json`, 프로젝트는 `.firebaserc`).
@@ -121,5 +148,6 @@ npx firebase deploy --only firestore:rules,storage
 | Expo Go에서 스피너만 계속 돌아요           | 위와 같아요. 그래도 그렇다면 README의 "문제가 생기면"을 봐요                      |
 | `auth/invalid-api-key`                     | `EXPO_PUBLIC_FIREBASE_API_KEY` 값이 콘솔의 웹 앱 `apiKey`와 같은지                |
 | `auth/operation-not-allowed`               | Authentication에서 이메일/비밀번호 로그인이 켜져 있는지                           |
+| 인증 메일이 스팸함으로 가요                | 위 [인증 메일 설정](#인증-메일-설정)의 공개용 이름 · 템플릿 · 도메인 맞춤설정     |
 | 게시글 저장 · 조회에서 `permission-denied` | 위 [보안 규칙](#보안-규칙) 표와, 규칙을 배포했는지(콘솔의 규칙 탭)                |
 | 사진 업로드가 실패해요                     | `EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET` 값과 Storage가 만들어져 있는지              |
