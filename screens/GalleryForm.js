@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet } from 'react-native';
 
 import { Content, Day, Header, Location, Photo, Tags, Title } from '../components';
@@ -16,6 +16,8 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function GalleryForm({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(false);
+  // 저장 중에 다시 눌러 글이 두 번 만들어지지 않게 막음. state는 같은 프레임의 두 번째 탭에 반영되지 않아 ref를 씀
+  const isSavingRef = useRef(false);
   const dispatch = useDispatch();
   const gallery = useSelector((state) => state.gallery);
   const docId = route.params?.docId;
@@ -64,6 +66,10 @@ export default function GalleryForm({ navigation, route }) {
   };
 
   const save = async () => {
+    if (isSavingRef.current) {
+      return;
+    }
+    isSavingRef.current = true;
     setIsLoading(true);
     try {
       const downloadURLs = await Promise.all(
@@ -84,13 +90,13 @@ export default function GalleryForm({ navigation, route }) {
         location: gallery.location,
         tags: gallery.tags,
         writer: email,
-        createdAt: new Date(),
       };
 
       if (docId) {
+        // 수정할 때 createdAt을 바꾸면 목록 순서가 바뀌므로 그대로 둠
         await updateDocForId(docId, data);
       } else {
-        await createNewPost(data, email);
+        await createNewPost({ ...data, createdAt: new Date() }, email);
       }
 
       initForm();
@@ -99,11 +105,12 @@ export default function GalleryForm({ navigation, route }) {
       navigation.popTo(NAVIGATOR.BOTTOM_TAB_NAV, { screen: NAVIGATOR.GALLERY });
     } catch (e) {
       showToast(
-        null,
+        'error',
         '작성 중 오류가 발생하였습니다.',
         '입력 확인 후 다시 시도해 주시기 바랍니다.'
       );
     } finally {
+      isSavingRef.current = false;
       setIsLoading(false);
     }
   };
@@ -144,7 +151,7 @@ export default function GalleryForm({ navigation, route }) {
       {isLoading && <LoadingSpinner isOverlay={true} />}
 
       <Header
-        title={'새 게시물'}
+        title={docId ? '게시물 수정' : '새 게시물'}
         visibleLeftIcon={true}
         visibleRightIcon={true}
         leftIconName={'arrow-back'}

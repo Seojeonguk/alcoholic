@@ -1,8 +1,10 @@
+import { toLocalDateString } from '../../lib';
+
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
   title: '',
-  day: new Date().toJSON().substring(0, 10),
+  day: toLocalDateString(),
   photos: [],
   content: '',
   location: '',
@@ -15,7 +17,8 @@ export const gallerySlice = createSlice({
   reducers: {
     init: (state) => {
       state.title = initialState.title;
-      state.day = initialState.day;
+      // 앱을 켜 둔 채 날짜가 바뀌어도 오늘 날짜로 시작하게 매번 새로 구함
+      state.day = toLocalDateString();
       state.photos = initialState.photos;
       state.content = initialState.content;
       state.location = initialState.location;

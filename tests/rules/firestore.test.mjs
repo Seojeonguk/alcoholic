@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { after, before, beforeEach, describe, test } from 'node:test';
 
@@ -218,6 +219,18 @@ describe('posts/{postId}', () => {
     for (const post of myPosts.docs) {
       await assertSucceeds(deleteDoc(post.ref));
     }
+  });
+
+  test('createdAt을 빼고 수정하면 원래 값이 그대로 남아요', async () => {
+    const createdAt = new Date('2026-01-01T00:00:00Z');
+    await seed('posts/mine', newPost(ME.email, { createdAt }));
+    const db = verifiedDb(ME);
+    const { createdAt: _, ...withoutCreatedAt } = newPost(ME.email, { title: '수정' });
+
+    await assertSucceeds(updateDoc(doc(db, 'posts', 'mine'), withoutCreatedAt));
+    const updated = await getDoc(doc(db, 'posts', 'mine'));
+    assert.equal(updated.data().title, '수정');
+    assert.equal(updated.data().createdAt.toMillis(), createdAt.getTime());
   });
 
   test('다른 사람 글은 수정 · 삭제할 수 없어요', async () => {

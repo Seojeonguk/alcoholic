@@ -4,7 +4,7 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-nativ
 import { Header } from '../components';
 import { COLORS } from '../constants';
 import { auth } from '../firebaseConfig';
-import { getKorErrorMsg } from '../lib';
+import { getKorErrorMsg, showToast } from '../lib';
 
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,6 +22,12 @@ export default function ForgetPassword({ navigation }) {
   const handleSendEmail = () => {
     sendPasswordResetEmail(auth, email)
       .then(() => {
+        showToast(
+          'success',
+          '비밀번호 재설정 메일을 보냈습니다.',
+          `${email}의 메일함(스팸함 포함)을 확인해 주세요.`,
+          'top'
+        );
         navigation.goBack();
       })
       .catch((err) => {
