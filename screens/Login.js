@@ -6,6 +6,7 @@ import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
 import {
   emailRequestLimitKey,
+  getAuthErrorField,
   getKorErrorMsg,
   sendVerificationEmail,
   setEmailRequestLimit,
@@ -76,7 +77,7 @@ export default function Login({ navigation }) {
       })
       .catch((err) => {
         const korErrorMsg = getKorErrorMsg(err.code);
-        if (korErrorMsg.includes('이메일')) {
+        if (getAuthErrorField(err.code) === 'email') {
           setEmailError(korErrorMsg);
         } else {
           setPasswordError(korErrorMsg);

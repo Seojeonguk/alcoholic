@@ -3,7 +3,13 @@ import { AuthScreen, Button, PasswordInput, TextField } from '../components';
 import { NAVIGATOR } from '../constants';
 import { createUserInfo } from '../services';
 import { auth } from '../firebaseConfig';
-import { getKorErrorMsg, sendVerificationEmail, setEmailRequestLimit, showToast } from '../lib';
+import {
+  getAuthErrorField,
+  getKorErrorMsg,
+  sendVerificationEmail,
+  setEmailRequestLimit,
+  showToast,
+} from '../lib';
 
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
@@ -58,7 +64,7 @@ export default function RegistrationForm({ navigation }) {
       navigation.replace(NAVIGATOR.LOGIN);
     } catch (e) {
       const korErrorMsg = getKorErrorMsg(e.code);
-      if (korErrorMsg.includes('이메일')) {
+      if (getAuthErrorField(e.code) === 'email') {
         setEmailError(korErrorMsg);
       } else {
         setPasswordError(korErrorMsg);

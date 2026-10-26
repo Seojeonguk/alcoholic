@@ -8,7 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test:rules": "node tests/rules/run.mjs",
-    "test:unit": "node --test \"tests/unit/*.test.mjs\""
+    "test:unit": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test \"tests/unit/*.test.mjs\""
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
