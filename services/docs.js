@@ -35,7 +35,7 @@ const createNewPost = async (data, email) => {
   });
 };
 
-// 내 글 전체를 최신순으로 한 번에 불러옴
+// 내 글 전체를 한 번에 불러옴. 정렬 · 월 묶음은 화면에서 마신 날짜(day) 기준으로 함(lib/postSections)
 const getPosts = async (email) => {
   const q = query(postsRef, where('writer', '==', email), orderBy('createdAt', 'desc'));
 
@@ -47,9 +47,13 @@ const getPosts = async (email) => {
     'https://firebasestorage.googleapis.com/v0/b/alcoholic-a9f86.appspot.com/o/default.jfif?alt=media&token=18e253aa-6a28-4a68-9823-eaf0726b6830';
 
   docs.forEach((doc) => {
-    const presentivePhoto = doc.data()?.photos?.[0] ?? DEFAULT_PHOTO_URI;
-    const docId = doc.id;
-    ret.push({ presentivePhoto: presentivePhoto, docId: docId });
+    const data = doc.data();
+    ret.push({
+      docId: doc.id,
+      presentivePhoto: data?.photos?.[0] ?? DEFAULT_PHOTO_URI,
+      day: data?.day,
+      createdAt: data?.createdAt?.toMillis?.() ?? 0,
+    });
   });
 
   return ret;
