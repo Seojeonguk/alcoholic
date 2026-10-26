@@ -20,6 +20,8 @@ export default {
         backgroundColor: '#F6E8D8',
       },
       package: 'com.seojeonguk.alcoholic',
+      // 스토어에 올릴 때마다 1씩 올림
+      versionCode: 1,
     },
     web: {
       favicon: './assets/favicon.png',
