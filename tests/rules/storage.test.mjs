@@ -95,6 +95,11 @@ describe('posts/{uid}/{fileId}', () => {
     }
   });
 
+  test('글을 지울 때 그 글의 사진 하나를 지울 수 있어요', async () => {
+    await seed(`posts/${ME.uid}/a.jpg`);
+    await assertSucceeds(deleteObject(ref(verifiedStorage(ME), `posts/${ME.uid}/a.jpg`)));
+  });
+
   test('다른 사람 폴더의 사진은 지울 수 없어요', async () => {
     await seed(`posts/${OTHER.uid}/a.jpg`);
     await assertFails(deleteObject(ref(verifiedStorage(ME), `posts/${OTHER.uid}/a.jpg`)));

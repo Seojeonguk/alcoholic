@@ -63,7 +63,7 @@ https://github.com/Seojeonguk/alcoholic/blob/master/docs/privacy-policy.md
 | 사용자가 데이터 삭제를 요청할 수 있나요         | 예                                                                                                    |
 | 계정 생성                                       | 사용자 이름(이메일)과 비밀번호                                                                        |
 | 계정 삭제 URL                                   | `https://github.com/Seojeonguk/alcoholic/blob/master/docs/privacy-policy.md#4-계정--데이터-삭제-방법` |
-| 계정 없이 일부 데이터만 삭제 요청               | 예 (개인정보처리방침 4번의 이메일로 게시글만 지우기)                                                  |
+| 계정 없이 일부 데이터만 삭제 요청               | 예 (앱의 글 삭제, 또는 개인정보처리방침 4번의 이메일로 게시글만 지우기)                               |
 
 **수집하는 데이터** — 모두 **공유하지 않음**(Google은 Firebase 처리 위탁이라 공유에 해당하지 않아요), **임시 처리 아님**이에요.
 
