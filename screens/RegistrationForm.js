@@ -5,9 +5,9 @@ import { Header } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { createUserInfo } from '../services';
 import { auth } from '../firebaseConfig';
-import { getKorErrorMsg, setEmailRequestLimit, showToast } from '../lib';
+import { getKorErrorMsg, sendVerificationEmail, setEmailRequestLimit, showToast } from '../lib';
 
-import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RegistrationForm({ navigation }) {
@@ -42,7 +42,7 @@ export default function RegistrationForm({ navigation }) {
     showToast(
       'success',
       '이메일의 메일함을 확인바랍니다',
-      `${email}로 인증 메일을 발송하였습니다.`,
+      `${email}로 인증 메일을 발송하였습니다. 메일이 없으면 스팸함도 확인해 주세요.`,
       'top'
     );
   };
@@ -56,7 +56,7 @@ export default function RegistrationForm({ navigation }) {
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      await sendEmailVerification(auth.currentUser);
+      await sendVerificationEmail(auth.currentUser);
       await setEmailRequestLimit();
       // 문서 ID는 보안 규칙이 비교하는 로그인 토큰의 이메일(소문자)과 같아야 함
       await createUserInfo(auth.currentUser.email);
