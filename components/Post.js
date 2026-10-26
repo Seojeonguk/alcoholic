@@ -1,10 +1,13 @@
 import { Dimensions, Image, StyleSheet, TouchableOpacity } from 'react-native';
 
+const COLUMN_SIZE = 3;
+const GAP = 2;
+
 export default function Post({ item, isMiddle, navigation }) {
   const { presentivePhoto, docId } = item;
-  const { width, height } = Dimensions.get('window');
-  const minDimension = Math.min(width, height);
-  const imgHeight = minDimension / 3;
+  const { width } = Dimensions.get('window');
+  // 네트워크 이미지는 크기를 직접 정해야 보임. 한 줄에 3개, 가운데 칸 양옆 간격을 뺀 정사각형
+  const imgSize = (width - GAP * 2) / COLUMN_SIZE;
 
   const movedetial = () => {
     navigation.navigate('Details', { docId: docId });
@@ -17,8 +20,9 @@ export default function Post({ item, isMiddle, navigation }) {
         style={[
           styles.itemPhoto,
           {
-            height: imgHeight,
-            marginHorizontal: isMiddle ? 2 : 0,
+            height: imgSize,
+            marginHorizontal: isMiddle ? GAP : 0,
+            width: imgSize,
           },
         ]}
         resizeMode="stretch"
@@ -29,7 +33,7 @@ export default function Post({ item, isMiddle, navigation }) {
 
 const styles = StyleSheet.create({
   itemPhoto: {
-    marginBottom: 2,
+    marginBottom: GAP,
     resizeMode: 'stretch',
   },
 });
