@@ -1,3 +1,4 @@
+import toastConfig from './lib/toastConfig';
 import Navigation from './navigation/Navigation';
 import store from './redux/store';
 
@@ -10,7 +11,7 @@ export default function App() {
     <Provider store={store}>
       <SafeAreaProvider>
         <Navigation />
-        <Toast />
+        <Toast config={toastConfig} />
       </SafeAreaProvider>
     </Provider>
   );

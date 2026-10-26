@@ -1,49 +1,41 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { COLORS, NAVIGATOR } from '../constants';
 import { Gallery, Settings } from '../screens';
-import { Entypo, FontAwesome } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 const Tab = createBottomTabNavigator();
 
-const TAB_BAR_COLORS = {
-  [NAVIGATOR.GALLERY]: COLORS.BOTTOM_TAB_GALLERY_COLOR,
-  [NAVIGATOR.SETTINGS]: COLORS.BOTTOM_TAB_SETTINGS_COLOR,
-};
+const tabIcon =
+  (name) =>
+  ({ focused, color }) =>
+    <Ionicons name={focused ? name : `${name}-outline`} size={22} color={color} />;
 
 export default function BottomTabNav() {
-  const galleryIcon = ({ color }) => {
-    return <Entypo name="drink" size={24} color={color} />;
-  };
-
-  const settingsIcon = ({ color }) => {
-    return <FontAwesome name="gear" size={24} color={color} />;
-  };
-
   return (
     <Tab.Navigator
       initialRouteName={NAVIGATOR.GALLERY}
-      screenOptions={({ route }) => ({
+      screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.BOTTOM_TAB_ACTIVE_COLOR,
-        tabBarInactiveTintColor: COLORS.BOTTOM_TAB_INACTIVE_COLOR,
-        tabBarStyle: { backgroundColor: TAB_BAR_COLORS[route.name] },
-      })}
+        tabBarActiveTintColor: COLORS.TEXT,
+        tabBarInactiveTintColor: '#B0B8C1',
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarStyle: {
+          backgroundColor: COLORS.BACKGROUND,
+          borderTopColor: COLORS.LINE,
+          borderTopWidth: 1,
+          elevation: 0,
+        },
+      }}
     >
       <Tab.Screen
         name={NAVIGATOR.GALLERY}
         component={Gallery}
-        options={{
-          tabBarLabel: NAVIGATOR.GALLERY,
-          tabBarIcon: galleryIcon,
-        }}
+        options={{ tabBarLabel: '기록', tabBarIcon: tabIcon('images') }}
       />
       <Tab.Screen
         name={NAVIGATOR.SETTINGS}
         component={Settings}
-        options={{
-          tabBarLabel: NAVIGATOR.SETTINGS,
-          tabBarIcon: settingsIcon,
-        }}
+        options={{ tabBarLabel: '설정', tabBarIcon: tabIcon('settings') }}
       />
     </Tab.Navigator>
   );

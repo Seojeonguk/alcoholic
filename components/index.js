@@ -9,4 +9,5 @@ import Post from './Post';
 import Tags from './Tags';
 import Title from './Title';
 
+export * from './ui';
 export { Carousel, Content, Day, Header, Location, PasswordInput, Photo, Post, Tags, Title };

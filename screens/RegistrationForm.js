@@ -40,8 +40,7 @@ export default function RegistrationForm({ navigation }) {
     showToast(
       'success',
       '이메일의 메일함을 확인바랍니다',
-      `${email}로 인증 메일을 발송하였습니다. 메일이 없으면 스팸함도 확인해 주세요.`,
-      'top'
+      `${email}로 인증 메일을 발송하였습니다. 메일이 없으면 스팸함도 확인해 주세요.`
     );
   };
 
