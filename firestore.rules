@@ -25,7 +25,8 @@ service cloud.firestore {
       allow update: if verified() && myEmail() == email
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['posts'])
         && request.resource.data.posts is list;
-      allow delete: if false;
+      // 탈퇴할 때 지움. 인증 전에 탈퇴하는 경우도 있어 이메일 인증은 보지 않음
+      allow delete: if signedIn() && myEmail() == email;
     }
 
     function validPost(data) {

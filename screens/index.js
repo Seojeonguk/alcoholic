@@ -1,3 +1,4 @@
+import DeleteAccount from './DeleteAccount';
 import Details from './Details';
 import ForgetPassword from './ForgotPassword';
 import Gallery from './Gallery';
@@ -8,6 +9,7 @@ import RegistrationForm from './RegistrationForm';
 import Settings from './Settings';
 
 export {
+  DeleteAccount,
   Details,
   ForgetPassword,
   Gallery,

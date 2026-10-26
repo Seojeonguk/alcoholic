@@ -1,6 +1,7 @@
 import {
   arrayUnion,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -12,6 +13,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore';
+import { deleteObject, getStorage, listAll, ref } from 'firebase/storage';
 import { db } from '../firebaseConfig';
 
 const usersRef = collection(db, 'users');
@@ -81,4 +83,15 @@ const getPost = async (docId) => {
   return post.data();
 };
 
-export { createNewPost, createUserInfo, getPost, getPosts, updateDocForId };
+// 탈퇴할 때 내 사진 · 게시글 · 사용자 문서를 지움. 중간에 실패해도 다시 실행하면 남은 것만 지움
+const deleteUserData = async (email, uid) => {
+  const { items } = await listAll(ref(getStorage(), `posts/${uid}`));
+  await Promise.all(items.map((item) => deleteObject(item)));
+
+  const myPosts = await getDocs(query(postsRef, where('writer', '==', email)));
+  await Promise.all(myPosts.docs.map((post) => deleteDoc(post.ref)));
+
+  await deleteDoc(doc(usersRef, email));
+};
+
+export { createNewPost, createUserInfo, deleteUserData, getPost, getPosts, updateDocForId };
