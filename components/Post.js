@@ -1,4 +1,6 @@
-import { Dimensions, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { Dimensions, StyleSheet, TouchableOpacity } from 'react-native';
+
+import { Image } from 'expo-image';
 
 const COLUMN_SIZE = 3;
 const GAP = 2;
@@ -16,6 +18,10 @@ export default function Post({ item, isMiddle, navigation }) {
   return (
     <TouchableOpacity activeOpacity={0.2} onPress={movedetial}>
       <Image
+        cachePolicy="memory-disk"
+        contentFit="cover"
+        // FlatList가 칸을 재사용할 때 이전 글의 사진이 잠깐 보이지 않게 함
+        recyclingKey={docId}
         source={{ uri: presentivePhoto }}
         style={[
           styles.itemPhoto,
@@ -25,7 +31,7 @@ export default function Post({ item, isMiddle, navigation }) {
             width: imgSize,
           },
         ]}
-        resizeMode="stretch"
+        transition={150}
       />
     </TouchableOpacity>
   );
@@ -34,6 +40,5 @@ export default function Post({ item, isMiddle, navigation }) {
 const styles = StyleSheet.create({
   itemPhoto: {
     marginBottom: GAP,
-    resizeMode: 'stretch',
   },
 });

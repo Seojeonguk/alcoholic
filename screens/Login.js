@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-import { Header } from '../components';
+import { Header, PasswordInput } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
 import {
@@ -21,7 +21,6 @@ export default function Login({ navigation }) {
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [isSecurePassword, setSecurePassword] = useState(true);
   const emailRef = useRef();
   const passwordRef = useRef();
 
@@ -45,9 +44,9 @@ export default function Login({ navigation }) {
         '재인증',
         '인증 메일을 재전송 하시겠습니까?',
         [
-          { text: 'Cancel', style: 'cancel' },
+          { text: '취소', style: 'cancel' },
           {
-            text: 'Send',
+            text: '보내기',
             onPress: async () => {
               await sendVerificationEmail(user);
               await setEmailRequestLimit();
@@ -129,16 +128,12 @@ export default function Login({ navigation }) {
 
           <View style={styles.inputBox}>
             <Text style={styles.inputLabel}>비밀번호</Text>
-            <TextInput
+            <PasswordInput
               onChangeText={handleChangePassword}
-              onPressIn={() => setSecurePassword(false)}
-              onPressOut={() => setSecurePassword(true)}
               onSubmitEditing={handleLogin}
               placeholder="비밀번호를 입력해 주세요"
               ref={passwordRef}
               returnKeyType="done"
-              secureTextEntry={isSecurePassword}
-              style={styles.input}
               value={password}
             />
             <Text style={styles.inputError}>{passwordError}</Text>

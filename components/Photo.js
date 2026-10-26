@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   photo: {
     height: '100%',
     width: '100%',
-    resizeMode: 'stretch',
+    resizeMode: 'cover',
     borderRadius: 10,
     borderColor: 'grey',
     borderWidth: 1,

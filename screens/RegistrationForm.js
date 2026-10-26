@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-import { Header } from '../components';
+import { Header, PasswordInput } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { createUserInfo } from '../services';
 import { auth } from '../firebaseConfig';
@@ -17,8 +17,6 @@ export default function RegistrationForm({ navigation }) {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
-  const [isSecurePassword, setSecurePassword] = useState(true);
-  const [isSecurePasswordConfirm, setIsSecurePasswordConfirm] = useState(true);
   const emailRef = useRef();
   const passwordRef = useRef();
   const confirmPasswordRef = useRef();
@@ -107,17 +105,13 @@ export default function RegistrationForm({ navigation }) {
 
           <View style={styles.inputBox}>
             <Text style={styles.inputLabel}>비밀번호</Text>
-            <TextInput
+            <PasswordInput
               onChangeText={handleChangePassword}
-              onPressIn={() => setSecurePassword(false)}
-              onPressOut={() => setSecurePassword(true)}
               onSubmitEditing={() => confirmPasswordRef.current.focus()}
               placeholder="비밀번호를 입력해 주세요"
               ref={passwordRef}
               returnKeyType="next"
               submitBehavior="submit"
-              secureTextEntry={isSecurePassword}
-              style={styles.input}
               value={password}
             />
             <Text style={styles.inputError}>{passwordError}</Text>
@@ -125,16 +119,12 @@ export default function RegistrationForm({ navigation }) {
 
           <View style={styles.inputBox}>
             <Text style={styles.inputLabel}>비밀번호 확인</Text>
-            <TextInput
+            <PasswordInput
               onChangeText={handleChangeConfirmPassword}
-              onPressIn={() => setIsSecurePasswordConfirm(false)}
-              onPressOut={() => setIsSecurePasswordConfirm(true)}
               onSubmitEditing={handleRegistration}
               placeholder="비밀번호(확인)를 입력해 주세요"
               ref={confirmPasswordRef}
               returnKeyType="done"
-              secureTextEntry={isSecurePasswordConfirm}
-              style={styles.input}
               value={confirmPassword}
             />
             <Text style={styles.inputError}>{confirmPasswordError}</Text>
