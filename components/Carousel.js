@@ -1,13 +1,18 @@
 import React, { memo, useState } from 'react';
-import { Dimensions, FlatList, Image, View } from 'react-native';
+import { Dimensions, FlatList, View } from 'react-native';
 import Indicator from './Indicator';
+
+import { Image } from 'expo-image';
 
 const RenderItem = memo(({ item, gap, width }) => {
   return (
     <View style={{ width: width, marginHorizontal: gap / 2 }}>
       <Image
+        cachePolicy="memory-disk"
+        contentFit="cover"
         source={{ uri: item }}
-        style={{ height: '100%', resizeMode: 'stretch', marginHorizontal: gap / 2 }}
+        style={{ height: '100%', marginHorizontal: gap / 2 }}
+        transition={150}
       />
     </View>
   );
@@ -19,8 +24,10 @@ const ListEmptyComponent = ({ width }) => {
   return (
     <View style={{ width: width }}>
       <Image
+        cachePolicy="memory-disk"
+        contentFit="cover"
         source={{ uri: DEFAULT_PHOTO_URI }}
-        style={{ height: '100%', resizeMode: 'stretch' }}
+        style={{ height: '100%' }}
       />
     </View>
   );

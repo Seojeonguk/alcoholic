@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-import { Header } from '../components';
+import { Header, PasswordInput } from '../components';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
@@ -85,14 +85,12 @@ export default function DeleteAccount({ navigation }) {
         <View style={styles.inputWrap}>
           <View style={styles.inputBox}>
             <Text style={styles.inputLabel}>비밀번호</Text>
-            <TextInput
+            <PasswordInput
               editable={!isLoading}
               onChangeText={handleChangePassword}
               onSubmitEditing={handleDeleteAccount}
               placeholder="비밀번호를 입력해 주세요"
               returnKeyType="done"
-              secureTextEntry={true}
-              style={styles.input}
               value={password}
             />
             <Text style={styles.inputError}>{passwordError}</Text>
@@ -137,12 +135,6 @@ const styles = StyleSheet.create({
     color: COLORS.LABEL_COLOR,
     fontSize: 13,
     lineHeight: 20,
-  },
-  input: {
-    borderBottomColor: COLORS.BORDER_COLOR,
-    borderBottomWidth: 1,
-    color: 'black',
-    fontSize: 15,
   },
   inputBox: {
     marginVertical: 15,
