@@ -127,6 +127,25 @@ describe('users/{email}', () => {
       updateDoc(doc(verifiedDb(ME), 'users', OTHER.email), { posts: arrayUnion('post-1') })
     );
   });
+
+  test('탈퇴할 때 내 사용자 문서를 지울 수 있어요', async () => {
+    await seed(`users/${ME.email}`, { userEmail: ME.email, posts: [] });
+
+    await assertSucceeds(deleteDoc(doc(verifiedDb(ME), 'users', ME.email)));
+  });
+
+  test('이메일 인증 전이어도 내 사용자 문서는 지울 수 있어요', async () => {
+    await seed(`users/${ME.email}`, { userEmail: ME.email, posts: [] });
+
+    await assertSucceeds(deleteDoc(doc(unverifiedDb(ME), 'users', ME.email)));
+  });
+
+  test('다른 사람 사용자 문서는 지울 수 없어요', async () => {
+    await seed(`users/${OTHER.email}`, { userEmail: OTHER.email, posts: [] });
+
+    await assertFails(deleteDoc(doc(verifiedDb(ME), 'users', OTHER.email)));
+    await assertFails(deleteDoc(doc(guestDb(), 'users', OTHER.email)));
+  });
 });
 
 describe('posts/{postId}', () => {
@@ -186,6 +205,19 @@ describe('posts/{postId}', () => {
 
     await assertSucceeds(setDoc(doc(db, 'posts', 'mine'), newPost(ME.email, { title: '수정' })));
     await assertFails(setDoc(doc(db, 'posts', 'mine'), newPost(OTHER.email)));
+  });
+
+  test('탈퇴할 때 내 글을 모두 찾아 지울 수 있어요', async () => {
+    await seed('posts/mine-1', newPost(ME.email));
+    await seed('posts/mine-2', newPost(ME.email));
+    const db = verifiedDb(ME);
+
+    const myPosts = await assertSucceeds(
+      getDocs(query(collection(db, 'posts'), where('writer', '==', ME.email)))
+    );
+    for (const post of myPosts.docs) {
+      await assertSucceeds(deleteDoc(post.ref));
+    }
   });
 
   test('다른 사람 글은 수정 · 삭제할 수 없어요', async () => {

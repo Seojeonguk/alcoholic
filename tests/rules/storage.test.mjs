@@ -6,7 +6,7 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { getBytes, ref, uploadBytes } from 'firebase/storage';
+import { deleteObject, getBytes, listAll, ref, uploadBytes } from 'firebase/storage';
 
 const ME = { uid: 'me-uid', email: 'me@example.com' };
 const OTHER = { uid: 'other-uid', email: 'other@example.com' };
@@ -83,6 +83,23 @@ describe('posts/{uid}/{fileId}', () => {
     await assertSucceeds(getBytes(ref(verifiedStorage(ME), `posts/${ME.uid}/a.jpg`)));
     await assertFails(getBytes(ref(guestStorage(), `posts/${ME.uid}/a.jpg`)));
   });
+
+  test('탈퇴할 때 내 폴더의 사진을 모두 찾아 지울 수 있어요', async () => {
+    await seed(`posts/${ME.uid}/a.jpg`);
+    await seed(`posts/${ME.uid}/b.jpg`);
+    const storage = verifiedStorage(ME);
+
+    const { items } = await assertSucceeds(listAll(ref(storage, `posts/${ME.uid}`)));
+    for (const item of items) {
+      await assertSucceeds(deleteObject(item));
+    }
+  });
+
+  test('다른 사람 폴더의 사진은 지울 수 없어요', async () => {
+    await seed(`posts/${OTHER.uid}/a.jpg`);
+    await assertFails(deleteObject(ref(verifiedStorage(ME), `posts/${OTHER.uid}/a.jpg`)));
+    await assertFails(deleteObject(ref(guestStorage(), `posts/${OTHER.uid}/a.jpg`)));
+  });
 });
 
 describe('예전 경로와 기본 이미지', () => {
@@ -90,6 +107,7 @@ describe('예전 경로와 기본 이미지', () => {
     await seed('posts/old.jpg');
     await assertSucceeds(getBytes(ref(verifiedStorage(ME), 'posts/old.jpg')));
     await assertFails(uploadBytes(ref(verifiedStorage(ME), 'posts/new.jpg'), IMAGE, JPEG));
+    await assertFails(deleteObject(ref(verifiedStorage(ME), 'posts/old.jpg')));
   });
 
   test('기본 이미지는 읽을 수만 있어요', async () => {

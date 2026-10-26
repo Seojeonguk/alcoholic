@@ -3,6 +3,7 @@ const NAVIGATOR = {
   LOGIN: 'Login',
   REGISTRATION_FORM: 'RegistrationForm',
   FORGOT_PASSWORD: 'ForgetPassword',
+  DELETE_ACCOUNT: 'DeleteAccount',
   GALLERY: 'Gallery',
   GALLERY_FORM: 'GalleryForm',
   DETAILS: 'Details',
