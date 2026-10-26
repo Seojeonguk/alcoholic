@@ -1,5 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
-import { SectionList, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import {
+  RefreshControl,
+  SectionList,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
 import { Button, Post, PressableScale, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
@@ -27,34 +34,40 @@ const toRows = (posts) => {
 export default function Gallery({ navigation }) {
   const [posts, setPosts] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  // 처음 불러온 뒤 다시 불러올 때는 목록을 그대로 두고 위쪽에 로딩 표시만 보여 줌(자리 표시로 바꾸면 깜빡임)
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { width } = useWindowDimensions();
   const photoSize = (width - SIDE_PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
+
+  // isActive: 화면을 떠난 뒤 늦게 끝난 요청은 화면에 반영하지 않음
+  const loadPosts = useCallback(async (isActive = () => true) => {
+    setIsRefreshing(true);
+    try {
+      const userPosts = await getPosts(getAuth().currentUser.email);
+      if (isActive()) {
+        setPosts(userPosts);
+        setIsLoaded(true);
+      }
+    } catch (e) {
+      if (isActive()) {
+        showToast('error', '글 목록을 불러오지 못했어요.', '잠시 후 다시 시도해 주세요.');
+      }
+    } finally {
+      if (isActive()) {
+        setIsRefreshing(false);
+      }
+    }
+  }, []);
 
   // 글을 쓰고 돌아왔을 때도 새 글이 보이도록 화면에 들어올 때마다 다시 불러옴
   useFocusEffect(
     useCallback(() => {
       let active = true;
-
-      const loadPosts = async () => {
-        try {
-          const userPosts = await getPosts(getAuth().currentUser.email);
-          if (active) {
-            setPosts(userPosts);
-            setIsLoaded(true);
-          }
-        } catch (e) {
-          if (active) {
-            showToast('error', '글 목록을 불러오지 못했어요.', '잠시 후 다시 시도해 주세요.');
-          }
-        }
-      };
-
-      loadPosts();
-
+      loadPosts(() => active);
       return () => {
         active = false;
       };
-    }, [])
+    }, [loadPosts])
   );
 
   // 마신 날짜순으로 정렬해 월별로 묶음. 같은 날은 최근에 쓴 글이 먼저
@@ -123,6 +136,14 @@ export default function Gallery({ navigation }) {
           contentContainerStyle={styles.list}
           keyExtractor={(row) => row.map((post) => post.docId).join('_')}
           ListEmptyComponent={renderEmpty}
+          refreshControl={
+            <RefreshControl
+              colors={[COLORS.ACCENT]}
+              onRefresh={() => loadPosts()}
+              refreshing={isRefreshing}
+              tintColor={COLORS.ACCENT}
+            />
+          }
           renderItem={renderRow}
           renderSectionHeader={({ section }) => (
             <Text style={styles.sectionTitle}>{section.title}</Text>
