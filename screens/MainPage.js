@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
-import mainPageImg from '../assets/mainPageImg.png';
+import appIcon from '../assets/icon.png';
+import { BottomButtonArea, Button } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
-import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function MainPage({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -44,61 +44,51 @@ export default function MainPage({ navigation, route }) {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      {isLoading ? (
-        <LoadingSpinner />
-      ) : (
-        <>
-          <View style={styles.mainImgWrap}>
-            <Image source={mainPageImg} style={styles.mainImg} />
-          </View>
+    <SafeAreaView edges={['top']} style={styles.container}>
+      <View style={styles.intro}>
+        <Image source={appIcon} style={styles.icon} />
+        <Text style={styles.title}>{'오늘 마신 술,\n사진으로 남겨요'}</Text>
+        <Text style={styles.subtitle}>나만 보는 술 기록장</Text>
+      </View>
 
-          <View style={styles.btnWrap}>
-            <TouchableOpacity
-              onPress={handleLoginBtn}
-              style={[styles.btn, { backgroundColor: COLORS.BUTTON_COLOR }]}
-            >
-              <Text style={styles.btnText}>로그인</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={handleRegistrationBtn}
-              style={[styles.btn, { backgroundColor: COLORS.THIRD_SUB_COLOR }]}
-            >
-              <Text style={styles.btnText}>회원가입</Text>
-            </TouchableOpacity>
-          </View>
-        </>
+      {/* 로그인 상태를 확인하는 동안에는 버튼을 숨김(로그인돼 있으면 바로 갤러리로 감) */}
+      {!isLoading && (
+        <BottomButtonArea>
+          <Button onPress={handleLoginBtn} title="이메일로 시작하기" />
+          <Button onPress={handleRegistrationBtn} title="처음이에요 · 회원가입" variant="text" />
+        </BottomButtonArea>
       )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  btnWrap: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  btn: {
-    alignItems: 'center',
-    borderRadius: 5,
-    height: 40,
-    justifyContent: 'center',
-    marginVertical: 10,
-    width: 250,
-  },
   container: {
-    backgroundColor: COLORS.BACKGROUND_COLOR,
+    backgroundColor: COLORS.BACKGROUND,
     flex: 1,
   },
-  mainImg: {
-    borderRadius: 100,
-    height: 200,
-    width: 200,
+  icon: {
+    borderRadius: 22,
+    height: 72,
+    marginBottom: 24,
+    width: 72,
   },
-  mainImgWrap: {
-    alignItems: 'center',
-    flex: 2,
+  intro: {
+    flex: 1,
     justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 80,
+  },
+  subtitle: {
+    color: COLORS.TEXT_SUB,
+    fontSize: 15,
+    marginTop: 10,
+  },
+  title: {
+    color: COLORS.TEXT,
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    lineHeight: 36,
   },
 });
