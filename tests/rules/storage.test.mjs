@@ -78,10 +78,23 @@ describe('posts/{uid}/{fileId}', () => {
     await assertFails(uploadBytes(ref(verifiedStorage(ME), `posts/${ME.uid}/a.jpg`), IMAGE, JPEG));
   });
 
-  test('로그인한 사용자는 읽을 수 있고, 로그인하지 않으면 읽을 수 없어요', async () => {
+  test('내 사진은 읽을 수 있고, 로그인하지 않으면 읽을 수 없어요', async () => {
     await seed(`posts/${ME.uid}/a.jpg`);
     await assertSucceeds(getBytes(ref(verifiedStorage(ME), `posts/${ME.uid}/a.jpg`)));
     await assertFails(getBytes(ref(guestStorage(), `posts/${ME.uid}/a.jpg`)));
+  });
+
+  test('다른 사람 사진은 읽거나 목록을 볼 수 없어요', async () => {
+    await seed(`posts/${OTHER.uid}/a.jpg`);
+    const storage = verifiedStorage(ME);
+
+    await assertFails(getBytes(ref(storage, `posts/${OTHER.uid}/a.jpg`)));
+    await assertFails(listAll(ref(storage, `posts/${OTHER.uid}`)));
+  });
+
+  test('인증 전이어도 내 폴더의 목록은 볼 수 있어요(탈퇴할 때 사진을 찾음)', async () => {
+    await seed(`posts/${ME.uid}/a.jpg`);
+    await assertSucceeds(listAll(ref(unverifiedStorage(ME), `posts/${ME.uid}`)));
   });
 
   test('탈퇴할 때 내 폴더의 사진을 모두 찾아 지울 수 있어요', async () => {
