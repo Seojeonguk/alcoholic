@@ -83,6 +83,10 @@ npx expo start
 
 `npm install` 대신 `npx expo install <패키지>`로 설치해요. 지금 Expo SDK에 맞는 버전을 골라 줘요.
 
+## 개인정보처리방침
+
+[개인정보처리방침](docs/privacy-policy.md)은 Google Play 스토어 등록정보에 링크로 넣어요. 앱이 모으는 데이터나 쓰는 서비스가 바뀌면 이 문서와 Play Console의 데이터 보안 양식을 함께 고쳐요.
+
 ## 빌드 · 배포
 
 EAS Build로 Google Play에 배포하는 방법은 [#219](https://github.com/Seojeonguk/alcoholic/issues/219)에서 준비하면서 정리할 예정이에요.
