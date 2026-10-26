@@ -25,8 +25,7 @@ export default function ForgetPassword({ navigation }) {
         showToast(
           'success',
           '비밀번호 재설정 메일을 보냈습니다.',
-          `${email}의 메일함(스팸함 포함)을 확인해 주세요.`,
-          'top'
+          `${email}의 메일함(스팸함 포함)을 확인해 주세요.`
         );
         navigation.goBack();
       })

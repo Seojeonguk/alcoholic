@@ -30,7 +30,7 @@ export default function DeleteAccount({ navigation }) {
       await deleteUserData(user.email, user.uid);
       await deleteUser(user);
 
-      showToast('success', '탈퇴했습니다.', '그동안 이용해 주셔서 감사합니다.', 'top');
+      showToast('success', '탈퇴했습니다.', '그동안 이용해 주셔서 감사합니다.');
       navigation.reset({
         index: 0,
         routes: [{ name: NAVIGATOR.MAIN_PAGE }],
