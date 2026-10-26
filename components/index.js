@@ -1,3 +1,4 @@
+import AuthScreen from './AuthScreen';
 import Carousel from './Carousel';
 import Content from './Content';
 import Day from './Day';
@@ -10,4 +11,16 @@ import Tags from './Tags';
 import Title from './Title';
 
 export * from './ui';
-export { Carousel, Content, Day, Header, Location, PasswordInput, Photo, Post, Tags, Title };
+export {
+  AuthScreen,
+  Carousel,
+  Content,
+  Day,
+  Header,
+  Location,
+  PasswordInput,
+  Photo,
+  Post,
+  Tags,
+  Title,
+};

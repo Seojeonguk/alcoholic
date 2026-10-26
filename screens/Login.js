@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text } from 'react-native';
 
-import { Header, PasswordInput } from '../components';
+import { AuthScreen, Button, PasswordInput, PressableScale, TextField } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
 import {
@@ -14,7 +14,6 @@ import {
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Login({ navigation }) {
   const [email, setEmail] = useState('');
@@ -85,141 +84,54 @@ export default function Login({ navigation }) {
       });
   };
 
-  const handleRegistrationBtn = () => {
-    navigation.navigate(NAVIGATOR.REGISTRATION_FORM);
-  };
-
   const handleForgotPasswordBtn = () => {
     navigation.navigate(NAVIGATOR.FORGOT_PASSWORD);
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Header
-        visibleLeftIcon={true}
-        visibleRightIcon={false}
-        leftIconName={'arrow-back'}
-        onPressLeft={() => navigation.replace(NAVIGATOR.MAIN_PAGE)}
-        iconSize={24}
+    <AuthScreen
+      bottom={<Button onPress={handleLogin} title="로그인" />}
+      onBack={() => navigation.replace(NAVIGATOR.MAIN_PAGE)}
+      title="이메일로 로그인"
+    >
+      <TextField
+        error={emailError}
+        inputMode="email"
+        keyboardType="email-address"
+        label="이메일"
+        onChangeText={handleChangeEmail}
+        onSubmitEditing={() => passwordRef.current.focus()}
+        placeholder="이메일을 입력해 주세요"
+        ref={emailRef}
+        returnKeyType="next"
+        submitBehavior="submit"
+        value={email}
       />
-
-      <View style={styles.contentWrap}>
-        <View style={styles.titleWrap}>
-          <Text style={styles.title}>이메일로 시작하기</Text>
-        </View>
-
-        <View style={styles.inputWrap}>
-          <View style={styles.inputBox}>
-            <Text style={styles.inputLabel}>이메일 주소</Text>
-            <TextInput
-              inputMode="email"
-              keyboardType="email-address"
-              onChangeText={handleChangeEmail}
-              onSubmitEditing={() => passwordRef.current.focus()}
-              placeholder="이메일을 입력해 주세요"
-              ref={emailRef}
-              returnKeyType="next"
-              submitBehavior="submit"
-              style={styles.input}
-              value={email}
-            />
-            <Text style={styles.inputError}>{emailError}</Text>
-          </View>
-
-          <View style={styles.inputBox}>
-            <Text style={styles.inputLabel}>비밀번호</Text>
-            <PasswordInput
-              onChangeText={handleChangePassword}
-              onSubmitEditing={handleLogin}
-              placeholder="비밀번호를 입력해 주세요"
-              ref={passwordRef}
-              returnKeyType="done"
-              value={password}
-            />
-            <Text style={styles.inputError}>{passwordError}</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity onPress={handleLogin} style={styles.loginBtn}>
-          <Text style={styles.loginBtnText}>로그인</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={handleRegistrationBtn} style={styles.registrationBtn}>
-          <Text style={styles.registrationBtnText}>회원가입</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={handleForgotPasswordBtn} style={styles.forgotPasswordBtn}>
-          <Text style={styles.forgotPasswordBtnText}>비밀번호를 잊으셨나요?</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      <PasswordInput
+        error={passwordError}
+        label="비밀번호"
+        onChangeText={handleChangePassword}
+        onSubmitEditing={handleLogin}
+        placeholder="비밀번호를 입력해 주세요"
+        ref={passwordRef}
+        returnKeyType="done"
+        value={password}
+      />
+      <PressableScale onPress={handleForgotPasswordBtn} style={styles.forgotPassword}>
+        <Text style={styles.forgotPasswordText}>비밀번호를 잊으셨나요?</Text>
+      </PressableScale>
+    </AuthScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: COLORS.BACKGROUND_COLOR,
-    flex: 1,
+  forgotPassword: {
+    alignSelf: 'flex-start',
+    paddingVertical: 14,
   },
-  contentWrap: {
-    flex: 1,
-    paddingHorizontal: 40,
-  },
-  forgotPasswordBtn: {
-    justifyContent: 'center',
-  },
-  forgotPasswordBtnText: {
-    color: COLORS.BORDER_COLOR,
-    fontSize: 10,
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-  },
-  input: {
-    borderBottomColor: COLORS.BORDER_COLOR,
-    borderBottomWidth: 1,
-    borderRightColor: '#f6e8db',
-    color: 'black',
-    fontSize: 15,
-  },
-  inputBox: {
-    marginVertical: 15,
-  },
-  inputError: {
-    color: '#ff0000',
-    fontSize: 10,
-  },
-  inputLabel: {
-    color: COLORS.LABEL_COLOR,
-    fontSize: 9,
-  },
-  inputWrap: {},
-  loginBtn: {
-    backgroundColor: COLORS.BUTTON_COLOR,
-    borderRadius: 5,
-    height: 40,
-    justifyContent: 'center',
-    marginVertical: 15,
-  },
-  loginBtnText: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  titleWrap: {
-    height: 35,
-    marginVertical: 10,
-  },
-  registrationBtn: {
-    justifyContent: 'center',
-    marginVertical: 10,
-  },
-  registrationBtnText: {
-    color: COLORS.BORDER_COLOR,
-    fontSize: 10,
-    textAlign: 'center',
+  forgotPasswordText: {
+    color: COLORS.TEXT_SUB,
+    fontSize: 14,
     textDecorationLine: 'underline',
   },
 });

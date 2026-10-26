@@ -1,14 +1,11 @@
 import { useRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-
-import { Header, PasswordInput } from '../components';
-import { COLORS, NAVIGATOR } from '../constants';
+import { AuthScreen, Button, PasswordInput, TextField } from '../components';
+import { NAVIGATOR } from '../constants';
 import { createUserInfo } from '../services';
 import { auth } from '../firebaseConfig';
 import { getKorErrorMsg, sendVerificationEmail, setEmailRequestLimit, showToast } from '../lib';
 
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RegistrationForm({ navigation }) {
   const [email, setEmail] = useState('');
@@ -70,128 +67,45 @@ export default function RegistrationForm({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Header
-        visibleLeftIcon={true}
-        visibleRightIcon={false}
-        leftIconName={'arrow-back'}
-        onPressLeft={() => navigation.goBack()}
-        iconSize={24}
+    <AuthScreen
+      bottom={<Button onPress={handleRegistration} title="가입하기" />}
+      onBack={() => navigation.goBack()}
+      title="이메일로 회원가입"
+    >
+      <TextField
+        error={emailError}
+        inputMode="email"
+        keyboardType="email-address"
+        label="이메일"
+        onChangeText={handleChangeEmail}
+        onSubmitEditing={() => passwordRef.current.focus()}
+        placeholder="이메일을 입력해 주세요"
+        ref={emailRef}
+        returnKeyType="next"
+        submitBehavior="submit"
+        value={email}
       />
-
-      <View style={styles.contentWrap}>
-        <View style={styles.titleWrap}>
-          <Text style={styles.title}>이메일로 회원가입</Text>
-        </View>
-
-        <View style={styles.inputWrap}>
-          <View style={styles.inputBox}>
-            <Text style={styles.inputLabel}>이메일 주소</Text>
-            <TextInput
-              inputMode="email"
-              keyboardType="email-address"
-              onChangeText={handleChangeEmail}
-              onSubmitEditing={() => passwordRef.current.focus()}
-              placeholder="이메일을 입력해 주세요"
-              ref={emailRef}
-              returnKeyType="next"
-              submitBehavior="submit"
-              style={styles.input}
-              value={email}
-            />
-            <Text style={styles.inputError}>{emailError}</Text>
-          </View>
-
-          <View style={styles.inputBox}>
-            <Text style={styles.inputLabel}>비밀번호</Text>
-            <PasswordInput
-              onChangeText={handleChangePassword}
-              onSubmitEditing={() => confirmPasswordRef.current.focus()}
-              placeholder="비밀번호를 입력해 주세요"
-              ref={passwordRef}
-              returnKeyType="next"
-              submitBehavior="submit"
-              value={password}
-            />
-            <Text style={styles.inputError}>{passwordError}</Text>
-          </View>
-
-          <View style={styles.inputBox}>
-            <Text style={styles.inputLabel}>비밀번호 확인</Text>
-            <PasswordInput
-              onChangeText={handleChangeConfirmPassword}
-              onSubmitEditing={handleRegistration}
-              placeholder="비밀번호(확인)를 입력해 주세요"
-              ref={confirmPasswordRef}
-              returnKeyType="done"
-              value={confirmPassword}
-            />
-            <Text style={styles.inputError}>{confirmPasswordError}</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity onPress={handleRegistration} style={styles.registrationBtn}>
-          <Text style={styles.registrationBtnText}>회원가입</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      <PasswordInput
+        error={passwordError}
+        label="비밀번호"
+        onChangeText={handleChangePassword}
+        onSubmitEditing={() => confirmPasswordRef.current.focus()}
+        placeholder="6자 이상 입력해 주세요"
+        ref={passwordRef}
+        returnKeyType="next"
+        submitBehavior="submit"
+        value={password}
+      />
+      <PasswordInput
+        error={confirmPasswordError}
+        label="비밀번호 확인"
+        onChangeText={handleChangeConfirmPassword}
+        onSubmitEditing={handleRegistration}
+        placeholder="비밀번호를 한 번 더 입력해 주세요"
+        ref={confirmPasswordRef}
+        returnKeyType="done"
+        value={confirmPassword}
+      />
+    </AuthScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: COLORS.BACKGROUND_COLOR,
-    flex: 1,
-  },
-  contentWrap: {
-    flex: 1,
-    paddingHorizontal: 40,
-  },
-  forgotPasswordBtn: {
-    justifyContent: 'center',
-  },
-  forgotPasswordBtnText: {
-    color: COLORS.BORDER_COLOR,
-    fontSize: 10,
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-  },
-  input: {
-    borderBottomColor: COLORS.BORDER_COLOR,
-    borderBottomWidth: 1,
-    borderRightColor: '#f6e8db',
-    color: 'black',
-    fontSize: 15,
-  },
-  inputBox: {
-    marginVertical: 15,
-  },
-  inputError: {
-    color: '#ff0000',
-    fontSize: 10,
-  },
-  inputLabel: {
-    color: COLORS.LABEL_COLOR,
-    fontSize: 9,
-  },
-  inputWrap: {},
-  registrationBtn: {
-    backgroundColor: COLORS.BUTTON_COLOR,
-    borderRadius: 5,
-    height: 40,
-    justifyContent: 'center',
-    marginVertical: 15,
-  },
-  registrationBtnText: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  titleWrap: {
-    height: 35,
-    marginVertical: 10,
-  },
-});

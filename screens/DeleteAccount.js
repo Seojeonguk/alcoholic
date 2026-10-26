@@ -1,15 +1,13 @@
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert } from 'react-native';
 
-import { Header, PasswordInput } from '../components';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { COLORS, NAVIGATOR } from '../constants';
+import { AuthScreen, Button, PasswordInput } from '../components';
+import { NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
 import { getKorErrorMsg, showToast } from '../lib';
 import { deleteUserData } from '../services';
 
 import { deleteUser, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function DeleteAccount({ navigation }) {
   const [password, setPassword] = useState('');
@@ -63,97 +61,32 @@ export default function DeleteAccount({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Header
-        visibleLeftIcon={true}
-        visibleRightIcon={false}
-        leftIconName={'arrow-back'}
-        onPressLeft={() => navigation.goBack()}
-        iconSize={24}
-      />
-
-      <View style={styles.contentWrap}>
-        <View style={styles.titleWrap}>
-          <Text style={styles.title}>탈퇴하기</Text>
-        </View>
-
-        <Text style={styles.description}>
-          탈퇴하면 계정과 모든 게시글, 사진이 삭제되며 되돌릴 수 없습니다.
-          {'\n'}본인 확인을 위해 비밀번호를 입력해 주세요.
-        </Text>
-
-        <View style={styles.inputWrap}>
-          <View style={styles.inputBox}>
-            <Text style={styles.inputLabel}>비밀번호</Text>
-            <PasswordInput
-              editable={!isLoading}
-              onChangeText={handleChangePassword}
-              onSubmitEditing={handleDeleteAccount}
-              placeholder="비밀번호를 입력해 주세요"
-              returnKeyType="done"
-              value={password}
-            />
-            <Text style={styles.inputError}>{passwordError}</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          disabled={isLoading}
+    <AuthScreen
+      bottom={
+        <Button
+          loading={isLoading}
+          loadingTitle="탈퇴하는 중…"
           onPress={handleDeleteAccount}
-          style={styles.deleteAccountBtn}
-        >
-          <Text style={styles.deleteAccountBtnText}>탈퇴하기</Text>
-        </TouchableOpacity>
-      </View>
-
-      {isLoading && <LoadingSpinner isOverlay={true} />}
-    </SafeAreaView>
+          title="탈퇴하기"
+          variant="danger"
+        />
+      }
+      description={
+        '탈퇴하면 계정과 모든 게시글, 사진이 삭제되며 되돌릴 수 없습니다.\n본인 확인을 위해 비밀번호를 입력해 주세요.'
+      }
+      onBack={() => navigation.goBack()}
+      title="탈퇴하기"
+    >
+      <PasswordInput
+        editable={!isLoading}
+        error={passwordError}
+        label="비밀번호"
+        onChangeText={handleChangePassword}
+        onSubmitEditing={handleDeleteAccount}
+        placeholder="비밀번호를 입력해 주세요"
+        returnKeyType="done"
+        value={password}
+      />
+    </AuthScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: COLORS.BACKGROUND_COLOR,
-    flex: 1,
-  },
-  contentWrap: {
-    flex: 1,
-    paddingHorizontal: 40,
-  },
-  deleteAccountBtn: {
-    backgroundColor: COLORS.BOTTOM_TAB_GALLERY_COLOR,
-    borderRadius: 5,
-    height: 40,
-    justifyContent: 'center',
-    marginVertical: 15,
-  },
-  deleteAccountBtnText: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  description: {
-    color: COLORS.LABEL_COLOR,
-    fontSize: 13,
-    lineHeight: 20,
-  },
-  inputBox: {
-    marginVertical: 15,
-  },
-  inputError: {
-    color: '#ff0000',
-    fontSize: 10,
-  },
-  inputLabel: {
-    color: COLORS.LABEL_COLOR,
-    fontSize: 9,
-  },
-  inputWrap: {},
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  titleWrap: {
-    height: 35,
-    marginVertical: 10,
-  },
-});
