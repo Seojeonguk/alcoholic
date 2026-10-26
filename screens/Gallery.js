@@ -1,29 +1,43 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet } from 'react-native';
 
 import { Header, Post } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
+import { showToast } from '../lib';
 import { getPosts } from '../services';
 
+import { useFocusEffect } from '@react-navigation/native';
 import { getAuth } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Gallery({ navigation }) {
   const [posts, setPosts] = useState([]);
-  useEffect(() => {
-    const auth = getAuth();
-    const user = auth.currentUser;
-    const email = user.email;
+  // 글을 쓰고 돌아왔을 때도 새 글이 보이도록 화면에 들어올 때마다 다시 불러옴
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
 
-    const getPosting = async () => {
-      const userPosts = await getPosts(null, email);
+      const loadPosts = async () => {
+        try {
+          const userPosts = await getPosts(null, getAuth().currentUser.email);
+          if (active) {
+            setPosts(userPosts);
+          }
+        } catch (e) {
+          if (active) {
+            showToast('error', '글 목록을 불러오지 못했어요.', '잠시 후 다시 시도해 주세요.');
+          }
+        }
+      };
 
-      setPosts(posts.concat(userPosts));
-    };
-    console.log('get data');
+      loadPosts();
 
-    getPosting();
-  }, []);
+      return () => {
+        active = false;
+      };
+    }, [])
+  );
+
   const moveGalleryForm = () => {
     navigation.navigate(NAVIGATOR.GALLERY_FORM);
   };
