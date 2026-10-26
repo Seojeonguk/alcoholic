@@ -1,25 +1,32 @@
-import { StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { NAVIGATOR } from '../constants';
-import { PressableScale } from './ui';
+import { PressableScale, Skeleton } from './ui';
 
 import { Image } from 'expo-image';
 
 // 갤러리의 사진 한 칸. 크기는 갤러리가 화면 너비로 계산해서 넘김
 export default function Post({ item, navigation, size }) {
   const { presentivePhoto, docId } = item;
+  // 사진을 다 받기 전까지 회색 자리 표시를 보여 줌. 캐시에 있는 사진은 바로 떠서 새 기록만 보임
+  const [isPhotoLoaded, setIsPhotoLoaded] = useState(false);
 
   return (
     <PressableScale onPress={() => navigation.navigate(NAVIGATOR.DETAILS, { docId })}>
-      <Image
-        cachePolicy="memory-disk"
-        contentFit="cover"
-        // FlatList가 칸을 재사용할 때 이전 글의 사진이 잠깐 보이지 않게 함
-        recyclingKey={docId}
-        source={{ uri: presentivePhoto }}
-        style={[styles.photo, { height: size, width: size }]}
-        transition={150}
-      />
+      <View style={{ height: size, width: size }}>
+        {!isPhotoLoaded && <Skeleton height={size} style={styles.placeholder} width={size} />}
+        <Image
+          cachePolicy="memory-disk"
+          contentFit="cover"
+          onLoad={() => setIsPhotoLoaded(true)}
+          // FlatList가 칸을 재사용할 때 이전 글의 사진이 잠깐 보이지 않게 함
+          recyclingKey={docId}
+          source={{ uri: presentivePhoto }}
+          style={[styles.photo, { height: size, width: size }]}
+          transition={150}
+        />
+      </View>
     </PressableScale>
   );
 }
@@ -27,5 +34,8 @@ export default function Post({ item, navigation, size }) {
 const styles = StyleSheet.create({
   photo: {
     borderRadius: 12,
+  },
+  placeholder: {
+    position: 'absolute',
   },
 });
