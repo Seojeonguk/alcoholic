@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
 
-import { toLocalDateString } from '../lib';
+import { formatDay, toLocalDateString } from '../lib';
 import { updateDay } from '../redux';
+import { ListRow } from './ui';
 
-import { AntDesign } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -27,9 +26,8 @@ export default function Day() {
   };
 
   return (
-    <View style={styles.inputBox}>
-      <AntDesign color="black" name="calendar" size={24} />
-      <TextInput onPressIn={showDatePicker} placeholder="날짜" style={styles.input} value={date} />
+    <>
+      <ListRow onPress={showDatePicker} title="날짜" value={formatDay(date)} />
 
       {isShowDatePicker && (
         <DateTimePicker
@@ -40,20 +38,6 @@ export default function Day() {
           value={new Date(`${date}T00:00:00`)}
         />
       )}
-    </View>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  input: {
-    flex: 1,
-    paddingLeft: 10,
-  },
-  inputBox: {
-    flexDirection: 'row',
-    marginHorizontal: 20,
-    marginVertical: 5,
-    marginTop: 30,
-    alignItems: 'center',
-  },
-});

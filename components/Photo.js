@@ -1,32 +1,24 @@
-import { useState } from 'react';
-import { Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
-import { getDeviceSize, showToast } from '../lib';
+import { COLORS } from '../constants';
+import { showToast } from '../lib';
 import { addPhoto, deletePhoto } from '../redux';
+import { PressableScale } from './ui';
 
-import { AntDesign, FontAwesome } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useDispatch, useSelector } from 'react-redux';
 
-const { width } = getDeviceSize();
-const COLUMN_SIZE = 3;
-const contentPaddingHorizontal = 25;
-const MEDIA_ICON_SIZE = 24;
-const MEDIA_ICON_COLOR = 'black';
+const PHOTO_SIZE = 64;
 
+// 맨 앞 + 칸과 고른 사진 미리보기를 가로로 보여 줌
 export default function Photo() {
   const dispatch = useDispatch();
   const photos = useSelector((state) => state.gallery.photos);
-  const [visibleMediaSourceConfirmationModal, setVisibleMediaSourceConfirmationModal] =
-    useState(false);
-
-  const hideMediaSourceConfirmationModal = () => {
-    setVisibleMediaSourceConfirmationModal(false);
-  };
 
   // 시스템 사진 선택기를 써서 사진 권한 없이 고른 사진만 받아옴
   const showDeviceGallery = async () => {
-    hideMediaSourceConfirmationModal();
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
@@ -44,138 +36,96 @@ export default function Photo() {
     }
   };
 
-  const removePhoto = (index) => {
-    dispatch(deletePhoto(index));
+  const showCamera = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== ImagePicker.PermissionStatus.GRANTED) {
+        showToast('error', '카메라 권한이 필요해요.', '설정에서 카메라 권한을 허용해 주세요.');
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync();
+
+      if (result.canceled) {
+        return;
+      }
+
+      dispatch(addPhoto(result.assets[0].uri));
+    } catch (e) {
+      showToast('error', '카메라를 열지 못했어요.', '잠시 후 다시 시도해 주세요.');
+    }
   };
 
-  const showCamera = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== ImagePicker.PermissionStatus.GRANTED) {
-      showToast('error', '카메라 권한이 필요해요.', '설정에서 카메라 권한을 허용해 주세요.');
-      return;
-    }
-    hideMediaSourceConfirmationModal();
-    const result = await ImagePicker.launchCameraAsync();
-
-    if (result.canceled) {
-      return;
-    }
-
-    dispatch(addPhoto(result.assets[0].uri));
+  const chooseSource = () => {
+    Alert.alert('사진 추가', undefined, [
+      { text: '취소', style: 'cancel' },
+      { text: '카메라', onPress: showCamera },
+      { text: '앨범에서 고르기', onPress: showDeviceGallery },
+    ]);
   };
 
   return (
-    <View style={styles.photosContainer}>
-      <View style={styles.photosWrapper}>
-        <TouchableOpacity
-          onPress={() => setVisibleMediaSourceConfirmationModal(true)}
-          style={styles.addBtn}
-        >
-          <AntDesign color="grey" name="plus-circle" size={24} />
-        </TouchableOpacity>
-      </View>
+    <ScrollView
+      contentContainerStyle={styles.list}
+      horizontal
+      keyboardShouldPersistTaps="handled"
+      showsHorizontalScrollIndicator={false}
+      style={styles.container}
+    >
+      <PressableScale accessibilityLabel="사진 추가" onPress={chooseSource} style={styles.addBtn}>
+        <Ionicons color={COLORS.TEXT_SUB} name="add" size={28} />
+      </PressableScale>
 
       {photos.map((photo, index) => (
-        <View key={photo} style={styles.photosWrapper}>
-          <Image source={{ uri: photo }} style={styles.photo} />
-          <TouchableOpacity style={styles.removeBtnWrap} onPress={() => removePhoto(index)}>
-            <View style={styles.removeBtn}>
-              <AntDesign name="minus" size={15} color="red" />
-            </View>
-          </TouchableOpacity>
+        <View key={photo}>
+          <Image contentFit="cover" source={{ uri: photo }} style={styles.photo} />
+          <PressableScale
+            accessibilityLabel={`${index + 1}번째 사진 빼기`}
+            hitSlop={8}
+            onPress={() => dispatch(deletePhoto(index))}
+            style={styles.removeBtn}
+          >
+            <Ionicons color="#FFFFFF" name="close" size={12} />
+          </PressableScale>
         </View>
       ))}
-
-      <Modal
-        transparent={true}
-        visible={visibleMediaSourceConfirmationModal}
-        onRequestClose={hideMediaSourceConfirmationModal}
-      >
-        <View style={styles.mediaSourceConfirmationModal}>
-          <TouchableOpacity
-            style={styles.modalEmptySpace}
-            onPress={hideMediaSourceConfirmationModal}
-          />
-          <View style={styles.mediaSourceConfirmationModalBtnWrap}>
-            <View style={styles.mediaBtn}>
-              <TouchableOpacity onPress={showCamera} style={styles.media}>
-                <FontAwesome name="camera-retro" size={MEDIA_ICON_SIZE} color={MEDIA_ICON_COLOR} />
-                <Text style={styles.typeLabel}>카메라</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.mediaBtn}>
-              <TouchableOpacity onPress={showDeviceGallery} style={styles.media}>
-                <FontAwesome name="photo" size={MEDIA_ICON_SIZE} color={MEDIA_ICON_COLOR} />
-                <Text>갤러리</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   addBtn: {
     alignItems: 'center',
-    borderColor: 'grey',
-    borderRadius: 5,
-    borderWidth: 1,
-    height: '100%',
+    backgroundColor: COLORS.FILL,
+    borderRadius: 12,
+    height: PHOTO_SIZE,
     justifyContent: 'center',
-    width: '100%',
+    width: PHOTO_SIZE,
+  },
+  // 화면 좌우 여백까지 가로 스크롤되게 넓힘
+  container: {
+    marginHorizontal: -20,
+  },
+  // 삭제 버튼이 사진 밖으로 조금 나와도 잘리지 않게 위쪽 여백을 둠
+  list: {
+    gap: 10,
+    paddingBottom: 8,
+    paddingHorizontal: 20,
+    paddingTop: 16,
   },
   photo: {
-    height: '100%',
-    width: '100%',
-    resizeMode: 'cover',
-    borderRadius: 10,
-    borderColor: 'grey',
-    borderWidth: 1,
-  },
-  photosContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  photosWrapper: {
-    height: width / COLUMN_SIZE - 2 * contentPaddingHorizontal,
-    padding: 1,
-    width: width / COLUMN_SIZE - 2 * contentPaddingHorizontal,
-  },
-  removeBtnWrap: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
+    borderRadius: 12,
+    height: PHOTO_SIZE,
+    width: PHOTO_SIZE,
   },
   removeBtn: {
-    borderRadius: 100,
-    padding: 5,
-    backgroundColor: 'white',
-    borderColor: 'grey',
-    borderWidth: 1,
-  },
-  mediaSourceConfirmationModal: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  mediaBtn: {
-    padding: 20,
     alignItems: 'center',
+    backgroundColor: 'rgba(25, 31, 40, 0.7)',
+    borderRadius: 10,
+    height: 20,
     justifyContent: 'center',
-    flex: 1,
-  },
-  mediaSourceConfirmationModalBtnWrap: {
-    flexDirection: 'row',
-  },
-  modalEmptySpace: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    flex: 1,
-  },
-  media: {
-    borderRadius: 50,
-    padding: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: 'absolute',
+    right: -6,
+    top: -6,
+    width: 20,
   },
 });

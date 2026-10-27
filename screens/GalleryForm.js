@@ -1,10 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet } from 'react-native';
 
-import { Content, Day, Header, Location, Photo, Tags, Title } from '../components';
+import {
+  BottomButtonArea,
+  Button,
+  Content,
+  Day,
+  Header,
+  Location,
+  Photo,
+  Tags,
+  Title,
+} from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { createNewPost, updateDocForId } from '../services';
-import { showToast } from '../lib';
+import { resizeForUpload, showToast } from '../lib';
 import { init } from '../redux';
 
 import { getAuth } from 'firebase/auth';
@@ -12,10 +22,14 @@ import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import uuid from 'react-native-uuid';
 import { useDispatch, useSelector } from 'react-redux';
-import LoadingSpinner from '../components/LoadingSpinner';
+
+// 이미 올라간 사진(수정할 때 남겨 둔 사진)은 다시 올리지 않음
+const isUploaded = (uri) => uri.includes('firebase');
 
 export default function GalleryForm({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(false);
+  // 저장 버튼에 "사진 올리는 중 n/전체"를 보여 주기 위한 진행 상황. 새로 올릴 사진만 셈
+  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
   // 저장 중에 다시 눌러 글이 두 번 만들어지지 않게 막음. state는 같은 프레임의 두 번째 탭에 반영되지 않아 ref를 씀
   const isSavingRef = useRef(false);
   const dispatch = useDispatch();
@@ -71,6 +85,7 @@ export default function GalleryForm({ navigation, route }) {
     }
     isSavingRef.current = true;
     setIsLoading(true);
+    setUploadProgress({ done: 0, total: gallery.photos.filter((uri) => !isUploaded(uri)).length });
     try {
       const downloadURLs = await Promise.all(
         gallery.photos.map(async (photo) => {
@@ -101,14 +116,10 @@ export default function GalleryForm({ navigation, route }) {
 
       initForm();
 
-      showToast('success', '정상적으로 작성이 완료되었습니다.');
+      showToast('success', '기록을 저장했어요.');
       navigation.popTo(NAVIGATOR.BOTTOM_TAB_NAV, { screen: NAVIGATOR.GALLERY });
     } catch (e) {
-      showToast(
-        'error',
-        '작성 중 오류가 발생하였습니다.',
-        '입력 확인 후 다시 시도해 주시기 바랍니다.'
-      );
+      showToast('error', '기록을 저장하지 못했어요.', '입력한 내용을 확인하고 다시 시도해 주세요.');
     } finally {
       isSavingRef.current = false;
       setIsLoading(false);
@@ -116,9 +127,11 @@ export default function GalleryForm({ navigation, route }) {
   };
 
   const uploadPhoto = async (uri) => {
-    if (uri.includes('firebase')) {
+    if (isUploaded(uri)) {
       return uri;
     }
+    // 긴 변 1600px · JPEG로 줄여서 올림(#256). 실패하면 원본 그대로
+    const resizedUri = await resizeForUpload(uri);
     const blob = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.onload = function () {
@@ -128,7 +141,7 @@ export default function GalleryForm({ navigation, route }) {
         reject(new TypeError('Network request failed'));
       };
       xhr.responseType = 'blob';
-      xhr.open('GET', uri, true);
+      xhr.open('GET', resizedUri, true);
       xhr.send(null);
     });
 
@@ -142,43 +155,45 @@ export default function GalleryForm({ navigation, route }) {
     const downloadURL = await getDownloadURL(fileRef);
 
     blob.close();
+    setUploadProgress((progress) => ({ ...progress, done: progress.done + 1 }));
 
     return downloadURL;
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      {isLoading && <LoadingSpinner isOverlay={true} />}
+  const { done, total } = uploadProgress;
+  const loadingTitle =
+    total > 0 && done < total ? `사진 올리는 중 ${done}/${total}` : '저장하는 중…';
 
+  return (
+    <SafeAreaView edges={['top']} style={styles.container}>
       <Header
-        title={docId ? '게시물 수정' : '새 게시물'}
-        visibleLeftIcon={true}
-        visibleRightIcon={true}
-        leftIconName={'arrow-back'}
-        rightIconName={'checkmark-sharp'}
+        left="close"
         onPressLeft={() => navigation.goBack()}
-        onPressRight={() => save()}
-        iconSize={24}
+        title={docId ? '기록 수정' : '새 기록'}
       />
 
-      <ScrollView style={styles.content}>
-        <Title />
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Photo />
+        <Title />
         <Day />
         <Location />
         <Tags />
         <Content />
       </ScrollView>
+
+      <BottomButtonArea>
+        <Button loading={isLoading} loadingTitle={loadingTitle} onPress={save} title="저장하기" />
+      </BottomButtonArea>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: COLORS.BACKGROUND_COLOR,
+    backgroundColor: COLORS.BACKGROUND,
     flex: 1,
   },
   content: {
-    paddingHorizontal: 25,
+    paddingHorizontal: 20,
   },
 });
