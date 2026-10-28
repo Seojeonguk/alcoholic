@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { COLORS } from '../constants';
+import { COLORS, POST_LIMITS } from '../constants';
 import { addTag, deleteTag } from '../redux';
 import { PressableScale } from './ui';
 
@@ -42,9 +42,11 @@ export default function Tags() {
           </PressableScale>
         ))}
 
-        {isEditing ? (
+        {/* 태그가 상한만큼 차면 입력 칸과 "+ 추가"를 숨김 */}
+        {tags.length >= POST_LIMITS.TAGS ? null : isEditing ? (
           <TextInput
             autoFocus
+            maxLength={POST_LIMITS.TAG_LENGTH}
             onBlur={handleBlur}
             onChangeText={setNewTag}
             onSubmitEditing={handleSubmit}

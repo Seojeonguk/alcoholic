@@ -1,6 +1,6 @@
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
-import { COLORS } from '../constants';
+import { COLORS, POST_LIMITS } from '../constants';
 import { showToast } from '../lib';
 import { addPhoto, deletePhoto } from '../redux';
 import { PressableScale } from './ui';
@@ -16,6 +16,11 @@ const PHOTO_SIZE = 64;
 export default function Photo() {
   const dispatch = useDispatch();
   const photos = useSelector((state) => state.gallery.photos);
+  const remaining = POST_LIMITS.PHOTOS - photos.length;
+
+  const showLimitToast = () => {
+    showToast('info', `사진은 ${POST_LIMITS.PHOTOS}장까지 넣을 수 있어요.`);
+  };
 
   // 시스템 사진 선택기를 써서 사진 권한 없이 고른 사진만 받아옴
   const showDeviceGallery = async () => {
@@ -24,13 +29,18 @@ export default function Photo() {
         mediaTypes: ['images'],
         allowsMultipleSelection: true,
         orderedSelection: true,
+        selectionLimit: remaining,
       });
 
       if (result.canceled) {
         return;
       }
 
-      dispatch(addPhoto(result.assets.map((asset) => asset.uri)));
+      // selectionLimit을 지원하지 않는 기기도 있어서 남은 장수만큼만 넣음
+      if (result.assets.length > remaining) {
+        showLimitToast();
+      }
+      dispatch(addPhoto(result.assets.slice(0, remaining).map((asset) => asset.uri)));
     } catch (e) {
       showToast('error', '사진을 불러오지 못했어요.', '잠시 후 다시 시도해 주세요.');
     }
@@ -56,6 +66,10 @@ export default function Photo() {
   };
 
   const chooseSource = () => {
+    if (remaining <= 0) {
+      showLimitToast();
+      return;
+    }
     Alert.alert('사진 추가', undefined, [
       { text: '취소', style: 'cancel' },
       { text: '카메라', onPress: showCamera },

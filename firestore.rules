@@ -29,15 +29,24 @@ service cloud.firestore {
       allow delete: if signedIn() && myEmail() == email;
     }
 
+    // 태그는 1~20자. 규칙에는 반복문이 없어서 줄바꿈으로 이어 붙인 뒤 정규식으로 하나씩 검사함
+    // join이 숫자도 글자로 바꾸므로 원소 타입은 보지 않음(길이 · 개수 상한은 똑같이 걸림)
+    function validTags(tags) {
+      return tags is list
+        && tags.size() <= 20
+        && (tags.size() == 0 || tags.join('\n').matches('[^\n]{1,20}(\n[^\n]{1,20})*'));
+    }
+
+    // 길이 · 개수 상한은 앱의 constants/postLimits.js와 같아야 함
     function validPost(data) {
       return data.keys().hasOnly(['title', 'day', 'photos', 'content', 'location', 'tags', 'writer', 'createdAt'])
         && data.writer == myEmail()
-        && data.title is string
+        && data.title is string && data.title.size() <= 40
         && data.day is string
-        && data.photos is list
-        && data.content is string
-        && data.location is string
-        && data.tags is list
+        && data.photos is list && data.photos.size() <= 10
+        && data.content is string && data.content.size() <= 2000
+        && data.location is string && data.location.size() <= 50
+        && validTags(data.tags)
         && data.createdAt is timestamp;
     }
 

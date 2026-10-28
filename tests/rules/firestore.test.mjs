@@ -24,6 +24,8 @@ import {
   where,
 } from 'firebase/firestore';
 
+import { POST_LIMITS } from '../../constants/postLimits.js';
+
 const ME = { uid: 'me-uid', email: 'me@example.com' };
 const OTHER = { uid: 'other-uid', email: 'other@example.com' };
 
@@ -257,5 +259,51 @@ describe('posts/{postId}', () => {
 
     await assertFails(updateDoc(doc(db, 'posts', 'theirs'), { title: '수정' }));
     await assertFails(deleteDoc(doc(db, 'posts', 'theirs')));
+  });
+
+  describe('글 길이 제한', () => {
+    const write = (overrides) =>
+      addDoc(collection(verifiedDb(ME), 'posts'), newPost(ME.email, overrides));
+    const text = (length) => '가'.repeat(length);
+    const list = (count, item) => Array.from({ length: count }, (_, i) => `${item}${i}`);
+
+    test('상한까지는 쓸 수 있어요', async () => {
+      await assertSucceeds(
+        write({
+          title: text(POST_LIMITS.TITLE),
+          content: text(POST_LIMITS.CONTENT),
+          location: text(POST_LIMITS.LOCATION),
+          tags: list(POST_LIMITS.TAGS, '태'),
+          photos: list(POST_LIMITS.PHOTOS, 'https://example.com/'),
+        })
+      );
+      await assertSucceeds(write({ tags: [text(POST_LIMITS.TAG_LENGTH), '맥주'] }));
+    });
+
+    test('제목 · 내용 · 장소가 상한보다 길면 쓸 수 없어요', async () => {
+      await assertFails(write({ title: text(POST_LIMITS.TITLE + 1) }));
+      await assertFails(write({ content: text(POST_LIMITS.CONTENT + 1) }));
+      await assertFails(write({ location: text(POST_LIMITS.LOCATION + 1) }));
+    });
+
+    test('태그 · 사진이 상한보다 많으면 쓸 수 없어요', async () => {
+      await assertFails(write({ tags: list(POST_LIMITS.TAGS + 1, '태') }));
+      await assertFails(write({ photos: list(POST_LIMITS.PHOTOS + 1, 'https://example.com/') }));
+    });
+
+    test('태그 하나가 상한보다 길거나 비어 있으면 쓸 수 없어요', async () => {
+      await assertFails(write({ tags: ['맥주', text(POST_LIMITS.TAG_LENGTH + 1)] }));
+      await assertFails(write({ tags: [text(POST_LIMITS.TAG_LENGTH + 1)] }));
+      await assertFails(write({ tags: ['맥주', ''] }));
+    });
+
+    test('상한을 넘는 예전 글은 줄이지 않으면 수정할 수 없지만 지울 수는 있어요', async () => {
+      await seed('posts/long', newPost(ME.email, { content: text(POST_LIMITS.CONTENT + 1) }));
+      const db = verifiedDb(ME);
+
+      await assertFails(updateDoc(doc(db, 'posts', 'long'), { title: '수정' }));
+      await assertSucceeds(updateDoc(doc(db, 'posts', 'long'), { content: '줄임' }));
+      await assertSucceeds(deleteDoc(doc(db, 'posts', 'long')));
+    });
   });
 });
