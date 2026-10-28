@@ -1,77 +1,58 @@
-import React, { memo, useState } from 'react';
-import { Dimensions, FlatList, View } from 'react-native';
+import { memo, useState } from 'react';
+import { FlatList, StyleSheet, View } from 'react-native';
+
 import Indicator from './Indicator';
 
 import { Image } from 'expo-image';
 
-const RenderItem = memo(({ item, gap, width }) => {
-  return (
-    <View style={{ width: width, marginHorizontal: gap / 2 }}>
-      <Image
-        cachePolicy="memory-disk"
-        contentFit="cover"
-        source={{ uri: item }}
-        style={{ height: '100%', marginHorizontal: gap / 2 }}
-        transition={150}
-      />
-    </View>
-  );
-});
+const DEFAULT_PHOTO_URI =
+  'https://firebasestorage.googleapis.com/v0/b/alcoholic-a9f86.appspot.com/o/default.jfif?alt=media&token=18e253aa-6a28-4a68-9823-eaf0726b6830';
 
-const ListEmptyComponent = ({ width }) => {
-  const DEFAULT_PHOTO_URI =
-    'https://firebasestorage.googleapis.com/v0/b/alcoholic-a9f86.appspot.com/o/default.jfif?alt=media&token=18e253aa-6a28-4a68-9823-eaf0726b6830';
-  return (
-    <View style={{ width: width }}>
-      <Image
-        cachePolicy="memory-disk"
-        contentFit="cover"
-        source={{ uri: DEFAULT_PHOTO_URI }}
-        style={{ height: '100%' }}
-      />
-    </View>
-  );
-};
-
-function Carousel({ height, data, offset, gap, isIndicator }) {
+// 정사각형 사진을 한 장씩 넘기고, 아래쪽 가운데에 점으로 위치를 보여 줌
+function Carousel({ data, size }) {
   const [index, setIndex] = useState(0);
-
-  const screenWidth = Dimensions.get('window').width;
-  const width = screenWidth - (gap + offset) * 2;
+  // 사진이 없는 예전 글은 기본 사진을 보여 줌
+  const photos = data?.length > 0 ? data : [DEFAULT_PHOTO_URI];
 
   const scrollEnd = (e) => {
-    const changedIndex = Math.round(e.nativeEvent.contentOffset.x / (width + gap));
-    if (index != changedIndex) {
-      setIndex(changedIndex);
-    }
+    setIndex(Math.round(e.nativeEvent.contentOffset.x / size));
   };
 
   return (
-    <View style={{ height: height }}>
+    <View style={{ height: size, width: size }}>
       <FlatList
-        automaticallyAdjustContentInsets={false}
-        contentContainerStyle={{
-          paddingHorizontal: offset + gap / 2,
-        }}
-        data={data}
-        decelerationRate="fast"
-        disableIntervalMomentum
-        disableVirtualization={false}
-        extraData={data}
+        data={photos}
         horizontal
-        initialNumToRender={data.length}
-        keyExtractor={(item) => `page__${item}`}
+        keyExtractor={(item, i) => `page_${i}_${item}`}
         onMomentumScrollEnd={scrollEnd}
         pagingEnabled
-        renderItem={({ item }) => <RenderItem item={item} gap={gap} width={width} />}
-        snapToInterval={width + gap}
-        snapToAlignment="start"
+        renderItem={({ item }) => (
+          <Image
+            cachePolicy="memory-disk"
+            contentFit="cover"
+            source={{ uri: item }}
+            style={{ height: size, width: size }}
+            transition={150}
+          />
+        )}
         showsHorizontalScrollIndicator={false}
-        ListEmptyComponent={() => <ListEmptyComponent width={width} />}
       />
-      {isIndicator && <Indicator length={data.length || 1} index={index} />}
+      {photos.length > 1 && (
+        <View pointerEvents="none" style={styles.indicator}>
+          <Indicator index={index} length={photos.length} />
+        </View>
+      )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  indicator: {
+    bottom: 12,
+    left: 0,
+    position: 'absolute',
+    right: 0,
+  },
+});
 
 export default memo(Carousel);

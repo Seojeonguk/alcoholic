@@ -14,7 +14,7 @@ import {
 } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { createNewPost, updateDocForId } from '../services';
-import { resizeForUpload, showToast } from '../lib';
+import { resizeForUpload, showToast, usePreventLeave } from '../lib';
 import { init } from '../redux';
 
 import { getAuth } from 'firebase/auth';
@@ -35,6 +35,8 @@ export default function GalleryForm({ navigation, route }) {
   const dispatch = useDispatch();
   const gallery = useSelector((state) => state.gallery);
   const docId = route.params?.docId;
+  // 저장 중에 나갔다가 다시 들어와 저장하면 글이 두 번 만들어지므로 저장이 끝날 때까지 못 나가게 함
+  usePreventLeave(navigation, isSavingRef);
 
   useEffect(() => {
     if (docId) {
@@ -87,11 +89,12 @@ export default function GalleryForm({ navigation, route }) {
     setIsLoading(true);
     setUploadProgress({ done: 0, total: gallery.photos.filter((uri) => !isUploaded(uri)).length });
     try {
-      const downloadURLs = await Promise.all(
-        gallery.photos.map(async (photo) => {
-          return await uploadPhoto(photo);
-        })
-      );
+      // 사진 줄이기는 메모리를 많이 써서 한 장씩 하고, 올리기는 동시에 함
+      const photoUris = [];
+      for (const photo of gallery.photos) {
+        photoUris.push(isUploaded(photo) ? photo : await resizeForUpload(photo));
+      }
+      const downloadURLs = await Promise.all(photoUris.map(uploadPhoto));
 
       const auth = getAuth();
       const user = auth.currentUser;
@@ -117,6 +120,7 @@ export default function GalleryForm({ navigation, route }) {
       initForm();
 
       showToast('success', '기록을 저장했어요.');
+      isSavingRef.current = false;
       navigation.popTo(NAVIGATOR.BOTTOM_TAB_NAV, { screen: NAVIGATOR.GALLERY });
     } catch (e) {
       showToast('error', '기록을 저장하지 못했어요.', '입력한 내용을 확인하고 다시 시도해 주세요.');
@@ -130,8 +134,6 @@ export default function GalleryForm({ navigation, route }) {
     if (isUploaded(uri)) {
       return uri;
     }
-    // 긴 변 1600px · JPEG로 줄여서 올림(#256). 실패하면 원본 그대로
-    const resizedUri = await resizeForUpload(uri);
     const blob = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.onload = function () {
@@ -141,7 +143,7 @@ export default function GalleryForm({ navigation, route }) {
         reject(new TypeError('Network request failed'));
       };
       xhr.responseType = 'blob';
-      xhr.open('GET', resizedUri, true);
+      xhr.open('GET', uri, true);
       xhr.send(null);
     });
 
@@ -172,7 +174,12 @@ export default function GalleryForm({ navigation, route }) {
         title={docId ? '기록 수정' : '새 기록'}
       />
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      {/* 저장 중에 고친 내용은 저장되지 않으므로 입력을 막음 */}
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        style={isLoading && styles.locked}
+      >
         <Photo />
         <Title />
         <Day />
@@ -195,5 +202,8 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 20,
+  },
+  locked: {
+    pointerEvents: 'none',
   },
 });

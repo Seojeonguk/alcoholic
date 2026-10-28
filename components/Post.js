@@ -19,6 +19,8 @@ export default function Post({ item, navigation, size }) {
         <Image
           cachePolicy="memory-disk"
           contentFit="cover"
+          // 사진을 받지 못해도 자리 표시가 계속 깜빡이지 않게 함
+          onError={() => setIsPhotoLoaded(true)}
           onLoad={() => setIsPhotoLoaded(true)}
           // FlatList가 칸을 재사용할 때 이전 글의 사진이 잠깐 보이지 않게 함
           recyclingKey={docId}

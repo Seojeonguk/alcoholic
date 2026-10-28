@@ -1,5 +1,5 @@
 const COLORS = {
-  // 새 디자인(토스식 화이트) 색. 아래 예전 색은 화면을 모두 옮긴 뒤 지움
+  // 토스식 화이트 디자인 색(docs/superpowers/specs/2026-10-26-design-refresh-design.md)
   BACKGROUND: '#FFFFFF',
   ACCENT: '#2E699A',
   ACCENT_SOFT: '#E8F0F7',
@@ -9,19 +9,6 @@ const COLORS = {
   LINE: '#F2F4F6',
   DANGER: '#E5484D',
   TOAST: '#333D4B',
-
-  BACKGROUND_COLOR: '#F6E8D8',
-  BUTTON_COLOR: '#ABCEEA',
-  BORDER_COLOR: '#888888',
-  FIRST_SUB_COLOR: '#DDB8CF',
-  SECOND_SUB_COLOR: '#50A4C5',
-  THIRD_SUB_COLOR: '#A4AFC3',
-  FORTH_SUB_COLOR: '#2E699A',
-  LABEL_COLOR: '#888888',
-  BOTTOM_TAB_GALLERY_COLOR: '#EEB7B4',
-  BOTTOM_TAB_SETTINGS_COLOR: '#F2CFA5',
-  BOTTOM_TAB_ACTIVE_COLOR: '#FDFFFD',
-  BOTTOM_TAB_INACTIVE_COLOR: '#A3C2FF',
 };
 
 export { COLORS };
