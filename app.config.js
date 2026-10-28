@@ -44,7 +44,7 @@ export default {
         {
           image: './assets/splash.png',
           imageWidth: 200,
-          // 앱 배경색(COLORS.BACKGROUND_COLOR)과 같게 맞춤
+          // 앱 아이콘 배경색과 같게 맞춤
           backgroundColor: '#F6E8D8',
         },
       ],

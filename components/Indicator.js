@@ -1,35 +1,31 @@
 import { StyleSheet, View } from 'react-native';
 
-import { COLORS } from '../constants';
-
+// 사진 위에 놓이는 흰 점. 지금 보는 사진은 길쭉한 점으로 보여 줌
 export default function Indicator({ length, index }) {
   return (
-    <View style={styles.indicatorWrapper}>
-      {Array.from({ length: length }, (_, i) => i).map((i) => (
-        <View
-          key={i}
-          style={[
-            styles.indicator,
-            { backgroundColor: i === index ? COLORS.FORTH_SUB_COLOR : '#dfdfdf' },
-          ]}
-        />
+    <View style={styles.wrapper}>
+      {Array.from({ length }, (_, i) => (
+        <View key={i} style={[styles.dot, i === index && styles.active]} />
       ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  indicatorWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
+  active: {
+    backgroundColor: '#FFFFFF',
+    width: 16,
   },
-  indicator: {
-    marginHorizontal: 4,
-    marginVertical: 0,
-    width: 6,
-    height: 6,
+  dot: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     borderRadius: 3,
+    height: 6,
+    width: 6,
+  },
+  wrapper: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 6,
+    justifyContent: 'center',
   },
 });

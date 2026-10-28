@@ -1,27 +1,25 @@
-import { memo, useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { memo, useEffect, useRef, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
-import { Carousel, Header } from '../components';
+import { Carousel, Header, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
-import { showToast } from '../lib';
+import { formatDay, showToast } from '../lib';
 import { updateGallery } from '../redux';
-
-import { FontAwesome5 } from '@expo/vector-icons';
-import { getAuth } from 'firebase/auth';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useDispatch } from 'react-redux';
-import LoadingSpinner from '../components/LoadingSpinner';
 import { deletePost, getPost } from '../services';
 
-const DEFAULT_NUMBER_OF_LINES = 3;
+import { getAuth } from 'firebase/auth';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useDispatch } from 'react-redux';
 
 function Details({ route, navigation }) {
   const { docId } = route.params;
   const dispatch = useDispatch();
+  const { width } = useWindowDimensions();
+  const { top } = useSafeAreaInsets();
 
-  const [numberOfLines, setNumberOfLines] = useState(DEFAULT_NUMBER_OF_LINES);
   const [loading, setLoading] = useState(true);
-  const [isDeleting, setIsDeleting] = useState(false);
+  // 삭제 중에 메뉴를 다시 눌러 두 번 지우지 않게 막음
+  const isDeletingRef = useRef(false);
   const [myPost, setMyPost] = useState({
     title: '',
     photos: [],
@@ -60,30 +58,27 @@ function Details({ route, navigation }) {
     getPosting();
   }, []);
 
-  const toggleTruncate = () => {
-    const newNumberOfLines =
-      numberOfLines === DEFAULT_NUMBER_OF_LINES ? 0 : DEFAULT_NUMBER_OF_LINES;
-    setNumberOfLines(newNumberOfLines);
-  };
-
   const removePost = async () => {
-    setIsDeleting(true);
+    if (isDeletingRef.current) {
+      return;
+    }
+    isDeletingRef.current = true;
     try {
       const { email, uid } = getAuth().currentUser;
       await deletePost(docId, email, uid, photos);
-      showToast('success', '글을 삭제했습니다.');
+      showToast('success', '기록을 삭제했어요.');
       // 갤러리는 화면에 들어올 때마다 목록을 다시 불러옴
       navigation.goBack();
     } catch (e) {
-      setIsDeleting(false);
-      showToast('error', '글을 삭제하지 못했습니다.', '잠시 후 다시 시도해 주세요.');
+      isDeletingRef.current = false;
+      showToast('error', '기록을 삭제하지 못했어요.', '잠시 후 다시 시도해 주세요.');
     }
   };
 
   const handleDeletePost = () => {
     Alert.alert(
-      '글 삭제',
-      '이 글과 사진이 삭제되며 되돌릴 수 없습니다. 삭제하시겠습니까?',
+      '기록 삭제',
+      '이 기록과 사진이 삭제되며 되돌릴 수 없어요. 삭제할까요?',
       [
         { text: '취소', style: 'cancel' },
         { text: '삭제', style: 'destructive', onPress: removePost },
@@ -92,136 +87,135 @@ function Details({ route, navigation }) {
     );
   };
 
-  const onPressRight = () => {
+  const moveEdit = () => {
     dispatch(updateGallery(myPost));
     navigation.navigate(NAVIGATOR.GALLERY_FORM, { docId: docId });
   };
 
+  const showMenu = () => {
+    if (loading || isDeletingRef.current) {
+      return;
+    }
+    Alert.alert(
+      undefined,
+      undefined,
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '삭제', style: 'destructive', onPress: handleDeletePost },
+        { text: '수정', onPress: moveEdit },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  // 날짜와 장소를 한 줄로. 장소가 없으면 날짜만
+  const meta = [formatDay(day), location].filter(Boolean).join(' · ');
+
+  const renderSkeleton = () => (
+    <View>
+      <Skeleton height={width} radius={0} width={width} />
+      <View style={styles.body}>
+        <Skeleton height={28} radius={8} width="60%" />
+        <Skeleton height={16} radius={6} style={styles.skeletonLine} width="40%" />
+        <Skeleton height={16} radius={6} style={styles.skeletonLine} width="100%" />
+        <Skeleton height={16} radius={6} style={styles.skeletonLine} width="80%" />
+      </View>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={styles.container}>
-      <Header
-        visibleLeftIcon={true}
-        visibleRightIcon={true}
-        leftIconName={'arrow-back'}
-        rightIconName={'pencil-sharp'}
-        onPressLeft={() => navigation.goBack()}
-        onPressRight={onPressRight}
-        iconSize={24}
-      />
-
+    <View style={styles.container}>
       {loading ? (
-        <LoadingSpinner />
+        renderSkeleton()
       ) : (
-        <ScrollView>
-          <Carousel height={300} data={photos} offset={0} gap={0} isIndicator={true} />
+        <ScrollView contentContainerStyle={styles.scroll}>
+          <Carousel data={photos} size={width} />
 
-          <View style={styles.contentWrap}>
+          <View style={styles.body}>
             <Text style={styles.title}>{title}</Text>
+            {meta ? <Text style={styles.meta}>{meta}</Text> : null}
+            {content ? <Text style={styles.content}>{content}</Text> : null}
 
-            {location && (
-              <View style={styles.locationWrap}>
-                <FontAwesome5
-                  name="map-marker-alt"
-                  size={13}
-                  color="gray"
-                  style={styles.locationIcon}
-                />
-                <Text style={styles.location}>{location}</Text>
-              </View>
-            )}
-
-            <Text style={styles.day}>{day}</Text>
-
-            <Text
-              style={[styles.content, { marginBottom: tags ? 0 : 30 }]}
-              numberOfLines={numberOfLines}
-              onPress={toggleTruncate}
-            >
-              {content}
-            </Text>
-
-            {tags && (
-              <View style={styles.tagWrap}>
+            {tags?.length > 0 && (
+              <View style={styles.tags}>
                 {tags.map((item, index) => (
-                  <Text key={`item_${item}_${index}`} style={styles.tag}>
-                    #{item}
-                  </Text>
+                  <View key={`item_${item}_${index}`} style={styles.tag}>
+                    <Text style={styles.tagText}>#{item}</Text>
+                  </View>
                 ))}
               </View>
             )}
-
-            <TouchableOpacity
-              disabled={isDeleting}
-              onPress={handleDeletePost}
-              style={styles.deleteBtn}
-            >
-              <Text style={styles.deleteBtnText}>글 삭제</Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
       )}
 
-      {isDeleting && <LoadingSpinner isOverlay={true} />}
-    </SafeAreaView>
+      {/* 사진 위에 떠 있는 헤더 */}
+      <View style={[styles.header, { paddingTop: top }]}>
+        <Header
+          left="back"
+          light
+          onPressLeft={() => navigation.goBack()}
+          onPressRight={showMenu}
+          right="ellipsis-horizontal"
+        />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  body: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
   container: {
-    backgroundColor: COLORS.BACKGROUND_COLOR,
+    backgroundColor: COLORS.BACKGROUND,
     flex: 1,
   },
   content: {
-    lineHeight: 20,
-    marginTop: 10,
+    color: COLORS.TEXT,
+    fontSize: 15,
+    lineHeight: 24,
+    marginTop: 20,
   },
-  contentWrap: {
-    marginTop: 10,
-    paddingHorizontal: 24,
+  header: {
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
   },
-  day: {
-    fontSize: 10,
-  },
-  deleteBtn: {
-    alignSelf: 'center',
-    marginBottom: 30,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  deleteBtnText: {
-    color: '#ff0000',
-    textDecorationLine: 'underline',
-  },
-  location: {
+  meta: {
+    color: COLORS.TEXT_SUB,
     fontSize: 13,
+    marginTop: 8,
   },
-  locationIcon: {
-    height: '100%',
-    marginRight: 2,
-    verticalAlign: 'middle',
+  scroll: {
+    paddingBottom: 40,
   },
-  locationWrap: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    paddingVertical: 3,
+  skeletonLine: {
+    marginTop: 12,
   },
   tag: {
-    backgroundColor: '#c9d1d9',
-    borderColor: 'gray',
-    borderRadius: 10,
-    borderWidth: 1,
-    margin: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    backgroundColor: COLORS.FILL,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  tagWrap: {
-    marginTop: 10,
+  tagText: {
+    color: COLORS.TEXT,
+    fontSize: 14,
+  },
+  tags: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 20,
+    gap: 8,
+    marginTop: 20,
   },
   title: {
-    fontSize: 25,
+    color: COLORS.TEXT,
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
 });
 
