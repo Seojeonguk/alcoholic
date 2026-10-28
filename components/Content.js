@@ -1,5 +1,6 @@
-import { StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput } from 'react-native';
 
+import { COLORS } from '../constants';
 import { updateContent } from '../redux';
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,31 +14,28 @@ export default function Content() {
   };
 
   return (
-    <View style={styles.inputBox}>
-      <TextInput
-        multiline
-        onChangeText={handleChangeContent}
-        placeholder={'오늘 하루는 어떠셨나요?\n소감 및 느낀점을 적어주세요.'}
-        style={styles.input}
-        value={content}
-        numberOfLines={15}
-      />
-    </View>
+    <TextInput
+      multiline
+      onChangeText={handleChangeContent}
+      placeholder={'오늘 마신 술은 어땠나요?\n맛, 함께한 사람, 느낀 점을 남겨 보세요.'}
+      placeholderTextColor={COLORS.TEXT_SUB}
+      style={styles.input}
+      value={content}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  inputBox: {
-    flexDirection: 'row',
-    marginHorizontal: 20,
-    marginVertical: 5,
-    marginBottom: 30,
-  },
   input: {
-    flex: 1,
-    paddingLeft: 10,
+    backgroundColor: COLORS.FILL,
+    borderRadius: 12,
+    color: COLORS.TEXT,
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 24,
+    marginTop: 16,
+    minHeight: 160,
+    padding: 14,
     textAlignVertical: 'top',
-    lineHeight: 20,
-    letterSpacing: 1.3,
   },
 });

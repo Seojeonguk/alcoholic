@@ -1,84 +1,111 @@
-import { useRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity } from 'react-native';
+import { useState } from 'react';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { COLORS } from '../constants';
 import { addTag, deleteTag } from '../redux';
+import { PressableScale } from './ui';
 
-import { Octicons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 
+// 태그는 칩으로 보여 주고, 칩을 누르면 지움. "+ 추가"를 누르면 입력 칸이 열림
 export default function Tags() {
   const dispatch = useDispatch();
   const [newTag, setNewTag] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
   const tags = useSelector((state) => state.gallery.tags);
-  const ref = useRef();
 
-  const handleChangedTag = (tag) => {
-    setNewTag(tag);
-  };
-
-  const handleDeleteTag = (idx) => {
-    dispatch(deleteTag(idx));
-  };
-
+  // 화면에 #을 붙여 보여 주므로 직접 쓴 #은 떼고 넣음
   const handleSubmit = () => {
-    if (newTag === '') {
-      return;
+    const tag = newTag.trim().replace(/^#+/, '');
+    if (tag !== '') {
+      dispatch(addTag(tag));
     }
-    dispatch(addTag(newTag));
-    initNewTag();
-  };
-
-  const initNewTag = () => {
     setNewTag('');
   };
 
-  const clicking = () => {
-    ref.current.focus();
+  const handleBlur = () => {
+    handleSubmit();
+    setIsEditing(false);
   };
 
   return (
-    <TouchableOpacity style={styles.tagBox} onPress={clicking}>
-      <Octicons name="hash" size={24} color="black" />
+    <View style={styles.container}>
+      <Text style={styles.title}>태그</Text>
+      <View style={styles.chips}>
+        {tags.map((tag, idx) => (
+          <PressableScale
+            accessibilityLabel={`${tag} 태그 지우기`}
+            key={`${tag}_${idx}`}
+            onPress={() => dispatch(deleteTag(idx))}
+            style={styles.chip}
+          >
+            <Text style={styles.chipText}>#{tag}</Text>
+          </PressableScale>
+        ))}
 
-      {tags.map((tag, idx) => (
-        <TouchableOpacity key={idx} onPress={() => handleDeleteTag(idx)} style={styles.tags}>
-          <Text>{tag}</Text>
-        </TouchableOpacity>
-      ))}
-
-      <TextInput
-        blurOnSubmit={false}
-        onChangeText={handleChangedTag}
-        onSubmitEditing={handleSubmit}
-        placeholder="태그 입력"
-        style={styles.inputTag}
-        value={newTag}
-        ref={ref}
-        onBlur={() => handleSubmit()}
-      />
-    </TouchableOpacity>
+        {isEditing ? (
+          <TextInput
+            autoFocus
+            onBlur={handleBlur}
+            onChangeText={setNewTag}
+            onSubmitEditing={handleSubmit}
+            placeholder="태그 입력"
+            placeholderTextColor={COLORS.TEXT_SUB}
+            style={[styles.chip, styles.input]}
+            // 엔터로 태그를 넣은 뒤에도 키보드를 닫지 않고 이어서 입력함
+            submitBehavior="submit"
+            value={newTag}
+          />
+        ) : (
+          <PressableScale onPress={() => setIsEditing(true)} style={styles.addChip}>
+            <Text style={styles.addText}>+ 추가</Text>
+          </PressableScale>
+        )}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  inputTag: {
-    margin: 5,
+  addChip: {
+    borderColor: COLORS.LINE,
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  tagBox: {
+  addText: {
+    color: COLORS.TEXT_SUB,
+    fontSize: 14,
+  },
+  chip: {
+    backgroundColor: COLORS.FILL,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  chipText: {
+    color: COLORS.TEXT,
+    fontSize: 14,
+  },
+  chips: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginHorizontal: 20,
-    marginVertical: 5,
-    alignItems: 'center',
+    gap: 8,
+    marginTop: 10,
   },
-  tags: {
-    alignItems: 'center',
-    backgroundColor: '#c9d1d9',
-    borderRadius: 5,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    margin: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+  container: {
+    borderBottomColor: COLORS.LINE,
+    borderBottomWidth: 1,
+    paddingVertical: 14,
+  },
+  input: {
+    color: COLORS.TEXT,
+    fontSize: 14,
+    minWidth: 96,
+  },
+  title: {
+    color: COLORS.TEXT,
+    fontSize: 15,
   },
 });

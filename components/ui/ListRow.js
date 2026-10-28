@@ -32,10 +32,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginLeft: 6,
   },
+  // 남은 너비를 다 써서 장소 입력 칸처럼 넓은 내용도 들어가게 함
   right: {
     alignItems: 'center',
+    flex: 1,
     flexDirection: 'row',
-    flexShrink: 1,
     justifyContent: 'flex-end',
     marginLeft: 16,
   },
