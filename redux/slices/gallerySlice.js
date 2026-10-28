@@ -1,4 +1,4 @@
-import { toLocalDateString } from '../../lib';
+import { addUniqueTag, toLocalDateString } from '../../lib';
 
 import { createSlice } from '@reduxjs/toolkit';
 
@@ -24,9 +24,9 @@ export const gallerySlice = createSlice({
       state.location = initialState.location;
       state.tags = initialState.tags;
     },
+    // 같은 태그는 한 번만 넣음
     addTag: (state, action) => {
-      const newTags = state.tags.concat(action.payload);
-      state.tags = newTags;
+      state.tags = addUniqueTag(state.tags, action.payload);
     },
     deleteTag: (state, action) => {
       const newTags = state.tags.filter((tag, idx) => idx !== action.payload);
