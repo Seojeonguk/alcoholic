@@ -8,6 +8,7 @@ import { updateGallery } from '../redux';
 import { deletePost, getPost } from '../services';
 
 import { getAuth } from 'firebase/auth';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
 
@@ -153,8 +154,12 @@ function Details({ route, navigation }) {
         </ScrollView>
       )}
 
-      {/* 사진 위에 떠 있는 헤더 */}
-      <View style={[styles.header, { paddingTop: top }]}>
+      {/* 사진 위에 떠 있는 헤더. 밝은 사진에서도 흰 아이콘과 상태 표시줄 글씨가 보이게 위쪽을 어둡게 깔아 줌 */}
+      <LinearGradient
+        colors={['rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0)']}
+        pointerEvents="box-none"
+        style={[styles.header, { paddingTop: top }]}
+      >
         <Header
           left="back"
           light
@@ -162,7 +167,7 @@ function Details({ route, navigation }) {
           onPressRight={showMenu}
           right="ellipsis-horizontal"
         />
-      </View>
+      </LinearGradient>
     </View>
   );
 }
@@ -183,6 +188,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   header: {
+    paddingBottom: 32,
     left: 0,
     position: 'absolute',
     right: 0,
