@@ -12,7 +12,7 @@ const DEFAULT_PHOTO_URI =
 function Carousel({ data, size }) {
   const [index, setIndex] = useState(0);
   // 사진이 없는 예전 글은 기본 사진을 보여 줌
-  const photos = data.length > 0 ? data : [DEFAULT_PHOTO_URI];
+  const photos = data?.length > 0 ? data : [DEFAULT_PHOTO_URI];
 
   const scrollEnd = (e) => {
     setIndex(Math.round(e.nativeEvent.contentOffset.x / size));

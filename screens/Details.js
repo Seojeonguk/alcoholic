@@ -3,7 +3,7 @@ import { Alert, ScrollView, StyleSheet, Text, useWindowDimensions, View } from '
 
 import { Carousel, Header, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
-import { formatDay, showToast } from '../lib';
+import { formatDay, showToast, usePreventLeave } from '../lib';
 import { updateGallery } from '../redux';
 import { deletePost, getPost } from '../services';
 
@@ -20,6 +20,7 @@ function Details({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   // 삭제 중에 메뉴를 다시 눌러 두 번 지우지 않게 막음
   const isDeletingRef = useRef(false);
+  usePreventLeave(navigation, isDeletingRef);
   const [myPost, setMyPost] = useState({
     title: '',
     photos: [],
@@ -46,11 +47,12 @@ function Details({ route, navigation }) {
       }
       const currentPostInfo = {
         title: post.title,
-        location: post.location,
+        // 필드가 없는 예전 글도 열리게 기본값을 넣음
+        location: post.location ?? '',
         day: post.day,
         content: post.content,
-        tags: post.tags,
-        photos: post.photos,
+        tags: post.tags ?? [],
+        photos: post.photos ?? [],
       };
       setMyPost(currentPostInfo);
       setLoading(false);
@@ -63,10 +65,12 @@ function Details({ route, navigation }) {
       return;
     }
     isDeletingRef.current = true;
+    showToast('info', '기록을 삭제하는 중이에요.');
     try {
       const { email, uid } = getAuth().currentUser;
       await deletePost(docId, email, uid, photos);
       showToast('success', '기록을 삭제했어요.');
+      isDeletingRef.current = false;
       // 갤러리는 화면에 들어올 때마다 목록을 다시 불러옴
       navigation.goBack();
     } catch (e) {
