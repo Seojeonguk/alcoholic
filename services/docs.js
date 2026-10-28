@@ -43,14 +43,12 @@ const getPosts = async (email) => {
 
   const ret = [];
 
-  const DEFAULT_PHOTO_URI =
-    'https://firebasestorage.googleapis.com/v0/b/alcoholic-a9f86.appspot.com/o/default.jfif?alt=media&token=18e253aa-6a28-4a68-9823-eaf0726b6830';
-
   docs.forEach((doc) => {
     const data = doc.data();
     ret.push({
       docId: doc.id,
-      presentivePhoto: data?.photos?.[0] ?? DEFAULT_PHOTO_URI,
+      // 사진이 없는 글은 null. 화면에서 기본 이미지(DEFAULT_PHOTO)를 보여 줌
+      presentivePhoto: data?.photos?.[0] ?? null,
       day: data?.day,
       createdAt: data?.createdAt?.toMillis?.() ?? 0,
     });
