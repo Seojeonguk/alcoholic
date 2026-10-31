@@ -35,7 +35,8 @@ lib/                 # 공용 유틸 (showToast, 에러 메시지 변환, 이메
 npm install
 npx expo start                     # 개발 서버, 최신 Expo Go로 확인
 npx expo-doctor                    # 의존성 · 설정 검사
-npm run lint                       # ESLint(eslint-config-expo + Prettier) 검사
+npm run lint                       # ESLint(eslint-config-expo + Prettier) 검사, 경고도 실패로 봄
+npm run test:unit                  # lib 함수 단위 테스트 (node --test)
 npx expo install --check           # SDK와 맞지 않는 패키지 확인 (고치려면 --fix)
 npx expo export --platform android --output-dir <scratchpad>/export   # 번들이 만들어지는지 확인
 npm run test:rules                 # Firestore · Storage 보안 규칙 테스트 (에뮬레이터, Java 21 이상)
@@ -61,7 +62,9 @@ npm run test:rules                 # Firestore · Storage 보안 규칙 테스�
 
 ### 확인 방법
 
-- 아직 자동 테스트가 없음. 변경 후에는 최소한 `npm run lint`, `npx expo-doctor`, `npx expo export --platform android`로 번들이 만들어지는지 확인함.
+- PR을 열면 GitHub Actions(`.github/workflows/ci.yml`)가 lint · 단위 테스트 · Android 번들 · 보안 규칙 테스트를 돌림. CI에서는 `.env` 대신 더미 Firebase 값을 씀.
+- 그래도 PR 전에 로컬에서 `npm run lint`, `npm run test:unit`, `npx expo-doctor`, `npx expo export --platform android`를 돌려 확인함.
+- `npx expo lint`는 `components/` 같은 일부 폴더만 검사하므로 쓰지 않고 `npm run lint`(`eslint .`)를 씀.
 - 이 환경에서는 앱을 기기에서 직접 실행해 볼 수 없음. 실제 동작은 PR 체크리스트로 사용자가 확인함. 확인하지 못한 것을 확인했다고 쓰지 않음.
 
 ### Git · PR (squash merge, 브랜치 자동 삭제 켜짐)
