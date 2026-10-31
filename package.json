@@ -9,7 +9,7 @@
     "web": "expo start --web",
     "test:rules": "node tests/rules/run.mjs",
     "test:unit": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test \"tests/unit/*.test.mjs\"",
-    "lint": "expo lint"
+    "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

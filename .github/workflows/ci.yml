@@ -1,0 +1,60 @@
+# PR마다 lint · 단위 테스트 · 번들 빌드 · 보안 규칙 테스트를 자동으로 돌림
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: Lint · 단위 테스트 · 번들
+    runs-on: ubuntu-latest
+    env:
+      # .env는 git에 없으므로 번들이 만들어지는지만 보는 더미 값을 씀
+      EXPO_PUBLIC_FIREBASE_API_KEY: ci-dummy
+      EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: ci-dummy.firebaseapp.com
+      EXPO_PUBLIC_FIREBASE_PROJECT_ID: ci-dummy
+      EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET: ci-dummy.appspot.com
+      EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '0'
+      EXPO_PUBLIC_FIREBASE_APP_ID: ci-dummy
+      EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID: ci-dummy
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:unit
+      - run: npx expo export --platform android --output-dir ${{ runner.temp }}/export
+
+  rules:
+    name: 보안 규칙 테스트
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      # Firestore · Storage 에뮬레이터는 Java 21 이상이 필요함
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      # 에뮬레이터 jar를 매번 받지 않게 캐시함
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ hashFiles('package-lock.json') }}
+      - run: npm ci
+      - run: npm run test:rules
