@@ -5,10 +5,10 @@ import { Ionicons } from '@expo/vector-icons';
 
 const Tab = createBottomTabNavigator();
 
-const tabIcon =
-  (name) =>
-  ({ focused, color }) =>
-    <Ionicons name={focused ? name : `${name}-outline`} size={22} color={color} />;
+const tabIcon = (name) =>
+  function TabIcon({ focused, color }) {
+    return <Ionicons name={focused ? name : `${name}-outline`} size={22} color={color} />;
+  };
 
 export default function BottomTabNav() {
   return (

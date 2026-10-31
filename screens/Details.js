@@ -38,7 +38,7 @@ function Details({ route, navigation }) {
       let post;
       try {
         post = await getPost(docId);
-      } catch (e) {
+      } catch {
         post = null;
       }
       if (!post) {
@@ -59,7 +59,7 @@ function Details({ route, navigation }) {
       setLoading(false);
     };
     getPosting();
-  }, []);
+  }, [docId, navigation]);
 
   const removePost = async () => {
     if (isDeletingRef.current) {
@@ -74,7 +74,7 @@ function Details({ route, navigation }) {
       isDeletingRef.current = false;
       // 갤러리는 화면에 들어올 때마다 목록을 다시 불러옴
       navigation.goBack();
-    } catch (e) {
+    } catch {
       isDeletingRef.current = false;
       showToast('error', '기록을 삭제하지 못했어요.', '잠시 후 다시 시도해 주세요.');
     }

@@ -83,7 +83,7 @@ const deletePost = async (docId, email, uid, photos) => {
       const photoRef = ref(storage, url);
       // 예전 경로(posts/{파일})의 사진은 규칙상 지울 수 없음
       return photoRef.fullPath.startsWith(`posts/${uid}/`) ? [photoRef] : [];
-    } catch (e) {
+    } catch {
       return [];
     }
   });

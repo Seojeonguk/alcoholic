@@ -33,7 +33,7 @@ export default function MainPage({ navigation, route }) {
     });
 
     return unsubscribe;
-  }, []);
+  }, [navigation]);
 
   useEffect(() => {
     const timer = setInterval(() => {
