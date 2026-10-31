@@ -38,26 +38,6 @@ export default function GalleryForm({ navigation, route }) {
   // 저장 중에 나갔다가 다시 들어와 저장하면 글이 두 번 만들어지므로 저장이 끝날 때까지 못 나가게 함
   usePreventLeave(navigation, isSavingRef);
 
-  useEffect(() => {
-    if (docId) {
-      // 수정하다 나가면 그 내용이 새 글 작성 폼에 남지 않게 비움
-      return () => dispatch(init());
-    }
-    if (existInput()) {
-      Alert.alert('작성하던 기록이 있어요.', '이어서 작성할까요?', [
-        {
-          text: '새로 작성',
-          style: 'destructive',
-          onPress: () => initForm(),
-        },
-        {
-          text: '이어서 작성',
-          style: 'cancel',
-        },
-      ]);
-    }
-  }, []);
-
   const existInput = () => {
     if (gallery.title !== '') {
       return true;
@@ -80,6 +60,28 @@ export default function GalleryForm({ navigation, route }) {
   const initForm = () => {
     dispatch(init());
   };
+
+  useEffect(() => {
+    if (docId) {
+      // 수정하다 나가면 그 내용이 새 글 작성 폼에 남지 않게 비움
+      return () => dispatch(init());
+    }
+    if (existInput()) {
+      Alert.alert('작성하던 기록이 있어요.', '이어서 작성할까요?', [
+        {
+          text: '새로 작성',
+          style: 'destructive',
+          onPress: () => initForm(),
+        },
+        {
+          text: '이어서 작성',
+          style: 'cancel',
+        },
+      ]);
+    }
+    // 화면에 처음 들어올 때 한 번만 물어봄. 입력할 때마다 다시 묻지 않게 의존성을 비워 둠
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const save = async () => {
     if (isSavingRef.current) {
@@ -128,7 +130,7 @@ export default function GalleryForm({ navigation, route }) {
       showToast('success', '기록을 저장했어요.');
       isSavingRef.current = false;
       navigation.popTo(NAVIGATOR.BOTTOM_TAB_NAV, { screen: NAVIGATOR.GALLERY });
-    } catch (e) {
+    } catch {
       showToast('error', '기록을 저장하지 못했어요.', '입력한 내용을 확인하고 다시 시도해 주세요.');
     } finally {
       isSavingRef.current = false;

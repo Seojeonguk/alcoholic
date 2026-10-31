@@ -48,7 +48,7 @@ export default function Gallery({ navigation }) {
         setPosts(userPosts);
         setIsLoaded(true);
       }
-    } catch (e) {
+    } catch {
       if (isActive()) {
         showToast('error', '글 목록을 불러오지 못했어요.', '잠시 후 다시 시도해 주세요.');
       }

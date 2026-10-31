@@ -38,7 +38,7 @@ export default function Button({
       ]}
     >
       <Text style={[styles.title, variant === 'text' && styles.textTitle, { color }]}>
-        {loading ? loadingTitle ?? title : title}
+        {loading ? (loadingTitle ?? title) : title}
       </Text>
     </PressableScale>
   );

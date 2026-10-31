@@ -35,6 +35,7 @@ lib/                 # 공용 유틸 (showToast, 에러 메시지 변환, 이메
 npm install
 npx expo start                     # 개발 서버, 최신 Expo Go로 확인
 npx expo-doctor                    # 의존성 · 설정 검사
+npm run lint                       # ESLint(eslint-config-expo + Prettier) 검사
 npx expo install --check           # SDK와 맞지 않는 패키지 확인 (고치려면 --fix)
 npx expo export --platform android --output-dir <scratchpad>/export   # 번들이 만들어지는지 확인
 npm run test:rules                 # Firestore · Storage 보안 규칙 테스트 (에뮬레이터, Java 21 이상)
@@ -54,13 +55,13 @@ npm run test:rules                 # Firestore · Storage 보안 규칙 테스�
 - JavaScript(타입스크립트 아님), 함수 컴포넌트 + hooks.
 - import 순서: React · react-native → 프로젝트 모듈(`../components`, `../constants` …) → 외부 라이브러리. 각 폴더의 `index.js`에서 다시 내보낸 것을 가져다 씀.
 - 네비게이션 이름은 문자열로 쓰지 않고 `constants/nav.js`의 `NAVIGATOR`를 씀. 색상은 `constants/theme.js`의 `COLORS`.
-- Prettier 설정은 `.prettierrc.json`을 따름.
+- ESLint는 `eslint.config.js`(flat config, `eslint-config-expo` + `eslint-plugin-prettier`), Prettier는 `.prettierrc.json`을 따름. 경고도 0개로 유지함.
 - 사용자에게 보이는 문구는 한국어로 씀. 알림은 `lib`의 `showToast`를 씀.
 - 주석은 주변 코드의 밀도에 맞춰 한국어로 씀.
 
 ### 확인 방법
 
-- 아직 자동 테스트가 없음. 변경 후에는 최소한 `npx expo-doctor`와 `npx expo export --platform android`로 번들이 만들어지는지 확인함.
+- 아직 자동 테스트가 없음. 변경 후에는 최소한 `npm run lint`, `npx expo-doctor`, `npx expo export --platform android`로 번들이 만들어지는지 확인함.
 - 이 환경에서는 앱을 기기에서 직접 실행해 볼 수 없음. 실제 동작은 PR 체크리스트로 사용자가 확인함. 확인하지 못한 것을 확인했다고 쓰지 않음.
 
 ### Git · PR (squash merge, 브랜치 자동 삭제 켜짐)
@@ -88,6 +89,5 @@ npm run test:rules                 # Firestore · Storage 보안 규칙 테스�
 - **사진 선택은 시스템 사진 선택기**(`expo-image-picker`의 `launchImageLibraryAsync`, 여러 장 선택)를 씀(#233). `expo-media-library`로 기기 사진 전체를 읽는 방식은 Android Expo Go에서 동작하지 않고, Google Play 정책상 `READ_MEDIA_IMAGES`가 거절될 수 있어서 쓰지 않음. 사진 · 오디오 권한을 새로 추가하지 않음.
 - **expo-image**: 캐시는 `source.cache`가 아니라 `cachePolicy` prop으로 지정함(#214).
 - **아이콘**: `@expo/vector-icons` 15에서 이름이 바뀐 아이콘이 있음(`ios-*` 접두사 제거, `pluscircleo` → `plus-circle` 등). 새 아이콘 이름은 `node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/*.json`에서 확인함.
-- **ESLint 설정이 깨져 있음**: `.eslintrc.json`이 설치되지 않은 `airbnb` 프리셋을 씀. 고치기 전까지 lint 결과를 믿지 않음.
 - Windows Git Bash에서 heredoc 안에 백틱이 든 스크립트를 쓰면 깨질 때가 있음. 스크립트 · 긴 본문은 scratchpad에 파일로 써서 실행함(`gh issue create -F <파일>`).
 - 저장소 루트에 녹화 · 빌드 결과물 · 임시 파일을 커밋하지 않음.

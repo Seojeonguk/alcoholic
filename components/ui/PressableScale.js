@@ -1,11 +1,11 @@
-import { useRef } from 'react';
+import { useState } from 'react';
 import { Animated, Pressable } from 'react-native';
 
 const PRESSED_SCALE = 0.97;
 
 // 누르면 살짝 작아졌다 돌아와서 바로 반응하는 느낌을 줌
 export default function PressableScale({ onPress, disabled, style, children, ...props }) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const [scale] = useState(() => new Animated.Value(1));
 
   const animateTo = (toValue) => {
     Animated.spring(scale, {

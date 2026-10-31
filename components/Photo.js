@@ -41,7 +41,7 @@ export default function Photo() {
         showLimitToast();
       }
       dispatch(addPhoto(result.assets.slice(0, remaining).map((asset) => asset.uri)));
-    } catch (e) {
+    } catch {
       showToast('error', '사진을 불러오지 못했어요.', '잠시 후 다시 시도해 주세요.');
     }
   };
@@ -60,7 +60,7 @@ export default function Photo() {
       }
 
       dispatch(addPhoto(result.assets[0].uri));
-    } catch (e) {
+    } catch {
       showToast('error', '카메라를 열지 못했어요.', '잠시 후 다시 시도해 주세요.');
     }
   };

@@ -1,11 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { Animated } from 'react-native';
 
 import { COLORS } from '../../constants';
 
 // 처음 불러오는 동안 내용이 놓일 자리를 회색 상자로 보여 줌
 export default function Skeleton({ width, height, radius = 12, style }) {
-  const opacity = useRef(new Animated.Value(1)).current;
+  const [opacity] = useState(() => new Animated.Value(1));
 
   useEffect(() => {
     const pulse = Animated.loop(
