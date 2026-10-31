@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { NAVIGATOR } from '../constants';
+import { DEFAULT_PHOTO, NAVIGATOR } from '../constants';
 import { PressableScale, Skeleton } from './ui';
 
 import { Image } from 'expo-image';
@@ -24,7 +24,7 @@ export default function Post({ item, navigation, size }) {
           onLoad={() => setIsPhotoLoaded(true)}
           // FlatList가 칸을 재사용할 때 이전 글의 사진이 잠깐 보이지 않게 함
           recyclingKey={docId}
-          source={{ uri: presentivePhoto }}
+          source={presentivePhoto ? { uri: presentivePhoto } : DEFAULT_PHOTO}
           style={[styles.photo, { height: size, width: size }]}
           transition={150}
         />

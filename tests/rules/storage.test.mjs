@@ -128,9 +128,10 @@ describe('예전 경로와 기본 이미지', () => {
     await assertFails(deleteObject(ref(verifiedStorage(ME), 'posts/old.jpg')));
   });
 
-  test('기본 이미지는 읽을 수만 있어요', async () => {
+  // 기본 이미지는 앱 안(assets/default-photo.png)으로 옮겼어요. 예전 빌드는 토큰 URL로 받아서 규칙과 상관없어요
+  test('예전 기본 이미지(default.jfif)는 SDK로 읽거나 쓸 수 없어요', async () => {
     await seed('default.jfif');
-    await assertSucceeds(getBytes(ref(verifiedStorage(ME), 'default.jfif')));
+    await assertFails(getBytes(ref(verifiedStorage(ME), 'default.jfif')));
     await assertFails(uploadBytes(ref(verifiedStorage(ME), 'default.jfif'), IMAGE, JPEG));
   });
 
