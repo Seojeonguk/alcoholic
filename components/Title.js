@@ -1,6 +1,6 @@
 import { StyleSheet, TextInput } from 'react-native';
 
-import { COLORS } from '../constants';
+import { COLORS, POST_LIMITS } from '../constants';
 import { updateTitle } from '../redux';
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,7 +15,7 @@ export default function Title() {
 
   return (
     <TextInput
-      maxLength={40}
+      maxLength={POST_LIMITS.TITLE}
       multiline
       onChangeText={handleChangeTitle}
       placeholder="제목"

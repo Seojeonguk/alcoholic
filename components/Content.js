@@ -1,6 +1,6 @@
 import { StyleSheet, TextInput } from 'react-native';
 
-import { COLORS } from '../constants';
+import { COLORS, POST_LIMITS } from '../constants';
 import { updateContent } from '../redux';
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,6 +15,7 @@ export default function Content() {
 
   return (
     <TextInput
+      maxLength={POST_LIMITS.CONTENT}
       multiline
       onChangeText={handleChangeContent}
       placeholder={'오늘 마신 술은 어땠나요?\n맛, 함께한 사람, 느낀 점을 남겨 보세요.'}

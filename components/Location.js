@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { StyleSheet, TextInput } from 'react-native';
 
-import { COLORS } from '../constants';
+import { COLORS, POST_LIMITS } from '../constants';
 import { updateLocation } from '../redux';
 import { ListRow } from './ui';
 
@@ -20,6 +20,7 @@ export default function Location() {
   return (
     <ListRow onPress={() => inputRef.current?.focus()} showChevron={false} title="장소">
       <TextInput
+        maxLength={POST_LIMITS.LOCATION}
         onChangeText={handleChangeLocation}
         placeholder="어디서 마셨나요?"
         placeholderTextColor={COLORS.TEXT_SUB}

@@ -14,7 +14,7 @@ import {
 } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { createNewPost, updateDocForId } from '../services';
-import { resizeForUpload, showToast, usePreventLeave } from '../lib';
+import { getPostLimitError, resizeForUpload, showToast, usePreventLeave } from '../lib';
 import { init } from '../redux';
 
 import { getAuth } from 'firebase/auth';
@@ -83,6 +83,12 @@ export default function GalleryForm({ navigation, route }) {
 
   const save = async () => {
     if (isSavingRef.current) {
+      return;
+    }
+    // 규칙에서 거절되기 전에 무엇이 넘는지 알려 줌
+    const limitError = getPostLimitError(gallery);
+    if (limitError) {
+      showToast('error', limitError, '줄인 뒤 다시 저장해 주세요.');
       return;
     }
     isSavingRef.current = true;
