@@ -50,6 +50,8 @@ const getPosts = async (email) => {
       // 사진이 없는 글은 null. 화면에서 기본 이미지(DEFAULT_PHOTO)를 보여 줌
       presentivePhoto: data?.photos?.[0] ?? null,
       day: data?.day,
+      // 갤러리에서 태그로 거를 때 씀
+      tags: data?.tags ?? [],
       createdAt: data?.createdAt?.toMillis?.() ?? 0,
     });
   });

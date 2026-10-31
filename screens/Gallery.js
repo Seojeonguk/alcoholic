@@ -8,9 +8,9 @@ import {
   View,
 } from 'react-native';
 
-import { Button, Post, PressableScale, Skeleton } from '../components';
+import { Button, GalleryFilter, Post, PressableScale, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
-import { groupPostsByMonth, showToast } from '../lib';
+import { collectTags, filterPosts, groupPostsByMonth, showToast } from '../lib';
 import { getPosts } from '../services';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const COLUMNS = 3;
 const GAP = 6;
 const SIDE_PADDING = 20;
+const NO_FILTER = { tag: null, from: null, to: null };
 
 // 섹션의 글을 3개씩 한 줄로 묶음
 const toRows = (posts) => {
@@ -36,6 +37,7 @@ export default function Gallery({ navigation }) {
   const [isLoaded, setIsLoaded] = useState(false);
   // 처음 불러온 뒤 다시 불러올 때는 목록을 그대로 두고 위쪽에 로딩 표시만 보여 줌(자리 표시로 바꾸면 깜빡임)
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [filter, setFilter] = useState(NO_FILTER);
   const { width } = useWindowDimensions();
   const photoSize = (width - SIDE_PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
 
@@ -70,14 +72,22 @@ export default function Gallery({ navigation }) {
     }, [loadPosts])
   );
 
+  const tags = useMemo(() => collectTags(posts), [posts]);
+  // 고른 태그의 글을 모두 지워서 태그가 없어지면 태그 조건은 없는 것으로 봄
+  const activeFilter = useMemo(
+    () => ({ ...filter, tag: tags.includes(filter.tag) ? filter.tag : null }),
+    [filter, tags]
+  );
+  const isFiltering = !!(activeFilter.tag || (activeFilter.from && activeFilter.to));
+
   // 마신 날짜순으로 정렬해 월별로 묶음. 같은 날은 최근에 쓴 글이 먼저
   const sections = useMemo(
     () =>
-      groupPostsByMonth(posts, new Date()).map((section) => ({
+      groupPostsByMonth(filterPosts(posts, activeFilter), new Date()).map((section) => ({
         title: section.title,
         data: toRows(section.data),
       })),
-    [posts]
+    [posts, activeFilter]
   );
 
   const moveGalleryForm = () => {
@@ -118,6 +128,19 @@ export default function Gallery({ navigation }) {
     </View>
   );
 
+  const renderNoMatch = () => (
+    <View style={styles.empty}>
+      <Text style={styles.emptyTitle}>조건에 맞는 기록이 없어요.</Text>
+      <Text style={styles.emptyText}>태그나 기간을 바꿔 보세요.</Text>
+      <Button
+        onPress={() => setFilter(NO_FILTER)}
+        style={styles.emptyButton}
+        title="조건 지우기"
+        variant="soft"
+      />
+    </View>
+  );
+
   return (
     <SafeAreaView edges={['top']} style={styles.container}>
       <View style={styles.header}>
@@ -131,11 +154,15 @@ export default function Gallery({ navigation }) {
         </PressableScale>
       </View>
 
+      {isLoaded && posts.length > 0 ? (
+        <GalleryFilter filter={activeFilter} onChange={setFilter} tags={tags} />
+      ) : null}
+
       {isLoaded ? (
         <SectionList
           contentContainerStyle={styles.list}
           keyExtractor={(row) => row.map((post) => post.docId).join('_')}
-          ListEmptyComponent={renderEmpty}
+          ListEmptyComponent={isFiltering ? renderNoMatch : renderEmpty}
           refreshControl={
             <RefreshControl
               colors={[COLORS.ACCENT]}
