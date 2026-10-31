@@ -87,7 +87,8 @@ npm run test:rules                 # Firestore · Storage 보안 규칙 테스�
 
 ## 주의사항
 
-- **`.env` · `eas.json`은 git에 올리지 않음**(`.gitignore`, #197). Firebase 키를 코드에 직접 쓰지 않음.
+- **`.env`는 git에 올리지 않음**(`.gitignore`, #197). Firebase 키를 코드에 직접 쓰지 않음. EAS 빌드 · 업데이트는 EAS 환경 변수에서 키를 받음. `eas.json`에는 환경 · 채널 이름만 있어서 git에 올림(#240).
+- **EAS Update**(`runtimeVersion` 정책 `appVersion`): 같은 `version`의 빌드에만 업데이트가 감. 패키지 · 플러그인 · 권한 같은 네이티브 변경이 들어간 PR은 새 빌드가 필요하다고 PR 본문에 적고, 스토어에 올릴 때 `version`을 꼭 올림. 배포 방법은 README의 "JS 수정 바로 배포하기".
 - **React Navigation 7**: 이미 스택에 있는 화면으로 돌아갈 때는 `navigate`가 아니라 `popTo`를 씀. 부모 스택에서 탭 안의 화면으로 갈 때는 `{ screen: ... }` 파라미터로 중첩해서 지정함. 화면 파라미터는 객체로 넘김(`{ docId }`).
 - **사진 선택은 시스템 사진 선택기**(`expo-image-picker`의 `launchImageLibraryAsync`, 여러 장 선택)를 씀(#233). `expo-media-library`로 기기 사진 전체를 읽는 방식은 Android Expo Go에서 동작하지 않고, Google Play 정책상 `READ_MEDIA_IMAGES`가 거절될 수 있어서 쓰지 않음. 사진 · 오디오 권한을 새로 추가하지 않음.
 - **expo-image**: 캐시는 `source.cache`가 아니라 `cachePolicy` prop으로 지정함(#214).

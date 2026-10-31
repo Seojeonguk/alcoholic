@@ -1,3 +1,5 @@
+const EAS_PROJECT_ID = '090110c1-78a6-496f-9564-f32647afce83';
+
 export default {
   expo: {
     name: 'alcoholic',
@@ -6,8 +8,14 @@ export default {
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
+    // EAS Update로 받은 JS 업데이트는 앱이 켜질 때 받아 두고 다음에 켤 때 적용함
     updates: {
+      url: `https://u.expo.dev/${EAS_PROJECT_ID}`,
       fallbackToCacheTimeout: 0,
+    },
+    // 같은 version으로 만든 빌드에만 업데이트가 감. 네이티브가 바뀌면 version을 꼭 올림
+    runtimeVersion: {
+      policy: 'appVersion',
     },
     assetBundlePatterns: ['**/*'],
     ios: {
@@ -28,7 +36,7 @@ export default {
     },
     extra: {
       eas: {
-        projectId: '090110c1-78a6-496f-9564-f32647afce83',
+        projectId: EAS_PROJECT_ID,
       },
       firebaseApiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
       firebaseAuthDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,

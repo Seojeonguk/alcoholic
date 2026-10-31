@@ -91,10 +91,10 @@ npx expo start
 
 [EAS Build](https://docs.expo.dev/build/introduction/)로 빌드하고 Google Play에 올려요. 빌드 프로필은 `eas.json`에 있어요.
 
-| 프로필       | 결과물 | 쓰는 곳                              |
-| ------------ | ------ | ------------------------------------ |
-| `preview`    | APK    | 기기에 바로 설치해서 확인            |
-| `production` | AAB    | Google Play 업로드(내부 테스트 트랙) |
+| 프로필       | 결과물 | 업데이트 채널 | 쓰는 곳                              |
+| ------------ | ------ | ------------- | ------------------------------------ |
+| `preview`    | APK    | `preview`     | 기기에 바로 설치해서 확인            |
+| `production` | AAB    | `production`  | Google Play 업로드(내부 테스트 트랙) |
 
 ### 1. 처음 한 번 준비하기
 
@@ -131,3 +131,40 @@ Play Console의 앱 콘텐츠(데이터 보안 · 콘텐츠 등급 등)와 스�
    `eas.json`의 `submit.production` 설정대로 **내부 테스트** 트랙에 **초안**으로 올라가요. Play Console에서 확인하고 출시해요.
 
 3. 내부 테스트에서 확인한 빌드를 Play Console에서 **프로덕션**으로 승격해요.
+
+### 4. JS 수정 바로 배포하기 (EAS Update)
+
+네이티브 코드가 바뀌지 않은 수정(화면 · 문구 · JS 버그)은 스토어 심사 없이 [EAS Update](https://docs.expo.dev/eas-update/introduction/)로 배포해요. 앱은 켜질 때 업데이트를 받아 두고 **다음에 켤 때** 적용해요.
+
+**보낼 수 있는지 먼저 확인해요.** 업데이트는 `app.config.js`의 `version`이 같은 빌드에만 가요(`runtimeVersion` 정책 `appVersion`). 다음 중 하나라도 바뀌었으면 업데이트가 아니라 새 빌드로 올려요.
+
+- 패키지 추가 · 삭제 · 버전 변경(`package.json`의 `dependencies`)
+- `app.config.js`의 `plugins` · 권한 · `android` 설정
+- 아이콘 · 스플래시 이미지
+
+**배포하기**
+
+```bash
+# 먼저 preview 채널로 보내고, preview 빌드(APK)에서 확인해요
+npx eas-cli update --channel preview --environment preview --message "고친 내용"
+
+# 확인했으면 production 채널로 보내요
+npx eas-cli update --channel production --environment production --message "고친 내용"
+```
+
+- `--environment`를 **꼭** 붙여요. 빼면 Firebase 키가 없는 번들이 배포돼서 앱이 켜지자마자 멈춰요.
+- 보낸 업데이트는 `npx eas-cli update:list --branch production`이나 [expo.dev](https://expo.dev) 프로젝트의 **Updates**에서 확인해요.
+
+**되돌리기**
+
+```bash
+npx eas-cli update:rollback
+```
+
+- 고르는 화면에서 되돌릴 채널(브랜치)과 업데이트를 골라요. 바로 전 업데이트로 되돌리거나, 스토어 빌드에 들어 있던 원래 번들로 되돌릴 수 있어요.
+- 되돌린 것도 앱을 두 번 켜야(받고 → 적용) 사용자 기기에 반영돼요.
+
+**새 빌드를 올릴 때**
+
+- 네이티브가 바뀐 빌드는 `version`을 올려서 만들어요. `version`이 그대로면 예전 빌드용 업데이트가 새 빌드에도 가서 앱이 멈출 수 있어요.
+- Expo Go와 `npx expo start`에서는 업데이트를 받지 않아요. 업데이트는 EAS로 만든 빌드에서만 확인할 수 있어요.
