@@ -14,11 +14,10 @@ export default function Tags() {
   const [isEditing, setIsEditing] = useState(false);
   const tags = useSelector((state) => state.gallery.tags);
 
-  // 화면에 #을 붙여 보여 주므로 직접 쓴 #은 떼고 넣음
+  // 공백 · # 정리와 중복 확인은 addTag에서 함
   const handleSubmit = () => {
-    const tag = newTag.trim().replace(/^#+/, '');
-    if (tag !== '') {
-      dispatch(addTag(tag));
+    if (newTag.trim() !== '') {
+      dispatch(addTag(newTag));
     }
     setNewTag('');
   };
