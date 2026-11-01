@@ -11,7 +11,7 @@ import {
   showToast,
 } from '../lib';
 
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from '@react-native-firebase/auth';
 
 export default function RegistrationForm({ navigation }) {
   const [email, setEmail] = useState('');

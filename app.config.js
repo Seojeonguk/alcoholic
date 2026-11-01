@@ -28,6 +28,8 @@ export default {
         backgroundColor: '#F6E8D8',
       },
       package: 'com.seojeonguk.alcoholic',
+      // Firebase 설정 파일. git에 올리지 않고 EAS 빌드에서는 파일 환경 변수로 받음(README "빌드 · 배포")
+      googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
       // 스토어에 올릴 때마다 1씩 올림
       versionCode: 1,
     },
@@ -38,15 +40,18 @@ export default {
       eas: {
         projectId: EAS_PROJECT_ID,
       },
-      firebaseApiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-      firebaseAuthDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-      firebaseProjectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-      firebaseStorageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      firebaseMessagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-      firebaseAppId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
-      firebaseMeasurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
     },
     plugins: [
+      // google-services.json을 네이티브 프로젝트에 넣음
+      '@react-native-firebase/app',
+      [
+        'expo-build-properties',
+        {
+          // @react-native-firebase 27이 쓰는 Firebase Android SDK는 Kotlin 2.4로 컴파일돼 있어서
+          // RN 기본값(2.2)으로는 auth 모듈이 컴파일되지 않음
+          android: { kotlinVersion: '2.4.0' },
+        },
+      ],
       [
         'expo-splash-screen',
         {

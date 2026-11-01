@@ -4,7 +4,7 @@ import { ListRow, PressableScale } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
 
-import { signOut } from '@firebase/auth';
+import { signOut } from '@react-native-firebase/auth';
 import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 

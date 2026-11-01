@@ -15,7 +15,7 @@ import { getPosts } from '../services';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { getAuth } from 'firebase/auth';
+import { getAuth } from '@react-native-firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const COLUMNS = 3;
