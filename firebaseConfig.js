@@ -1,9 +1,27 @@
 // Firebase는 네이티브 SDK(@react-native-firebase)를 씀(#286)
 // 설정 값은 google-services.json에서 빌드할 때 들어가므로 여기서 초기화하지 않음
 // 로그인 상태 유지와 Firestore 오프라인 캐시도 네이티브 SDK가 알아서 함
+import { getApp } from '@react-native-firebase/app';
+import {
+  initializeAppCheck,
+  ReactNativeFirebaseAppCheckProvider,
+} from '@react-native-firebase/app-check';
 import { getAuth, setLanguageCode } from '@react-native-firebase/auth';
 import { getCrashlytics } from '@react-native-firebase/crashlytics';
 import { getFirestore } from '@react-native-firebase/firestore';
+
+// App Check: 진짜 앱에서 온 요청인지 Firebase가 확인하게 함(#260)
+// Auth · Firestore의 첫 요청에도 토큰이 붙도록 가장 먼저 초기화함
+// 개발용 빌드는 Play Integrity를 통과하지 못하므로 콘솔에 등록한 디버그 토큰을 씀
+const appCheckProvider = new ReactNativeFirebaseAppCheckProvider();
+appCheckProvider.configure({
+  android: {
+    provider: __DEV__ ? 'debug' : 'playIntegrity',
+    // .env에만 넣고 preview · production EAS 환경 변수에는 넣지 않음(넣으면 누구나 검사를 통과함)
+    debugToken: process.env.EXPO_PUBLIC_APP_CHECK_DEBUG_TOKEN,
+  },
+});
+initializeAppCheck(getApp(), { provider: appCheckProvider, isTokenAutoRefreshEnabled: true });
 
 const auth = getAuth();
 const db = getFirestore();

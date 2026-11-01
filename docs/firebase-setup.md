@@ -44,6 +44,39 @@ alcoholic/
 
 새로 만드는 Storage 버킷은 Blaze(종량제) 요금제가 필요할 수 있어요. 가능하면 이미 만들어 둔 프로젝트를 그대로 써요.
 
+## App Check
+
+App Check는 Firebase가 **진짜 이 앱에서 온 요청만** 받게 해요(#260). API 키는 앱에 들어 있어서 앱 밖에서도 Firebase를 부를 수 있는데, App Check를 **적용(enforce)**하면 그런 요청을 막아요.
+
+- `preview` · `production` 빌드는 **Play Integrity**로 확인받아요.
+- 개발용 빌드는 Play Integrity를 통과할 수 없어서 콘솔에 등록한 **디버그 토큰**을 써요.
+- 콘솔에서 적용을 켜기 전까지는 토큰이 없거나 틀려도 요청이 막히지 않아요. 그래서 아래 설정을 끝내기 전에도 앱은 그대로 동작해요.
+
+### 1. 디버그 토큰 등록하기 (개발용 빌드)
+
+1. Firebase 콘솔 → **App Check** → **앱** 탭에서 Android 앱의 ⋮ → **디버그 토큰 관리**를 눌러요.
+2. **디버그 토큰 추가** → 이름(예: `내 개발 PC`)을 넣고 **생성**을 눌러 나온 값을 복사해요.
+3. 프로젝트 루트의 `.env`에 넣고 개발 서버를 다시 켜요(`npx expo start -c`).
+
+   ```dotenv
+   EXPO_PUBLIC_APP_CHECK_DEBUG_TOKEN=복사한-값
+   ```
+
+> **디버그 토큰은 `.env`(또는 EAS `development` 환경)에만 넣어요.** `preview` · `production` 환경 변수에 넣으면 그 값을 아는 누구나 App Check를 통과할 수 있어요.
+
+### 2. Play Integrity 연결하기 (Play Console에 앱을 등록한 뒤)
+
+1. Play Console → 앱 → **테스트 및 출시 → 앱 무결성**에서 **앱 서명 키 인증서**의 **SHA-256** 값을 복사해요(Play 앱 서명을 쓰므로 업로드 키가 아니라 앱 서명 키예요).
+2. Firebase 콘솔 → **프로젝트 설정 → 일반 → 내 앱**의 Android 앱에서 **디지털 지문 추가**로 그 SHA-256을 넣어요.
+3. Firebase 콘솔 → **App Check → 앱**에서 Android 앱의 **Play Integrity**를 골라 등록해요.
+4. Play Console의 **앱 무결성 → Play Integrity API**에서 Firebase 프로젝트와 같은 **Google Cloud 프로젝트**를 연결해요.
+
+### 3. 지켜본 뒤 적용하기
+
+1. Firebase 콘솔 → **App Check → API** 탭에서 Cloud Firestore · Cloud Storage · Authentication의 요청 지표를 며칠 지켜봐요.
+2. **확인된 요청**이 대부분이고, 확인되지 않은 요청이 예전 버전 앱이나 앱 밖 호출뿐이면 서비스마다 **적용**을 눌러요.
+3. 적용한 뒤에는 App Check가 없는 예전 빌드는 Firebase를 쓸 수 없어요. 대부분의 사용자가 새 빌드로 업데이트한 뒤에 적용해요.
+
 ## 인증 메일 설정
 
 회원가입 인증 메일과 비밀번호 재설정 메일은 Firebase Authentication이 보내요. 앱은 메일을 한국어 템플릿으로 보내고(`setLanguageCode(auth, 'ko')`), 사용자 이름이 없으면 이메일 앞부분을 이름으로 넣어서 템플릿의 `%DISPLAY_NAME%`이 비지 않게 해요. 나머지는 콘솔에서 설정해요.
@@ -110,12 +143,13 @@ npx firebase deploy --only firestore:rules,storage
 
 ## 문제가 생기면
 
-| 증상                                                 | 확인할 것                                                                                                   |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| 빌드가 `Cannot copy google-services.json`으로 멈춰요 | 프로젝트 루트에 파일이 있는지, EAS 빌드면 `GOOGLE_SERVICES_JSON` 파일 환경 변수가 있는지                    |
-| Expo Go에서 Firebase 모듈 에러가 나요                | Expo Go 대신 개발용 빌드로 열어요(README "개발용 빌드 설치하기")                                            |
-| `auth/invalid-api-key` 등 설정 에러                  | `google-services.json`이 맞는 프로젝트의 `com.seojeonguk.alcoholic` 앱 파일인지, 바꾼 뒤 빌드를 다시 했는지 |
-| `auth/operation-not-allowed`                         | Authentication에서 이메일/비밀번호 로그인이 켜져 있는지                                                     |
-| 인증 메일이 스팸함으로 가요                          | 위 [인증 메일 설정](#인증-메일-설정)의 공개용 이름 · 템플릿 · 도메인 맞춤설정                               |
-| 게시글 저장 · 조회에서 `permission-denied`           | 위 [보안 규칙](#보안-규칙) 표와, 규칙을 배포했는지(콘솔의 규칙 탭)                                          |
-| 사진 업로드가 실패해요                               | `google-services.json`의 `storage_bucket`과 Storage가 만들어져 있는지                                       |
+| 증상                                                 | 확인할 것                                                                                                                                             |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 빌드가 `Cannot copy google-services.json`으로 멈춰요 | 프로젝트 루트에 파일이 있는지, EAS 빌드면 `GOOGLE_SERVICES_JSON` 파일 환경 변수가 있는지                                                              |
+| Expo Go에서 Firebase 모듈 에러가 나요                | Expo Go 대신 개발용 빌드로 열어요(README "개발용 빌드 설치하기")                                                                                      |
+| `auth/invalid-api-key` 등 설정 에러                  | `google-services.json`이 맞는 프로젝트의 `com.seojeonguk.alcoholic` 앱 파일인지, 바꾼 뒤 빌드를 다시 했는지                                           |
+| 적용 후 `permission-denied` · `app-check` 에러       | 개발용 빌드면 `.env`의 `EXPO_PUBLIC_APP_CHECK_DEBUG_TOKEN`이 콘솔에 등록한 값인지, 배포 빌드면 Play Integrity 연결(SHA-256 · Cloud 프로젝트)이 됐는지 |
+| `auth/operation-not-allowed`                         | Authentication에서 이메일/비밀번호 로그인이 켜져 있는지                                                                                               |
+| 인증 메일이 스팸함으로 가요                          | 위 [인증 메일 설정](#인증-메일-설정)의 공개용 이름 · 템플릿 · 도메인 맞춤설정                                                                         |
+| 게시글 저장 · 조회에서 `permission-denied`           | 위 [보안 규칙](#보안-규칙) 표와, 규칙을 배포했는지(콘솔의 규칙 탭)                                                                                    |
+| 사진 업로드가 실패해요                               | `google-services.json`의 `storage_bucket`과 Storage가 만들어져 있는지                                                                                 |
