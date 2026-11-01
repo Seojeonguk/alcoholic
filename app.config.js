@@ -44,6 +44,8 @@ export default {
     plugins: [
       // google-services.json을 네이티브 프로젝트에 넣음
       '@react-native-firebase/app',
+      // 네이티브 크래시를 모으고 난독화된 스택을 되돌리는 Gradle 플러그인을 넣음
+      '@react-native-firebase/crashlytics',
       [
         'expo-build-properties',
         {
