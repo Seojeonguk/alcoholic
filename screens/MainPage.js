@@ -6,6 +6,7 @@ import { BottomButtonArea, Button } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
 
+import { onAuthStateChanged } from '@react-native-firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function MainPage({ navigation, route }) {
@@ -20,7 +21,7 @@ export default function MainPage({ navigation, route }) {
   };
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setIsLoading(false);
       if (!user || !user.emailVerified) {
         return;

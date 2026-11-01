@@ -11,8 +11,8 @@ import {
   setDoc,
   updateDoc,
   where,
-} from 'firebase/firestore';
-import { deleteObject, getStorage, listAll, ref } from 'firebase/storage';
+} from '@react-native-firebase/firestore';
+import { deleteObject, getStorage, listAll, ref } from '@react-native-firebase/storage';
 import { db } from '../firebaseConfig';
 
 const usersRef = collection(db, 'users');

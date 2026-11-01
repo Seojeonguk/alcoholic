@@ -11,15 +11,15 @@
 ## 프로젝트 개요
 
 - **alcoholic**: 술 사진과 기록(제목 · 내용 · 날짜 · 장소 · 태그)을 남기는 React Native(Expo) 앱.
-- 스택: Expo SDK 58, React 19, React Native 0.88, React Navigation 7, Redux Toolkit 2, Firebase 13(Auth · Firestore · Storage), expo-image.
+- 스택: Expo SDK 58, React 19, React Native 0.88, React Navigation 7, Redux Toolkit 2, Firebase(`@react-native-firebase` 27: Auth · Firestore · Storage), expo-image.
 - 목표: v1.0.0을 Android(Google Play)로 첫 출시. 진행 상황은 #220(v1.0.0 Release Plan)과 마일스톤 `v1.0.0`에서 관리함. iOS 출시와 비회원 사용(#201)은 `v1.1.0`.
 
 ### 구조
 
 ```text
 App.js               # Redux Provider · SafeArea · Navigation · Toast
-app.config.js        # Expo 설정, .env의 Firebase 키를 extra로 넘김
-firebaseConfig.js    # Firebase 초기화 (Auth는 AsyncStorage persistence)
+app.config.js        # Expo 설정, google-services.json 경로 · 플러그인
+firebaseConfig.js    # Firebase 네이티브 SDK의 auth · db (설정은 google-services.json)
 navigation/          # 루트 native stack + 하단 탭(Gallery · Settings)
 screens/             # 화면 (MainPage, Login, RegistrationForm, ForgotPassword, Gallery, GalleryForm, Details, Settings)
 components/          # 화면에서 쓰는 컴포넌트 (Photo, Carousel, Tags, Header, TouchableImage …)
@@ -33,7 +33,7 @@ lib/                 # 공용 유틸 (showToast, 에러 메시지 변환, 이메
 
 ```bash
 npm install
-npx expo start                     # 개발 서버, 최신 Expo Go로 확인
+npx expo start                     # 개발 서버, 개발용 빌드(eas build --profile development)로 확인
 npx expo-doctor                    # 의존성 · 설정 검사
 npm run lint                       # ESLint(eslint-config-expo + Prettier) 검사, 경고도 실패로 봄
 npm run test:unit                  # lib 함수 단위 테스트 (node --test)
@@ -42,7 +42,7 @@ npx expo export --platform android --output-dir <scratchpad>/export   # 번들�
 npm run test:rules                 # Firestore · Storage 보안 규칙 테스트 (에뮬레이터, Java 21 이상)
 ```
 
-- 루트에 `.env`가 있어야 함(git에 올리지 않음): `EXPO_PUBLIC_FIREBASE_API_KEY`, `_AUTH_DOMAIN`, `_PROJECT_ID`, `_STORAGE_BUCKET`, `_MESSAGING_SENDER_ID`, `_APP_ID`, `_MEASUREMENT_ID`. Expo CLI가 자동으로 읽음(`dotenv` 쓰지 않음).
+- 루트에 Firebase 콘솔에서 받은 `google-services.json`이 있어야 빌드됨(git에 올리지 않음). `.env`(`EXPO_PUBLIC_*`)는 Expo CLI가 자동으로 읽음(`dotenv` 쓰지 않음).
 - 패키지는 `npm install` 대신 **`npx expo install <패키지>`**로 넣어서 SDK에 맞는 버전을 받음.
 - `export` 결과물은 저장소 안에 두지 않고 scratchpad에 만듦.
 - 보안 규칙(`firestore.rules` · `storage.rules`)을 바꾸면 `tests/rules/`에 테스트를 먼저 쓰고 `npm run test:rules`로 확인함. 배포(`npx firebase deploy --only firestore:rules,storage`)는 사용자가 함.
@@ -62,7 +62,7 @@ npm run test:rules                 # Firestore · Storage 보안 규칙 테스�
 
 ### 확인 방법
 
-- PR을 열면 GitHub Actions(`.github/workflows/ci.yml`)가 lint · 단위 테스트 · Android 번들 · 보안 규칙 테스트를 돌림. CI에서는 `.env` 대신 더미 Firebase 값을 씀.
+- PR을 열면 GitHub Actions(`.github/workflows/ci.yml`)가 lint · 단위 테스트 · Android 번들 · 보안 규칙 테스트를 돌림. `npx expo export`는 네이티브 설정 파일 없이도 되므로 CI에 Firebase 값은 필요 없음.
 - 그래도 PR 전에 로컬에서 `npm run lint`, `npm run test:unit`, `npx expo-doctor`, `npx expo export --platform android`를 돌려 확인함.
 - `npx expo lint`는 `components/` 같은 일부 폴더만 검사하므로 쓰지 않고 `npm run lint`(`eslint .`)를 씀.
 - 이 환경에서는 앱을 기기에서 직접 실행해 볼 수 없음. 실제 동작은 PR 체크리스트로 사용자가 확인함. 확인하지 못한 것을 확인했다고 쓰지 않음.
@@ -74,7 +74,7 @@ npm run test:rules                 # Firestore · Storage 보안 규칙 테스�
 - **커밋 메시지**: 짧은 한국어 제목 + 본문 **한 줄** `~합니다.` 형식으로 커밋이 미치는 결과를 씀(예: 제목 `Expo SDK 업그레이드`, 본문 `Expo SDK와 의존성을 최신 버전으로 올립니다.`). 자세한 이유 · 확인 내용은 PR 본문에 씀.
 - squash merge 기본 메시지는 PR 본문이 아니라 **커밋 메시지**를 쓰도록 설정돼 있음(`squash_merge_commit_title=COMMIT_OR_PR_TITLE`, `squash_merge_commit_message=COMMIT_MESSAGES`). 그래서 PR 하나에 커밋 하나를 유지함. 리뷰 반영 등으로 커밋이 늘면 머지 전에 하나로 합침.
 - **Claude attribution 금지**: `Co-Authored-By: Claude`나 "Generated with Claude Code"를 커밋 · PR에 넣지 않음.
-- **PR 본문**: 맨 위에 `Closes #N` → `## 요약` → `## 확인한 것`(실행한 명령과 결과) → 마지막에 **`## 기기에서 확인해 주세요`** 체크리스트(사용자가 직접 확인할 동작을 "행동 → 기대 결과" 형식으로. `.env` · 설정 단계도 포함).
+- **PR 본문**: 맨 위에 `Closes #N` → `## 요약` → `## 확인한 것`(실행한 명령과 결과) → 마지막에 **`## 기기에서 확인해 주세요`** 체크리스트(사용자가 직접 확인할 동작을 "행동 → 기대 결과" 형식으로. `google-services.json` · `.env` · 설정 단계도 포함).
 - **PR · 이슈 생성 시**: 레이블(`feat`, `fix`, `bug`, `delete`, `documentation`, `plan`, `question`), `--assignee @me`, 맞는 마일스톤을 항상 지정함. 여러 이슈를 묶는 상위 이슈에는 `plan` 레이블을 붙이고 하위 이슈를 체크리스트로 적음.
 - **이슈 본문**: `### [문제]` → `### [기대 동작]` → `### [체크리스트]` 형식.
 
@@ -87,7 +87,8 @@ npm run test:rules                 # Firestore · Storage 보안 규칙 테스�
 
 ## 주의사항
 
-- **`.env`는 git에 올리지 않음**(`.gitignore`, #197). Firebase 키를 코드에 직접 쓰지 않음. EAS 빌드 · 업데이트는 EAS 환경 변수에서 키를 받음. `eas.json`에는 환경 · 채널 이름만 있어서 git에 올림(#240).
+- **`.env` · `google-services.json`은 git에 올리지 않음**(`.gitignore`, #197 · #286). Firebase 키를 코드에 직접 쓰지 않음. EAS 빌드는 파일 환경 변수 `GOOGLE_SERVICES_JSON`에서 받음. `eas.json`에는 환경 · 채널 이름만 있어서 git에 올림(#240).
+- **Firebase는 `@react-native-firebase` 네이티브 SDK**(#286): Expo Go에서 동작하지 않으므로 개발용 빌드(`eas.json`의 `development`)로 확인함. 함수는 웹 SDK처럼 modular API(`getAuth()`, `doc(db, …)`)로 쓰고 예전 namespaced API(`auth().…`, `firestore().collection`)는 쓰지 않음. 사진은 `putFile`로 올림(`uploadBytes`는 구현돼 있지 않음). 보안 규칙 테스트만 웹 SDK(`firebase`, devDependency)를 씀.
 - **EAS Update**(`runtimeVersion` 정책 `appVersion`): 같은 `version`의 빌드에만 업데이트가 감. 패키지 · 플러그인 · 권한 같은 네이티브 변경이 들어간 PR은 새 빌드가 필요하다고 PR 본문에 적고, 스토어에 올릴 때 `version`을 꼭 올림. 배포 방법은 README의 "JS 수정 바로 배포하기".
 - **React Navigation 7**: 이미 스택에 있는 화면으로 돌아갈 때는 `navigate`가 아니라 `popTo`를 씀. 부모 스택에서 탭 안의 화면으로 갈 때는 `{ screen: ... }` 파라미터로 중첩해서 지정함. 화면 파라미터는 객체로 넘김(`{ docId }`).
 - **사진 선택은 시스템 사진 선택기**(`expo-image-picker`의 `launchImageLibraryAsync`, 여러 장 선택)를 씀(#233). `expo-media-library`로 기기 사진 전체를 읽는 방식은 Android Expo Go에서 동작하지 않고, Google Play 정책상 `READ_MEDIA_IMAGES`가 거절될 수 있어서 쓰지 않음. 사진 · 오디오 권한을 새로 추가하지 않음.

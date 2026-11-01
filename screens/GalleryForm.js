@@ -14,11 +14,17 @@ import {
 } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { createNewPost, updateDocForId } from '../services';
-import { getPostLimitError, resizeForUpload, showToast, usePreventLeave } from '../lib';
+import {
+  getImageContentType,
+  getPostLimitError,
+  resizeForUpload,
+  showToast,
+  usePreventLeave,
+} from '../lib';
 import { init } from '../redux';
 
-import { getAuth } from 'firebase/auth';
-import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
+import { getAuth } from '@react-native-firebase/auth';
+import { getDownloadURL, getStorage, putFile, ref } from '@react-native-firebase/storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import uuid from 'react-native-uuid';
 import { useDispatch, useSelector } from 'react-redux';
@@ -142,29 +148,13 @@ export default function GalleryForm({ navigation, route }) {
     if (isUploaded(uri)) {
       return uri;
     }
-    const blob = await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = function () {
-        resolve(xhr.response);
-      };
-      xhr.onerror = function (e) {
-        reject(new TypeError('Network request failed'));
-      };
-      xhr.responseType = 'blob';
-      xhr.open('GET', uri, true);
-      xhr.send(null);
-    });
-
     // storage.rules: 본인 uid 폴더에 이미지 타입으로만 올릴 수 있음
+    // 네이티브 SDK는 기기의 파일을 바로 올림(uploadBytes는 구현돼 있지 않음)
     const uid = getAuth().currentUser.uid;
     const fileRef = ref(getStorage(), `posts/${uid}/${uuid.v4()}`);
-    await uploadBytes(fileRef, blob, {
-      contentType: blob.type?.startsWith('image/') ? blob.type : 'image/jpeg',
-    });
+    await putFile(fileRef, uri, { contentType: getImageContentType(uri) });
 
     const downloadURL = await getDownloadURL(fileRef);
-
-    blob.close();
     setUploadProgress((progress) => ({ ...progress, done: progress.done + 1 }));
 
     return downloadURL;

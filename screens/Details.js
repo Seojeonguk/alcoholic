@@ -7,7 +7,7 @@ import { formatDay, showToast, usePreventLeave } from '../lib';
 import { updateGallery } from '../redux';
 import { deletePost, getPost } from '../services';
 
-import { getAuth } from 'firebase/auth';
+import { getAuth } from '@react-native-firebase/auth';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';

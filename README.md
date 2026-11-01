@@ -10,22 +10,22 @@
 
 ## 기술 스택
 
-| 영역      | 사용한 것                                                |
-| --------- | -------------------------------------------------------- |
-| 앱        | Expo SDK 58, React 19, React Native 0.88                 |
-| 화면 이동 | React Navigation 7 (native stack + bottom tabs)          |
-| 상태 관리 | Redux Toolkit 2                                          |
-| 백엔드    | Firebase 13 (Authentication · Cloud Firestore · Storage) |
-| 이미지    | expo-image, expo-image-picker (시스템 사진 선택기)       |
+| 영역      | 사용한 것                                                                                    |
+| --------- | -------------------------------------------------------------------------------------------- |
+| 앱        | Expo SDK 58, React 19, React Native 0.88                                                     |
+| 화면 이동 | React Navigation 7 (native stack + bottom tabs)                                              |
+| 상태 관리 | Redux Toolkit 2                                                                              |
+| 백엔드    | Firebase (`@react-native-firebase` 네이티브 SDK: Authentication · Cloud Firestore · Storage) |
+| 이미지    | expo-image, expo-image-picker (시스템 사진 선택기)                                           |
 
 ## 로컬에서 실행하기
 
 ### 1. 준비물
 
 - **Node.js** 22.13 이상 또는 24.3 이상
-- **휴대폰에 Expo Go** 최신 버전 (SDK 58을 지원하는 버전)
-  - [Android(Google Play)](https://play.google.com/store/apps/details?id=host.exp.exponent) · [iOS(App Store)](https://apps.apple.com/app/expo-go/id982107779)
-  - 휴대폰 대신 Android 에뮬레이터(Android Studio)나 iOS 시뮬레이터(macOS, Xcode)를 써도 돼요.
+- **Android 휴대폰이나 에뮬레이터**(Android Studio)에 설치한 **개발용 빌드** (아래 4번)
+  - 앱이 Firebase 네이티브 SDK를 써서 **Expo Go에서는 실행되지 않아요.**
+- **Expo 계정**과 `npx eas-cli login` (개발용 빌드를 EAS에서 만들어요)
 - 앱이 연결할 **Firebase 프로젝트** (Authentication의 이메일/비밀번호 로그인, Firestore, Storage 사용)
 
 ### 2. 저장소 받기와 패키지 설치
@@ -36,48 +36,43 @@ cd alcoholic
 npm install
 ```
 
-### 3. `.env` 만들기
+### 3. `google-services.json` 넣기
 
-프로젝트 루트에 `.env` 파일을 만들고 Firebase 설정 값을 넣어요. 값을 찾는 방법과 켜 둬야 하는 Firebase 기능은 [Firebase 설정](docs/firebase-setup.md)에 정리했어요.
+Firebase 콘솔에서 Android 앱의 `google-services.json`을 받아 **프로젝트 루트**에 둬요. 받는 방법과 켜 둬야 하는 Firebase 기능은 [Firebase 설정](docs/firebase-setup.md)에 정리했어요.
 
-```dotenv
-EXPO_PUBLIC_FIREBASE_API_KEY=
-EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=
-EXPO_PUBLIC_FIREBASE_PROJECT_ID=
-EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=
-EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-EXPO_PUBLIC_FIREBASE_APP_ID=
-EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=
+- `google-services.json`은 git에 올리지 않아요(`.gitignore`에 들어 있어요). EAS 빌드에는 파일 환경 변수로 넣어요(아래 "빌드 · 배포").
+- 이 파일은 **빌드할 때 앱에 들어가요.** 바꾸면 개발용 빌드를 다시 만들어야 해요.
+
+### 4. 개발용 빌드 설치하기
+
+앱이 Firebase 네이티브 SDK를 써서 Expo Go 대신 **개발용 빌드**(이 앱 전용 Expo Go라고 생각하면 돼요)를 한 번 설치해요.
+
+```bash
+npx eas-cli build --platform android --profile development
 ```
 
-- Expo CLI가 `.env`를 자동으로 읽어서 `app.config.js`에 넘겨요. 따로 설치할 건 없어요.
-- `.env`는 git에 올리지 않아요(`.gitignore`에 들어 있어요).
-- `.env`를 고친 뒤에는 개발 서버를 껐다가 다시 켜야 반영돼요.
+빌드가 끝나면 나오는 QR 코드나 링크로 APK를 받아 설치해요. 네이티브 패키지를 추가 · 변경하거나 `app.config.js`의 네이티브 설정을 바꿨을 때만 다시 만들어요. JS 코드만 바꿨다면 다시 만들 필요가 없어요.
 
-### 4. 개발 서버 실행
+### 5. 개발 서버 실행
 
 ```bash
 npx expo start
 ```
 
-터미널에 QR 코드가 나오면 아래 방법 중 하나로 앱을 열어요.
-
-- **Android 휴대폰**: Expo Go 앱에서 QR 코드를 스캔해요.
-- **iPhone**: 기본 카메라 앱으로 QR 코드를 스캔해요.
-- **Android 에뮬레이터**: 에뮬레이터를 켜 둔 상태에서 터미널에서 `a`를 눌러요(또는 `npm run android`).
-- **iOS 시뮬레이터**(macOS): 터미널에서 `i`를 눌러요(또는 `npm run ios`).
+설치한 개발용 빌드(`alcoholic`)를 열면 같은 Wi-Fi의 개발 서버가 목록에 나와요. 고르거나, 터미널의 QR 코드를 개발용 빌드로 스캔해요. Android 에뮬레이터는 터미널에서 `a`를 눌러요.
 
 휴대폰과 컴퓨터는 **같은 Wi-Fi**에 있어야 해요. 코드를 저장하면 앱에 바로 반영되고, 터미널에서 `r`을 누르면 앱을 새로 불러와요.
 
-### 5. 문제가 생기면
+### 6. 문제가 생기면
 
-| 증상                                          | 해결 방법                                                      |
-| --------------------------------------------- | -------------------------------------------------------------- |
-| 휴대폰에서 개발 서버에 연결되지 않아요        | 같은 Wi-Fi인지 확인하거나 `npx expo start --tunnel`로 실행해요 |
-| Expo Go에서 "SDK 버전이 맞지 않는다"고 나와요 | Expo Go를 최신 버전으로 업데이트해요                           |
-| 패키지를 바꾼 뒤 이상한 에러가 나요           | `npx expo start -c`로 Metro 캐시를 지우고 실행해요             |
-| 로그인 · 저장에서 Firebase 에러가 나요        | `.env` 값이 맞는지 확인하고 개발 서버를 다시 켜요              |
-| 의존성 버전이 맞는지 궁금해요                 | `npx expo-doctor`, `npx expo install --check`로 검사해요       |
+| 증상                                       | 해결 방법                                                         |
+| ------------------------------------------ | ----------------------------------------------------------------- |
+| 휴대폰에서 개발 서버에 연결되지 않아요     | 같은 Wi-Fi인지 확인하거나 `npx expo start --tunnel`로 실행해요    |
+| Expo Go로 열면 Firebase 모듈 에러가 나요   | Expo Go가 아니라 개발용 빌드(4번)로 열어요                        |
+| 네이티브 패키지를 바꾼 뒤 앱이 바로 꺼져요 | 개발용 빌드를 다시 만들어 설치해요                                |
+| 패키지를 바꾼 뒤 이상한 에러가 나요        | `npx expo start -c`로 Metro 캐시를 지우고 실행해요                |
+| 로그인 · 저장에서 Firebase 에러가 나요     | `google-services.json`이 맞는 프로젝트 · 패키지 이름인지 확인해요 |
+| 의존성 버전이 맞는지 궁금해요              | `npx expo-doctor`, `npx expo install --check`로 검사해요          |
 
 ## 패키지 추가하기
 
@@ -91,20 +86,20 @@ npx expo start
 
 [EAS Build](https://docs.expo.dev/build/introduction/)로 빌드하고 Google Play에 올려요. 빌드 프로필은 `eas.json`에 있어요.
 
-| 프로필       | 결과물 | 업데이트 채널 | 쓰는 곳                              |
-| ------------ | ------ | ------------- | ------------------------------------ |
-| `preview`    | APK    | `preview`     | 기기에 바로 설치해서 확인            |
-| `production` | AAB    | `production`  | Google Play 업로드(내부 테스트 트랙) |
+| 프로필        | 결과물 | 업데이트 채널 | 쓰는 곳                              |
+| ------------- | ------ | ------------- | ------------------------------------ |
+| `development` | APK    | `development` | 개발용 빌드(개발 서버에 붙어서 실행) |
+| `preview`     | APK    | `preview`     | 기기에 바로 설치해서 확인            |
+| `production`  | AAB    | `production`  | Google Play 업로드(내부 테스트 트랙) |
 
 ### 1. 처음 한 번 준비하기
 
 ```bash
 npx eas-cli login
-npx eas-cli env:push --environment production --path .env
-npx eas-cli env:push --environment preview --path .env
+npx eas-cli env:create --environment development --environment preview --environment production   --name GOOGLE_SERVICES_JSON --type file --value ./google-services.json --visibility secret
 ```
 
-- `.env`는 git에 올리지 않아서 EAS 서버에 올라가지 않아요. 그래서 Firebase 키를 **EAS 환경 변수**로 따로 넣어요. 각 프로필은 `eas.json`의 `environment`에 맞는 변수를 써요.
+- `google-services.json`은 git에 올리지 않아서 EAS 서버에 올라가지 않아요. 그래서 **EAS 파일 환경 변수** `GOOGLE_SERVICES_JSON`으로 넣어요. 빌드할 때 `app.config.js`가 이 파일 경로를 `android.googleServicesFile`로 써요. 각 프로필은 `eas.json`의 `environment`에 맞는 변수를 써요.
 - 값이 바뀌면 같은 명령에 `--force`를 붙여 다시 넣어요. 넣은 값은 `npx eas-cli env:list --environment production`이나 [expo.dev](https://expo.dev) 프로젝트의 **Environment variables**에서 확인해요.
 
 ### 2. 빌드하기
@@ -152,7 +147,7 @@ npx eas-cli update --channel preview --environment preview --message "고친 내
 npx eas-cli update --channel production --environment production --message "고친 내용"
 ```
 
-- `--environment`를 **꼭** 붙여요. 빼면 Firebase 키가 없는 번들이 배포돼서 앱이 켜지자마자 멈춰요.
+- `--environment`를 **꼭** 붙여요. 업데이트 번들에 들어가는 `EXPO_PUBLIC_*` 값을 빌드와 같은 EAS 환경 변수에서 읽어요. Firebase 설정(`google-services.json`)은 빌드에 들어 있어서 업데이트로는 바뀌지 않아요.
 - 보낸 업데이트는 `npx eas-cli update:list --branch production`이나 [expo.dev](https://expo.dev) 프로젝트의 **Updates**에서 확인해요.
 
 **되돌리기**
@@ -167,4 +162,4 @@ npx eas-cli update:rollback
 **새 빌드를 올릴 때**
 
 - 네이티브가 바뀐 빌드는 `version`을 올려서 만들어요. `version`이 그대로면 예전 빌드용 업데이트가 새 빌드에도 가서 앱이 멈출 수 있어요.
-- Expo Go와 `npx expo start`에서는 업데이트를 받지 않아요. 업데이트는 EAS로 만든 빌드에서만 확인할 수 있어요.
+- 개발용 빌드(`development`)와 `npx expo start`에서는 업데이트를 받지 않아요. 업데이트는 `preview` · `production` 빌드에서 확인해요.

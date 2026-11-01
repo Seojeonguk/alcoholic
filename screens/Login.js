@@ -14,7 +14,7 @@ import {
 } from '../lib';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from '@react-native-firebase/auth';
 
 export default function Login({ navigation }) {
   const [email, setEmail] = useState('');

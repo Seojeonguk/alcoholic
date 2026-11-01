@@ -3,7 +3,7 @@ import { AuthScreen, Button, TextField } from '../components';
 import { auth } from '../firebaseConfig';
 import { getKorErrorMsg, showToast } from '../lib';
 
-import { sendPasswordResetEmail } from 'firebase/auth';
+import { sendPasswordResetEmail } from '@react-native-firebase/auth';
 
 export default function ForgetPassword({ navigation }) {
   const [email, setEmail] = useState('');

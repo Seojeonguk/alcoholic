@@ -7,7 +7,11 @@ import { auth } from '../firebaseConfig';
 import { getKorErrorMsg, showToast, usePreventLeave } from '../lib';
 import { deleteUserData } from '../services';
 
-import { deleteUser, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import {
+  deleteUser,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+} from '@react-native-firebase/auth';
 
 export default function DeleteAccount({ navigation }) {
   const [password, setPassword] = useState('');
