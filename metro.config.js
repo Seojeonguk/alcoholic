@@ -1,4 +1,5 @@
 // Learn more https://docs.expo.dev/guides/customizing-metro
-const { getDefaultConfig } = require('expo/metro-config');
+// Sentry가 소스맵과 번들을 맞춰 볼 수 있게 debug ID를 넣음
+const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 
-module.exports = getDefaultConfig(__dirname);
+module.exports = getSentryExpoConfig(__dirname);

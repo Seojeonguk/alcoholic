@@ -48,11 +48,15 @@ EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=
 EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 EXPO_PUBLIC_FIREBASE_APP_ID=
 EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=
+
+# 선택: 크래시 수집(Sentry). 비워 두면 보내지 않아요
+EXPO_PUBLIC_SENTRY_DSN=
 ```
 
 - Expo CLI가 `.env`를 자동으로 읽어서 `app.config.js`에 넘겨요. 따로 설치할 건 없어요.
 - `.env`는 git에 올리지 않아요(`.gitignore`에 들어 있어요).
 - `.env`를 고친 뒤에는 개발 서버를 껐다가 다시 켜야 반영돼요.
+- 크래시는 EAS로 만든 빌드에서만 보내요. 개발 서버(`__DEV__`)에서는 DSN이 있어도 보내지 않아요.
 
 ### 4. 개발 서버 실행
 
@@ -105,6 +109,21 @@ npx eas-cli env:push --environment preview --path .env
 ```
 
 - `.env`는 git에 올리지 않아서 EAS 서버에 올라가지 않아요. 그래서 Firebase 키를 **EAS 환경 변수**로 따로 넣어요. 각 프로필은 `eas.json`의 `environment`에 맞는 변수를 써요.
+- **크래시 수집(Sentry)** 을 쓰려면 [sentry.io](https://sentry.io)에서 React Native 프로젝트를 만들고 아래 값을 EAS 환경 변수(`production` · `preview`)에 넣어요. 없어도 빌드는 되고 크래시만 보내지 않아요.
+
+  | 이름                     | 값                                                        | 공개 범위(visibility) |
+  | ------------------------ | --------------------------------------------------------- | --------------------- |
+  | `EXPO_PUBLIC_SENTRY_DSN` | 프로젝트 설정 → Client Keys(DSN)                          | Plain text            |
+  | `SENTRY_ORG`             | 조직 슬러그                                               | Plain text            |
+  | `SENTRY_PROJECT`         | 프로젝트 슬러그                                           | Plain text            |
+  | `SENTRY_AUTH_TOKEN`      | Settings → Auth Tokens(소스맵 업로드용). 없으면 안 올려요 | Secret                |
+
+  ```bash
+  npx eas-cli env:create --environment production --name SENTRY_AUTH_TOKEN --value <토큰> --visibility secret
+  ```
+
+  Sentry 프로젝트 설정의 **Security & Privacy**에서 **Prevent Storing of IP Addresses**를 켜요.
+
 - 값이 바뀌면 같은 명령에 `--force`를 붙여 다시 넣어요. 넣은 값은 `npx eas-cli env:list --environment production`이나 [expo.dev](https://expo.dev) 프로젝트의 **Environment variables**에서 확인해요.
 
 ### 2. 빌드하기

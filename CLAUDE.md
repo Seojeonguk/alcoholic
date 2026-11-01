@@ -42,7 +42,7 @@ npx expo export --platform android --output-dir <scratchpad>/export   # 번들�
 npm run test:rules                 # Firestore · Storage 보안 규칙 테스트 (에뮬레이터, Java 21 이상)
 ```
 
-- 루트에 `.env`가 있어야 함(git에 올리지 않음): `EXPO_PUBLIC_FIREBASE_API_KEY`, `_AUTH_DOMAIN`, `_PROJECT_ID`, `_STORAGE_BUCKET`, `_MESSAGING_SENDER_ID`, `_APP_ID`, `_MEASUREMENT_ID`. Expo CLI가 자동으로 읽음(`dotenv` 쓰지 않음).
+- 루트에 `.env`가 있어야 함(git에 올리지 않음): `EXPO_PUBLIC_FIREBASE_API_KEY`, `_AUTH_DOMAIN`, `_PROJECT_ID`, `_STORAGE_BUCKET`, `_MESSAGING_SENDER_ID`, `_APP_ID`, `_MEASUREMENT_ID`. 선택으로 `EXPO_PUBLIC_SENTRY_DSN`(없으면 크래시를 보내지 않음). Expo CLI가 자동으로 읽음(`dotenv` 쓰지 않음).
 - 패키지는 `npm install` 대신 **`npx expo install <패키지>`**로 넣어서 SDK에 맞는 버전을 받음.
 - `export` 결과물은 저장소 안에 두지 않고 scratchpad에 만듦.
 - 보안 규칙(`firestore.rules` · `storage.rules`)을 바꾸면 `tests/rules/`에 테스트를 먼저 쓰고 `npm run test:rules`로 확인함. 배포(`npx firebase deploy --only firestore:rules,storage`)는 사용자가 함.

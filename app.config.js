@@ -45,8 +45,19 @@ export default {
       firebaseMessagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
       firebaseAppId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
       firebaseMeasurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
+      // 없으면 크래시를 보내지 않음(lib/sentry.js)
+      sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
     },
     plugins: [
+      [
+        '@sentry/react-native/expo',
+        {
+          organization: process.env.SENTRY_ORG,
+          project: process.env.SENTRY_PROJECT,
+          // 토큰 없이 소스맵을 올리면 빌드가 실패하므로, 토큰이 없을 때는 올리지 않음
+          disableAutoUpload: !process.env.SENTRY_AUTH_TOKEN,
+        },
+      ],
       [
         'expo-splash-screen',
         {
