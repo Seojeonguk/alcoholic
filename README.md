@@ -162,4 +162,5 @@ npx eas-cli update:rollback
 **새 빌드를 올릴 때**
 
 - 네이티브가 바뀐 빌드는 `version`을 올려서 만들어요. `version`이 그대로면 예전 빌드용 업데이트가 새 빌드에도 가서 앱이 멈출 수 있어요.
+- 크래시와 처리하지 못한 에러는 `preview` · `production` 빌드에서만 Firebase 콘솔의 **Crashlytics**에 모여요. 개발용 빌드에서는 보내지 않아요.
 - 개발용 빌드(`development`)와 `npx expo start`에서는 업데이트를 받지 않아요. 업데이트는 `preview` · `production` 빌드에서 확인해요.
