@@ -12,6 +12,7 @@ import {
   setEmailRequestLimit,
   showToast,
 } from '../lib';
+import { leaveGuestMode } from '../services';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { signInWithEmailAndPassword } from '@react-native-firebase/auth';
@@ -70,7 +71,13 @@ export default function Login({ navigation }) {
         const user = userCredential.user;
         const emailVerified = user.emailVerified;
         if (emailVerified) {
-          navigation.replace(NAVIGATOR.BOTTOM_TAB_NAV, { screen: NAVIGATOR.GALLERY });
+          // 비회원이 설정 → 첫 화면 → 로그인으로 왔으면 아래에 남은 비회원 탭까지 치움
+          // 기기의 비회원 기록은 갤러리에서 이 계정으로 옮김(useGuestMigration)
+          await leaveGuestMode();
+          navigation.reset({
+            index: 0,
+            routes: [{ name: NAVIGATOR.BOTTOM_TAB_NAV, params: { screen: NAVIGATOR.GALLERY } }],
+          });
           return;
         }
         await checkEmailRequestLimit(user);
@@ -92,7 +99,8 @@ export default function Login({ navigation }) {
   return (
     <AuthScreen
       bottom={<Button onPress={handleLogin} title="로그인" />}
-      onBack={() => navigation.replace(NAVIGATOR.MAIN_PAGE)}
+      // 스택에 있는 첫 화면으로 돌아가면서 파라미터(비회원 백업 화면 fromGuest)를 그대로 둠
+      onBack={() => navigation.popTo(NAVIGATOR.MAIN_PAGE, undefined, { merge: true })}
       title="이메일로 로그인"
     >
       <TextField

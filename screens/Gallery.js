@@ -11,7 +11,7 @@ import {
 import { Button, GalleryFilter, Post, PressableScale, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { collectTags, filterPosts, groupPostsByMonth, showToast } from '../lib';
-import { getPosts } from '../services';
+import { getLocalPosts, getPosts, isMember, useGuestMigration } from '../services';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -45,7 +45,10 @@ export default function Gallery({ navigation }) {
   const loadPosts = useCallback(async (isActive = () => true) => {
     setIsRefreshing(true);
     try {
-      const userPosts = await getPosts(getAuth().currentUser.email);
+      // 비회원은 기기에 저장한 기록을 보여 줌(#201)
+      const userPosts = isMember()
+        ? await getPosts(getAuth().currentUser.email)
+        : await getLocalPosts();
       if (isActive()) {
         setPosts(userPosts);
         setIsLoaded(true);
@@ -60,6 +63,10 @@ export default function Gallery({ navigation }) {
       }
     }
   }, []);
+
+  // 회원이면 기기에 남은 비회원 기록을 계정으로 옮기고, 끝나면 목록을 다시 불러옴(#201)
+  const reloadPosts = useCallback(() => loadPosts(), [loadPosts]);
+  const { progress: migration } = useGuestMigration(reloadPosts);
 
   // 글을 쓰고 돌아왔을 때도 새 글이 보이도록 화면에 들어올 때마다 다시 불러옴
   useFocusEffect(
@@ -154,6 +161,12 @@ export default function Gallery({ navigation }) {
         </PressableScale>
       </View>
 
+      {migration ? (
+        <Text style={styles.migration}>
+          {`기기의 기록 옮기는 중 ${migration.done}/${migration.total}`}
+        </Text>
+      ) : null}
+
       {isLoaded && posts.length > 0 ? (
         <GalleryFilter filter={activeFilter} onChange={setFilter} tags={tags} />
       ) : null}
@@ -197,6 +210,12 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: COLORS.BACKGROUND,
     flex: 1,
+  },
+  migration: {
+    color: COLORS.TEXT_SUB,
+    fontSize: 13,
+    paddingBottom: 8,
+    paddingHorizontal: SIDE_PADDING,
   },
   empty: {
     alignItems: 'center',

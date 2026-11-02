@@ -1,0 +1,76 @@
+// 기기의 비회원 기록을 인증된 계정으로 옮김(#201)
+// 다시 시도해도 두 번 올라가지 않게 사진은 같은 경로, 글은 기기 글 ID를 문서 ID로 씀
+// 다 올라간 글만 기기에서 지우므로 중간에 끊겨도 다음에 남은 것부터 이어서 옮김
+import { db } from '../firebaseConfig';
+import { getImageContentType, photoIdFromUri, toRemotePost } from '../lib';
+import { createUserInfo } from './docs';
+import { claimLocalPosts, deleteLocalPost } from './localPosts';
+
+import { arrayUnion, doc, getDoc, setDoc, updateDoc } from '@react-native-firebase/firestore';
+import { getDownloadURL, getStorage, putFile, ref } from '@react-native-firebase/storage';
+import { File } from 'expo-file-system';
+
+// 이미 올라가 있으면(지난번에 올리다 끊김) 규칙상 덮어쓸 수 없으므로 URL만 받음
+const uploadOnce = async (uid, uri) => {
+  const photoRef = ref(getStorage(), `posts/${uid}/${photoIdFromUri(uri)}`);
+  try {
+    return await getDownloadURL(photoRef);
+  } catch (e) {
+    if (e?.code !== 'storage/object-not-found') {
+      throw e;
+    }
+  }
+  await putFile(photoRef, uri, { contentType: getImageContentType(uri) });
+  return getDownloadURL(photoRef);
+};
+
+const migratePost = async (post, uid, email) => {
+  // 기기에서 사라진 사진은 빼고 옮김. 그래야 옮기기가 끝없이 실패하지 않음
+  const photos = post.photos.filter((uri) => new File(uri).exists);
+  const urls = [];
+  for (const uri of photos) {
+    urls.push(await uploadOnce(uid, uri));
+  }
+  await setDoc(doc(db, 'posts', post.id), toRemotePost(post, email, urls));
+  await updateDoc(doc(db, 'users', email), { posts: arrayUnion(post.id) });
+  await deleteLocalPost(post.id);
+};
+
+const run = async ({ uid, email, onProgress }) => {
+  const posts = await claimLocalPosts(uid);
+  if (posts.length === 0) {
+    return { moved: 0, failed: 0 };
+  }
+  // 가입할 때 사용자 문서를 만들지 못한 계정이면 먼저 만듦
+  if (!(await getDoc(doc(db, 'users', email))).exists()) {
+    await createUserInfo(email);
+  }
+
+  let moved = 0;
+  let failed = 0;
+  onProgress?.({ done: 0, total: posts.length });
+  for (const post of posts) {
+    try {
+      await migratePost(post, uid, email);
+      moved += 1;
+    } catch {
+      failed += 1;
+    }
+    onProgress?.({ done: moved + failed, total: posts.length });
+  }
+  return { moved, failed };
+};
+
+// 갤러리에 빨리 다시 들어와도 한 번만 돌게 진행 중인 작업을 함께 씀
+let running = null;
+
+const migrateGuestPosts = (options) => {
+  if (!running) {
+    running = run(options).finally(() => {
+      running = null;
+    });
+  }
+  return running;
+};
+
+export { migrateGuestPosts };

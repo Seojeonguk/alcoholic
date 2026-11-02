@@ -23,7 +23,7 @@ firebaseConfig.js    # Firebase 네이티브 SDK의 auth · db (설정은 google
 navigation/          # 루트 native stack + 하단 탭(Gallery · Settings)
 screens/             # 화면 (MainPage, Login, RegistrationForm, ForgotPassword, Gallery, GalleryForm, Details, Settings)
 components/          # 화면에서 쓰는 컴포넌트 (Photo, Carousel, Tags, Header, TouchableImage …)
-services/            # Firestore 문서 읽기 · 쓰기 함수 (firebase.json과 이름이 겹치지 않게 firebase/가 아닌 services/)
+services/            # Firestore 문서 읽기 · 쓰기 함수 (firebase.json과 이름이 겹치지 않게 firebase/가 아닌 services/), 비회원 기기 저장소(localPosts) · 옮기기
 redux/               # store, gallerySlice (게시글 작성 폼 상태)
 constants/           # 네비게이션 이름(NAVIGATOR), 색상(COLORS), 에러 메시지
 lib/                 # 공용 유틸 (showToast, 에러 메시지 변환, 이메일 재전송 제한)
@@ -91,6 +91,7 @@ npm run test:rules                 # Firestore · Storage 보안 규칙 테스�
 - **Firebase는 `@react-native-firebase` 네이티브 SDK**(#286): Expo Go에서 동작하지 않으므로 개발용 빌드(`eas.json`의 `development`)로 확인함. 함수는 웹 SDK처럼 modular API(`getAuth()`, `doc(db, …)`)로 쓰고 예전 namespaced API(`auth().…`, `firestore().collection`)는 쓰지 않음. 사진은 `putFile`로 올림(`uploadBytes`는 구현돼 있지 않음). 보안 규칙 테스트만 웹 SDK(`firebase`, devDependency)를 씀.
 - **Crashlytics**(#259): `firebaseConfig.js`에서 `getCrashlytics()`를 불러 처리하지 못한 JS 에러 처리기를 등록함. 개발용 빌드(debug)에서는 보내지 않아서 `preview` · `production` 빌드로 확인함. 사용자 ID · 이메일은 넣지 않음.
 - **App Check**(#260): `firebaseConfig.js`에서 Auth · Firestore보다 먼저 초기화함. 개발용 빌드는 `debug` 공급자 + `.env`의 `EXPO_PUBLIC_APP_CHECK_DEBUG_TOKEN`, 배포 빌드는 `playIntegrity`. 디버그 토큰은 preview · production 환경 변수에 넣지 않음. 적용(enforce)은 콘솔에서 사용자가 함(`docs/firebase-setup.md`).
+- **비회원(가입 없이 쓰기)**(#201): 화면은 `isMember()`(인증된 로그인이 있는지)로 갈라서 회원은 `services/docs.js`, 비회원은 `services/localPosts.js`(`expo-file-system`, 문서 폴더의 `guest/`)를 씀. 비회원 기록은 가입 전에 서버로 보내지 않음. 인증된 계정으로 갤러리에 들어오면 `useGuestMigration`이 기기 기록을 옮김: 처음 옮기기 시작한 계정의 uid를 글에 적어 두고 그 계정으로만 옮기며, 기기 글 ID를 문서 ID로 · 같은 사진 경로로 써서 다시 시도해도 두 번 올라가지 않음. 판단 · 변환은 `lib/guestPosts.js`(단위 테스트).
 - **EAS Update**(`runtimeVersion` 정책 `appVersion`): 같은 `version`의 빌드에만 업데이트가 감. 패키지 · 플러그인 · 권한 같은 네이티브 변경이 들어간 PR은 새 빌드가 필요하다고 PR 본문에 적고, 스토어에 올릴 때 `version`을 꼭 올림. 배포 방법은 README의 "JS 수정 바로 배포하기".
 - **React Navigation 7**: 이미 스택에 있는 화면으로 돌아갈 때는 `navigate`가 아니라 `popTo`를 씀. 부모 스택에서 탭 안의 화면으로 갈 때는 `{ screen: ... }` 파라미터로 중첩해서 지정함. 화면 파라미터는 객체로 넘김(`{ docId }`).
 - **사진 선택은 시스템 사진 선택기**(`expo-image-picker`의 `launchImageLibraryAsync`, 여러 장 선택)를 씀(#233). `expo-media-library`로 기기 사진 전체를 읽는 방식은 Android Expo Go에서 동작하지 않고, Google Play 정책상 `READ_MEDIA_IMAGES`가 거절될 수 있어서 쓰지 않음. 사진 · 오디오 권한을 새로 추가하지 않음.
