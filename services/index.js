@@ -7,8 +7,39 @@ import {
   getPosts,
   updateDocForId,
 } from './docs';
+import {
+  GUEST_PHOTO_DIR_URI,
+  claimLocalPosts,
+  createLocalPost,
+  deleteLocalPost,
+  deleteVisibleLocalPosts,
+  getLocalPost,
+  getLocalPosts,
+  isLocalPhoto,
+  saveLocalPhoto,
+  updateLocalPost,
+} from './localPosts';
+import { migrateGuestPosts } from './migrateGuestPosts';
+import useGuestMigration from './useGuestMigration';
+import { enterGuestMode, hasGuestFlag, isMember, leaveGuestMode } from './session';
 
 export {
+  migrateGuestPosts,
+  useGuestMigration,
+  enterGuestMode,
+  hasGuestFlag,
+  isMember,
+  leaveGuestMode,
+  GUEST_PHOTO_DIR_URI,
+  claimLocalPosts,
+  createLocalPost,
+  deleteLocalPost,
+  deleteVisibleLocalPosts,
+  getLocalPost,
+  getLocalPosts,
+  isLocalPhoto,
+  saveLocalPhoto,
+  updateLocalPost,
   createNewPost,
   createUserInfo,
   deletePost,

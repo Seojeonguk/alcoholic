@@ -2,15 +2,27 @@ import { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
 import appIcon from '../assets/icon.png';
-import { BottomButtonArea, Button } from '../components';
+import { BottomButtonArea, Button, Header } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
+import { backupMessage, getAppMode } from '../lib';
+import { enterGuestMode, getLocalPosts, hasGuestFlag, leaveGuestMode } from '../services';
 
 import { onAuthStateChanged } from '@react-native-firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+const goGallery = (navigation) =>
+  navigation.reset({
+    index: 0,
+    routes: [{ name: NAVIGATOR.BOTTOM_TAB_NAV, params: { screen: NAVIGATOR.GALLERY } }],
+  });
+
 export default function MainPage({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(true);
+  // 비회원이 설정의 "가입하고 기록 백업하기"로 들어옴. 비회원 표시가 있어도 갤러리로 돌려보내지 않음
+  const fromGuest = route.params?.fromGuest === true;
+  // 백업 화면에서 기기의 기록이 그대로 있다는 걸 개수로 알려 줌. 불러오기 전에는 null
+  const [guestPostCount, setGuestPostCount] = useState(null);
 
   const handleLoginBtn = () => {
     navigation.navigate(NAVIGATOR.LOGIN);
@@ -20,21 +32,55 @@ export default function MainPage({ navigation, route }) {
     navigation.navigate(NAVIGATOR.REGISTRATION_FORM);
   };
 
+  const handleGuestBtn = async () => {
+    await enterGuestMode();
+    goGallery(navigation);
+  };
+
   useEffect(() => {
+    let active = true;
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setIsLoading(false);
-      if (!user || !user.emailVerified) {
+      const mode = getAppMode({
+        hasVerifiedUser: user?.emailVerified === true,
+        guestFlag: await hasGuestFlag(),
+      });
+      // 기다리는 동안 화면을 떠났거나 로그인 상태가 바뀌었으면(로그아웃 직후 등) 이번 판단은 버림
+      const isStale = () => !active || auth.currentUser?.uid !== user?.uid;
+      if (isStale()) {
         return;
       }
-
-      navigation.reset({
-        index: 0,
-        routes: [{ name: NAVIGATOR.BOTTOM_TAB_NAV }],
-      });
+      if (mode === 'member') {
+        await leaveGuestMode();
+        if (!isStale()) {
+          goGallery(navigation);
+        }
+        return;
+      }
+      if (mode === 'guest' && !fromGuest) {
+        goGallery(navigation);
+        return;
+      }
+      setIsLoading(false);
     });
 
-    return unsubscribe;
-  }, [navigation]);
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, [navigation, fromGuest]);
+
+  useEffect(() => {
+    if (!fromGuest) {
+      return undefined;
+    }
+    let active = true;
+    getLocalPosts()
+      .then((posts) => active && setGuestPostCount(posts.length))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [fromGuest]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -46,17 +92,37 @@ export default function MainPage({ navigation, route }) {
 
   return (
     <SafeAreaView edges={['top']} style={styles.container}>
+      {/* 설정에서 백업하러 왔으면 처음 화면이 아니라 백업 화면으로 보여 줌(기록이 사라진 것처럼 보이지 않게) */}
+      {fromGuest && <Header left="back" onPressLeft={() => navigation.goBack()} />}
       <View style={styles.intro}>
         <Image source={appIcon} style={styles.icon} />
-        <Text style={styles.title}>{'오늘 마신 술,\n사진으로 남겨요'}</Text>
-        <Text style={styles.subtitle}>나만 보는 술 기록장</Text>
+        {fromGuest ? (
+          <>
+            <Text style={styles.title}>{'기록을 계정에\n백업해요'}</Text>
+            {guestPostCount !== null && (
+              <Text style={styles.subtitle}>{backupMessage(guestPostCount)}</Text>
+            )}
+          </>
+        ) : (
+          <>
+            <Text style={styles.title}>{'오늘 마신 술,\n사진으로 남겨요'}</Text>
+            <Text style={styles.subtitle}>나만 보는 술 기록장</Text>
+          </>
+        )}
       </View>
 
       {/* 로그인 상태를 확인하는 동안에는 버튼을 숨김(로그인돼 있으면 바로 갤러리로 감) */}
       {!isLoading && (
         <BottomButtonArea>
-          <Button onPress={handleLoginBtn} title="이메일로 시작하기" />
+          <Button
+            onPress={handleLoginBtn}
+            title={fromGuest ? '이메일로 로그인' : '이메일로 시작하기'}
+          />
           <Button onPress={handleRegistrationBtn} title="처음이에요 · 회원가입" variant="text" />
+          {/* 비회원이 백업하려고 들어왔을 때는 숨김 */}
+          {!fromGuest && (
+            <Button onPress={handleGuestBtn} title="가입 없이 시작하기" variant="text" />
+          )}
         </BottomButtonArea>
       )}
     </SafeAreaView>
@@ -83,6 +149,7 @@ const styles = StyleSheet.create({
   subtitle: {
     color: COLORS.TEXT_SUB,
     fontSize: 15,
+    lineHeight: 22,
     marginTop: 10,
   },
   title: {

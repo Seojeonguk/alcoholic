@@ -5,7 +5,7 @@ import { Carousel, Header, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { formatDay, showToast, usePreventLeave } from '../lib';
 import { updateGallery } from '../redux';
-import { deletePost, getPost } from '../services';
+import { deleteLocalPost, deletePost, getLocalPost, getPost, isMember } from '../services';
 
 import { getAuth } from '@react-native-firebase/auth';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -37,7 +37,7 @@ function Details({ route, navigation }) {
     const getPosting = async () => {
       let post;
       try {
-        post = await getPost(docId);
+        post = isMember() ? await getPost(docId) : await getLocalPost(docId);
       } catch {
         post = null;
       }
@@ -68,8 +68,12 @@ function Details({ route, navigation }) {
     isDeletingRef.current = true;
     showToast('info', '기록을 삭제하는 중이에요.');
     try {
-      const { email, uid } = getAuth().currentUser;
-      await deletePost(docId, email, uid, photos);
+      if (isMember()) {
+        const { email, uid } = getAuth().currentUser;
+        await deletePost(docId, email, uid, photos);
+      } else {
+        await deleteLocalPost(docId);
+      }
       showToast('success', '기록을 삭제했어요.');
       isDeletingRef.current = false;
       // 갤러리는 화면에 들어올 때마다 목록을 다시 불러옴

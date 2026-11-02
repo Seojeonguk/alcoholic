@@ -13,7 +13,15 @@ import {
   Title,
 } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
-import { createNewPost, updateDocForId } from '../services';
+import {
+  createLocalPost,
+  createNewPost,
+  isLocalPhoto,
+  isMember,
+  saveLocalPhoto,
+  updateDocForId,
+  updateLocalPost,
+} from '../services';
 import {
   getImageContentType,
   getPostLimitError,
@@ -29,8 +37,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import uuid from 'react-native-uuid';
 import { useDispatch, useSelector } from 'react-redux';
 
-// 이미 올라간 사진(수정할 때 남겨 둔 사진)은 다시 올리지 않음
-const isUploaded = (uri) => uri.includes('firebase');
+// 이미 올라간 사진 · 기기에 저장해 둔 사진(수정할 때 남겨 둔 사진)은 다시 올리거나 복사하지 않음
+const isUploaded = (uri) => uri.includes('firebase') || isLocalPhoto(uri);
 
 export default function GalleryForm({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -101,34 +109,41 @@ export default function GalleryForm({ navigation, route }) {
     }
     isSavingRef.current = true;
     setIsLoading(true);
-    setUploadProgress({ done: 0, total: gallery.photos.filter((uri) => !isUploaded(uri)).length });
+    // 비회원은 기기에만 저장함(#201). 사진을 올리지 않으니 진행 상황 없이 "저장하는 중…"만 보여 줌
+    const member = isMember();
+    setUploadProgress({
+      done: 0,
+      total: member ? gallery.photos.filter((uri) => !isUploaded(uri)).length : 0,
+    });
     try {
       // 사진 줄이기는 메모리를 많이 써서 한 장씩 하고, 올리기는 동시에 함
       const photoUris = [];
       for (const photo of gallery.photos) {
         photoUris.push(isUploaded(photo) ? photo : await resizeForUpload(photo));
       }
-      const downloadURLs = await Promise.all(photoUris.map(uploadPhoto));
-
-      const auth = getAuth();
-      const user = auth.currentUser;
-      const email = user.email;
+      const savedPhotos = await Promise.all(photoUris.map(member ? uploadPhoto : keepOnDevice));
 
       const data = {
         title: gallery.title,
         day: gallery.day,
-        photos: downloadURLs,
+        photos: savedPhotos,
         content: gallery.content,
         location: gallery.location,
         tags: gallery.tags,
-        writer: email,
       };
 
-      if (docId) {
+      if (!member) {
+        if (docId) {
+          await updateLocalPost(docId, data);
+        } else {
+          await createLocalPost({ ...data, createdAt: new Date().getTime() });
+        }
+      } else if (docId) {
         // 수정할 때 createdAt을 바꾸면 목록 순서가 바뀌므로 그대로 둠
-        await updateDocForId(docId, data);
+        await updateDocForId(docId, { ...data, writer: getAuth().currentUser.email });
       } else {
-        await createNewPost({ ...data, createdAt: new Date() }, email);
+        const email = getAuth().currentUser.email;
+        await createNewPost({ ...data, writer: email, createdAt: new Date() }, email);
       }
 
       initForm();
@@ -143,6 +158,9 @@ export default function GalleryForm({ navigation, route }) {
       setIsLoading(false);
     }
   };
+
+  // 비회원: 줄인 사진을 앱 문서 폴더로 복사해 둠(캐시 폴더는 시스템이 지울 수 있음)
+  const keepOnDevice = (uri) => (isUploaded(uri) ? uri : saveLocalPhoto(uri));
 
   const uploadPhoto = async (uri) => {
     if (isUploaded(uri)) {

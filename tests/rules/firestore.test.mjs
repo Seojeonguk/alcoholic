@@ -164,6 +164,18 @@ describe('users/{email}', () => {
 });
 
 describe('posts/{postId}', () => {
+  // 비회원 기록 옮기기(#201): 기기 글 ID를 문서 ID로 써서 다시 시도해도 같은 문서에 씀
+  test('옮길 때 정한 문서 ID로 내 글을 만들고, 다시 시도하면 같은 문서에 덮어쓸 수 있어요', async () => {
+    const ref = doc(verifiedDb(ME), 'posts/guest-uuid-1');
+    await assertSucceeds(setDoc(ref, newPost(ME.email)));
+    await assertSucceeds(setDoc(ref, newPost(ME.email)));
+  });
+
+  test('다른 사람이 정한 문서 ID로 옮긴 글에 다시 쓸 수 없어요', async () => {
+    await seed('posts/guest-uuid-2', newPost(OTHER.email));
+    await assertFails(setDoc(doc(verifiedDb(ME), 'posts/guest-uuid-2'), newPost(ME.email)));
+  });
+
   test('인증한 사용자는 내 글을 쓸 수 있어요', async () => {
     await assertSucceeds(addDoc(collection(verifiedDb(ME), 'posts'), newPost(ME.email)));
   });
