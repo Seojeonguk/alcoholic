@@ -1,0 +1,7 @@
+# GitHub Pages(master 브랜치의 docs/ 폴더) 설정이에요. 개인정보처리방침만 공개해요(#297).
+title: Alcoholic
+lang: ko
+exclude:
+  - firebase-setup.md
+  - play-console.md
+  - superpowers/

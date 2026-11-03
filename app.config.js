@@ -2,7 +2,7 @@ const EAS_PROJECT_ID = '090110c1-78a6-496f-9564-f32647afce83';
 
 export default {
   expo: {
-    name: 'alcoholic',
+    name: 'Alcoholic',
     slug: 'alcoholic',
     version: '1.0.0',
     orientation: 'portrait',
