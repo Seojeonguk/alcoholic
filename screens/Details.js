@@ -69,8 +69,7 @@ function Details({ route, navigation }) {
     showToast('info', '기록을 삭제하는 중이에요.');
     try {
       if (isMember()) {
-        const { email, uid } = getAuth().currentUser;
-        await deletePost(docId, email, uid, photos);
+        await deletePost(docId, getAuth().currentUser.uid, photos);
       } else {
         await deleteLocalPost(docId);
       }

@@ -1,6 +1,4 @@
 import {
-  arrayRemove,
-  arrayUnion,
   collection,
   deleteDoc,
   doc,
@@ -18,6 +16,7 @@ import { db } from '../firebaseConfig';
 const usersRef = collection(db, 'users');
 const postsRef = collection(db, 'posts');
 
+// posts(글 ID 목록)는 더 쓰지 않음(#292). 지금 배포된 규칙이 posts를 요구해서 빈 배열은 계속 넣음
 const createUserInfo = async (email) => {
   const newUserDoc = doc(usersRef, email);
   await setDoc(newUserDoc, {
@@ -26,13 +25,9 @@ const createUserInfo = async (email) => {
   });
 };
 
-const createNewPost = async (data, email) => {
-  const newPostDoc = doc(postsRef);
-  await setDoc(newPostDoc, data);
-
-  await updateDoc(doc(usersRef, email), {
-    posts: arrayUnion(newPostDoc.id),
-  });
+// 글 문서 하나만 씀. 실패하면 글이 저장되지 않은 것이라 다시 눌러도 글이 두 번 생기지 않음(#292)
+const createNewPost = async (data) => {
+  await setDoc(doc(postsRef), data);
 };
 
 // 내 글 전체를 한 번에 불러옴. 정렬 · 월 묶음은 화면에서 마신 날짜(day) 기준으로 함(lib/postSections)
@@ -88,11 +83,8 @@ const deletePhotos = async (urls, uid) => {
 };
 
 // 글과 그 글의 사진을 지움. 사진은 글을 지운 뒤에 지움
-const deletePost = async (docId, email, uid, photos) => {
+const deletePost = async (docId, uid, photos) => {
   await deleteDoc(doc(postsRef, docId));
-  await updateDoc(doc(usersRef, email), {
-    posts: arrayRemove(docId),
-  });
 
   await deletePhotos(photos, uid);
 };

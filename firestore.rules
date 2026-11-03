@@ -15,16 +15,15 @@ service cloud.firestore {
     }
 
     // 사용자 정보: 문서 ID가 이메일. 회원가입 직후(인증 전)에 만들어짐
+    // 예전에는 글 ID 목록(posts)을 따로 적었지만 읽는 곳이 없어 그만씀(#292). 이미 있는 문서의 posts는 그대로 둠
     match /users/{email} {
       allow read: if signedIn() && myEmail() == email;
+      // 앱은 예전 규칙과도 맞도록 빈 posts를 넣어 만듦. posts는 없거나 빈 배열만 받아 줌
       allow create: if signedIn() && myEmail() == email
         && request.resource.data.keys().hasOnly(['userEmail', 'posts'])
         && request.resource.data.userEmail == email
-        && request.resource.data.posts is list;
-      // 글을 쓸 때 posts 배열에 글 ID를 추가하는 것만 허용
-      allow update: if verified() && myEmail() == email
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['posts'])
-        && request.resource.data.posts is list;
+        && request.resource.data.get('posts', []) == [];
+      // 고칠 것이 없으므로 update는 허용하지 않음
       // 탈퇴할 때 지움. 인증 전에 탈퇴하는 경우도 있어 이메일 인증은 보지 않음
       allow delete: if signedIn() && myEmail() == email;
     }
