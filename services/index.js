@@ -22,10 +22,20 @@ import {
   updateLocalPost,
 } from './localPosts';
 import { migrateGuestPosts } from './migrateGuestPosts';
+import {
+  askAnnouncementsOnce,
+  getAnnouncementsEnabled,
+  listenAnnouncements,
+  setAnnouncements,
+} from './notifications';
 import useGuestMigration from './useGuestMigration';
 import { enterGuestMode, hasGuestFlag, isMember, leaveGuestMode, waitForAuthUser } from './session';
 
 export {
+  askAnnouncementsOnce,
+  getAnnouncementsEnabled,
+  listenAnnouncements,
+  setAnnouncements,
   migrateGuestPosts,
   useGuestMigration,
   enterGuestMode,

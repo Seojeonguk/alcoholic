@@ -1,6 +1,9 @@
+import { useEffect } from 'react';
+
 import toastConfig from './lib/toastConfig';
 import Navigation from './navigation/Navigation';
 import store from './redux/store';
+import { listenAnnouncements } from './services';
 
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -12,6 +15,9 @@ import { Provider } from 'react-redux';
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function App() {
+  // 앱이 켜져 있을 때 받은 공지 알림과 알림을 눌러 앱을 연 경우를 처리함(#304)
+  useEffect(() => listenAnnouncements(), []);
+
   return (
     <Provider store={store}>
       <SafeAreaProvider>

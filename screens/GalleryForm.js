@@ -14,6 +14,7 @@ import {
 } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import {
+  askAnnouncementsOnce,
   createLocalPost,
   createNewPost,
   deleteLocalPhotos,
@@ -209,6 +210,10 @@ export default function GalleryForm({ navigation, route }) {
       showToast('success', '기록을 저장했어요.');
       isSavingRef.current = false;
       navigation.popTo(NAVIGATOR.BOTTOM_TAB_NAV, { screen: NAVIGATOR.GALLERY });
+      // 새 기록을 저장한 뒤 공지 알림을 받을지 한 번만 물어봄(#304). 실패해도 저장은 끝난 것으로 봄
+      if (!docId) {
+        askAnnouncementsOnce().catch(() => {});
+      }
     } catch {
       // 글이 저장되지 않았으니 이번에 올린 사진은 어디에서도 쓰이지 않음
       if (member) {

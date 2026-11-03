@@ -1,5 +1,12 @@
 const EAS_PROJECT_ID = '090110c1-78a6-496f-9564-f32647afce83';
 
+// 공지 알림 아이콘은 흰색 단색, 색상은 앱 강조색(constants/theme.js의 ACCENT)
+const NOTIFICATION = {
+  icon: './assets/notification-icon.png',
+  color: '#2E699A',
+  channelLabel: '공지 알림',
+};
+
 export default {
   expo: {
     name: 'Alcoholic',
@@ -32,6 +39,8 @@ export default {
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
       // 스토어에 올릴 때마다 1씩 올림
       versionCode: 1,
+      // Android 13 이상의 공지 알림 권한. 앱을 켤 때가 아니라 사용자가 알림을 켤 때 요청함(#304)
+      permissions: ['android.permission.POST_NOTIFICATIONS'],
     },
     web: {
       favicon: './assets/favicon.png',
@@ -46,6 +55,15 @@ export default {
       '@react-native-firebase/app',
       // 네이티브 크래시를 모으고 난독화된 스택을 되돌리는 Gradle 플러그인을 넣음
       '@react-native-firebase/crashlytics',
+      // 공지 알림(FCM, #304). 아이콘 · 색상 메타데이터를 AndroidManifest에 넣음
+      [
+        '@react-native-firebase/messaging',
+        {
+          android: { notificationIcon: NOTIFICATION.icon, notificationColor: NOTIFICATION.color },
+        },
+      ],
+      // 위 메타데이터가 가리키는 아이콘 · 색상 리소스와 기본 알림 채널 이름(한국어)을 만듦
+      ['./plugins/withNotificationDefaults', NOTIFICATION],
       [
         'expo-build-properties',
         {

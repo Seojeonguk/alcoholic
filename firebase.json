@@ -6,6 +6,9 @@
   "storage": {
     "rules": "storage.rules"
   },
+  "react-native": {
+    "messaging_auto_init_enabled": false
+  },
   "emulators": {
     "firestore": {
       "port": 8180,
