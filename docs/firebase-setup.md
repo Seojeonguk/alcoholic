@@ -108,6 +108,8 @@ App Check는 Firebase가 **진짜 이 앱에서 온 요청만** 받게 해요(#2
 
 Firestore · Storage 보안 규칙은 저장소의 `firestore.rules` · `storage.rules`에서 관리해요(설정은 `firebase.json`, 프로젝트는 `.firebaserc`).
 
+Firestore 복합 인덱스도 저장소의 `firestore.indexes.json`에서 관리해요. 갤러리의 내 글 목록(`getPosts`)이 `writer` 조건과 `createdAt` 정렬을 함께 써서 `posts`에 `writer` 오름차순 · `createdAt` 내림차순 인덱스가 있어야 해요. 새 Firebase 프로젝트를 쓸 때도 아래 배포 명령으로 함께 만들어져요.
+
 | 대상                    | 규칙                                                                                                                                                                                   |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `users/{이메일}`        | 내 이메일 문서만 읽고 만들 수 있어요(회원가입 직후 인증 전에도 만들 수 있음). 수정은 이메일 인증 후 `posts` 배열만 돼요. 탈퇴할 때 내 문서를 지울 수 있어요.                           |
@@ -134,12 +136,14 @@ Get-CimInstance Win32_Process -Filter "Name='java.exe'" | Where-Object CommandLi
 
 ### 배포
 
-규칙을 바꾸면 테스트를 통과한 뒤 배포해요. 처음 배포하기 전에는 Firebase 콘솔의 Firestore · Storage **규칙** 탭에서 지금 규칙을 복사해 백업해 둬요.
+규칙 · 인덱스를 바꾸면 테스트를 통과한 뒤 배포해요. 처음 배포하기 전에는 Firebase 콘솔의 Firestore · Storage **규칙** 탭에서 지금 규칙을 복사해 백업해 둬요.
 
 ```bash
 npx firebase login
-npx firebase deploy --only firestore:rules,storage
+npx firebase deploy --only firestore:rules,firestore:indexes,storage
 ```
+
+- 콘솔에는 있는데 `firestore.indexes.json`에 없는 인덱스가 있으면 배포할 때 지울지 물어봐요. 콘솔에서 만든 인덱스는 `npx firebase firestore:indexes`로 받아 파일에 먼저 넣어요.
 
 ## 문제가 생기면
 
