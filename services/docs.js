@@ -72,15 +72,10 @@ const getPost = async (docId) => {
   return post.data();
 };
 
-// 글과 그 글의 사진을 지움. 사진은 글을 지운 뒤에 지우고, 실패해도 탈퇴할 때 폴더째 지워지므로 넘어감
-const deletePost = async (docId, email, uid, photos) => {
-  await deleteDoc(doc(postsRef, docId));
-  await updateDoc(doc(usersRef, email), {
-    posts: arrayRemove(docId),
-  });
-
+// 내 폴더(posts/{uid}/)의 사진만 지움. 실패해도 에러를 던지지 않음(탈퇴할 때 폴더째 지워짐)
+const deletePhotos = async (urls, uid) => {
   const storage = getStorage();
-  const myPhotos = photos.flatMap((url) => {
+  const myPhotos = urls.flatMap((url) => {
     try {
       const photoRef = ref(storage, url);
       // 예전 경로(posts/{파일})의 사진은 규칙상 지울 수 없음
@@ -90,6 +85,16 @@ const deletePost = async (docId, email, uid, photos) => {
     }
   });
   await Promise.allSettled(myPhotos.map((photoRef) => deleteObject(photoRef)));
+};
+
+// 글과 그 글의 사진을 지움. 사진은 글을 지운 뒤에 지움
+const deletePost = async (docId, email, uid, photos) => {
+  await deleteDoc(doc(postsRef, docId));
+  await updateDoc(doc(usersRef, email), {
+    posts: arrayRemove(docId),
+  });
+
+  await deletePhotos(photos, uid);
 };
 
 // 탈퇴할 때 내 사진 · 게시글 · 사용자 문서를 지움. 중간에 실패해도 다시 실행하면 남은 것만 지움
@@ -106,6 +111,7 @@ const deleteUserData = async (email, uid) => {
 export {
   createNewPost,
   createUserInfo,
+  deletePhotos,
   deletePost,
   deleteUserData,
   getPost,

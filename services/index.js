@@ -1,6 +1,7 @@
 import {
   createNewPost,
   createUserInfo,
+  deletePhotos,
   deletePost,
   deleteUserData,
   getPost,
@@ -17,6 +18,7 @@ import {
   getLocalPosts,
   isLocalPhoto,
   saveLocalPhoto,
+  deleteLocalPhotos,
   updateLocalPost,
 } from './localPosts';
 import { migrateGuestPosts } from './migrateGuestPosts';
@@ -39,9 +41,11 @@ export {
   getLocalPosts,
   isLocalPhoto,
   saveLocalPhoto,
+  deleteLocalPhotos,
   updateLocalPost,
   createNewPost,
   createUserInfo,
+  deletePhotos,
   deletePost,
   deleteUserData,
   getPost,
