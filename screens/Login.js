@@ -5,7 +5,9 @@ import { AuthScreen, Button, PasswordInput, PressableScale, TextField } from '..
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
 import {
+  canResendEmail,
   emailRequestLimitKey,
+  formatRetryTime,
   getAuthErrorField,
   getKorErrorMsg,
   sendVerificationEmail,
@@ -22,6 +24,9 @@ export default function Login({ navigation }) {
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  // state는 다음 렌더링에 바뀌므로 키보드 완료 키를 빠르게 두 번 눌러도 한 번만 보내도록 ref로 막음
+  const isSubmittingRef = useRef(false);
   const emailRef = useRef();
   const passwordRef = useRef();
 
@@ -35,61 +40,73 @@ export default function Login({ navigation }) {
     setPassword(newPassword);
   };
 
+  const resendVerificationEmail = async (user) => {
+    try {
+      await sendVerificationEmail(user);
+      await setEmailRequestLimit();
+      showToast(
+        'success',
+        '인증 메일을 보냈어요.',
+        `${user.email}의 메일함(스팸함 포함)을 확인해 주세요.`
+      );
+    } catch (e) {
+      showToast('error', '인증 메일을 보내지 못했어요.', getKorErrorMsg(e.code));
+    }
+  };
+
   const checkEmailRequestLimit = async (user) => {
     const emailRequestLimitObj = await AsyncStorage.getItem(emailRequestLimitKey);
-    const emailRequestLimit = new Date(emailRequestLimitObj);
-    const now = new Date();
+    const emailRequestLimit = emailRequestLimitObj ? new Date(emailRequestLimitObj) : null;
 
-    if (now > emailRequestLimit) {
+    if (canResendEmail(emailRequestLimit)) {
       Alert.alert(
-        '재인증',
-        '인증 메일을 재전송 하시겠습니까?',
+        '이메일 인증',
+        '아직 이메일 인증을 하지 않았어요. 인증 메일을 다시 보낼까요?',
         [
           { text: '취소', style: 'cancel' },
-          {
-            text: '보내기',
-            onPress: async () => {
-              await sendVerificationEmail(user);
-              await setEmailRequestLimit();
-            },
-          },
+          { text: '보내기', onPress: () => resendVerificationEmail(user) },
         ],
         { cancelable: true }
       );
     } else {
       showToast(
         'info',
-        '이메일의 메일함을 확인바랍니다.',
-        `${emailRequestLimit.getHours()}시 ${emailRequestLimit.getMinutes()}분 ${emailRequestLimit.getSeconds()}초 까지 메일을 다시 보낼 수 없습니다.`
+        '메일함에서 인증 메일을 확인해 주세요.',
+        `인증 메일은 ${formatRetryTime(emailRequestLimit)}부터 다시 보낼 수 있어요.`
       );
     }
   };
 
-  const handleLogin = () => {
-    signInWithEmailAndPassword(auth, email, password)
-      .then(async (userCredential) => {
-        const user = userCredential.user;
-        const emailVerified = user.emailVerified;
-        if (emailVerified) {
-          // 비회원이 설정 → 첫 화면 → 로그인으로 왔으면 아래에 남은 비회원 탭까지 치움
-          // 기기의 비회원 기록은 갤러리에서 이 계정으로 옮김(useGuestMigration)
-          await leaveGuestMode();
-          navigation.reset({
-            index: 0,
-            routes: [{ name: NAVIGATOR.BOTTOM_TAB_NAV, params: { screen: NAVIGATOR.GALLERY } }],
-          });
-          return;
-        }
-        await checkEmailRequestLimit(user);
-      })
-      .catch((err) => {
-        const korErrorMsg = getKorErrorMsg(err.code);
-        if (getAuthErrorField(err.code) === 'email') {
-          setEmailError(korErrorMsg);
-        } else {
-          setPasswordError(korErrorMsg);
-        }
-      });
+  const handleLogin = async () => {
+    if (isSubmittingRef.current) {
+      return;
+    }
+    isSubmittingRef.current = true;
+    setIsLoading(true);
+    try {
+      const { user } = await signInWithEmailAndPassword(auth, email, password);
+      if (user.emailVerified) {
+        // 비회원이 설정 → 첫 화면 → 로그인으로 왔으면 아래에 남은 비회원 탭까지 치움
+        // 기기의 비회원 기록은 갤러리에서 이 계정으로 옮김(useGuestMigration)
+        await leaveGuestMode();
+        navigation.reset({
+          index: 0,
+          routes: [{ name: NAVIGATOR.BOTTOM_TAB_NAV, params: { screen: NAVIGATOR.GALLERY } }],
+        });
+        return;
+      }
+      await checkEmailRequestLimit(user);
+    } catch (err) {
+      const korErrorMsg = getKorErrorMsg(err.code);
+      if (getAuthErrorField(err.code) === 'email') {
+        setEmailError(korErrorMsg);
+      } else {
+        setPasswordError(korErrorMsg);
+      }
+    } finally {
+      isSubmittingRef.current = false;
+      setIsLoading(false);
+    }
   };
 
   const handleForgotPasswordBtn = () => {
@@ -98,7 +115,14 @@ export default function Login({ navigation }) {
 
   return (
     <AuthScreen
-      bottom={<Button onPress={handleLogin} title="로그인" />}
+      bottom={
+        <Button
+          loading={isLoading}
+          loadingTitle="로그인하는 중…"
+          onPress={handleLogin}
+          title="로그인"
+        />
+      }
       // 스택에 있는 첫 화면으로 돌아가면서 파라미터(비회원 백업 화면 fromGuest)를 그대로 둠
       onBack={() => navigation.popTo(NAVIGATOR.MAIN_PAGE, undefined, { merge: true })}
       title="이메일로 로그인"

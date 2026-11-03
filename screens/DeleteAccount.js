@@ -36,7 +36,7 @@ export default function DeleteAccount({ navigation }) {
       await deleteUserData(user.email, user.uid);
       await deleteUser(user);
 
-      showToast('success', '탈퇴했습니다.', '그동안 이용해 주셔서 감사합니다.');
+      showToast('success', '탈퇴했어요.', '그동안 이용해 주셔서 고마워요.');
       isDeletingRef.current = false;
       navigation.reset({
         index: 0,
@@ -49,7 +49,7 @@ export default function DeleteAccount({ navigation }) {
         setPasswordError(getKorErrorMsg(e.code));
         return;
       }
-      showToast('error', '탈퇴하지 못했습니다.', '잠시 후 다시 시도해 주세요.');
+      showToast('error', '탈퇴하지 못했어요.', '잠시 후 다시 시도해 주세요.');
     }
   };
 
@@ -61,7 +61,7 @@ export default function DeleteAccount({ navigation }) {
 
     Alert.alert(
       '탈퇴하기',
-      '모든 게시글과 사진이 삭제되며 되돌릴 수 없습니다. 탈퇴하시겠습니까?',
+      '모든 게시글과 사진이 삭제되고 되돌릴 수 없어요. 탈퇴할까요?',
       [
         { text: '취소', style: 'cancel' },
         { text: '탈퇴', style: 'destructive', onPress: deleteAccount },
@@ -82,7 +82,7 @@ export default function DeleteAccount({ navigation }) {
         />
       }
       description={
-        '탈퇴하면 계정과 모든 게시글, 사진이 삭제되며 되돌릴 수 없습니다.\n본인 확인을 위해 비밀번호를 입력해 주세요.'
+        '탈퇴하면 계정과 모든 게시글, 사진이 삭제되고 되돌릴 수 없어요.\n본인 확인을 위해 비밀번호를 입력해 주세요.'
       }
       onBack={() => navigation.goBack()}
       title="탈퇴하기"
