@@ -7,7 +7,8 @@
 - 이메일 회원가입 · 로그인, 이메일 인증, 비밀번호 재설정
 - 가입 없이 시작하기: 기록 · 사진을 기기에만 저장하고, 나중에 가입하면 계정으로 옮겨요(#201)
 - 술 기록 작성 · 수정: 사진(갤러리 · 카메라), 제목, 내용, 날짜, 장소, 태그
-- 내 기록을 갤러리로 모아 보기, 상세 보기(사진 캐러셀)
+- 내 기록을 갤러리로 모아 보기, 상세 보기(사진 캐러셀), 태그 · 날짜로 찾기
+- 공지 알림: 설정에서 켜면 새 버전 · 점검 소식을 받아요(#304, [공지 알림 보내기](docs/notifications.md))
 
 ## 기술 스택
 
@@ -17,6 +18,7 @@
 | 화면 이동 | React Navigation 7 (native stack + bottom tabs)                                              |
 | 상태 관리 | Redux Toolkit 2                                                                              |
 | 백엔드    | Firebase (`@react-native-firebase` 네이티브 SDK: Authentication · Cloud Firestore · Storage) |
+| 운영      | Firebase Crashlytics · App Check · Cloud Messaging(공지 알림), EAS Update                    |
 | 이미지    | expo-image, expo-image-picker (시스템 사진 선택기)                                           |
 
 ## 로컬에서 실행하기
@@ -67,14 +69,15 @@ npx expo start
 
 ### 6. 문제가 생기면
 
-| 증상                                       | 해결 방법                                                         |
-| ------------------------------------------ | ----------------------------------------------------------------- |
-| 휴대폰에서 개발 서버에 연결되지 않아요     | 같은 Wi-Fi인지 확인하거나 `npx expo start --tunnel`로 실행해요    |
-| Expo Go로 열면 Firebase 모듈 에러가 나요   | Expo Go가 아니라 개발용 빌드(4번)로 열어요                        |
-| 네이티브 패키지를 바꾼 뒤 앱이 바로 꺼져요 | 개발용 빌드를 다시 만들어 설치해요                                |
-| 패키지를 바꾼 뒤 이상한 에러가 나요        | `npx expo start -c`로 Metro 캐시를 지우고 실행해요                |
-| 로그인 · 저장에서 Firebase 에러가 나요     | `google-services.json`이 맞는 프로젝트 · 패키지 이름인지 확인해요 |
-| 의존성 버전이 맞는지 궁금해요              | `npx expo-doctor`, `npx expo install --check`로 검사해요          |
+| 증상                                       | 해결 방법                                                          |
+| ------------------------------------------ | ------------------------------------------------------------------ |
+| 휴대폰에서 개발 서버에 연결되지 않아요     | 같은 Wi-Fi인지 확인하거나 `npx expo start --tunnel`로 실행해요     |
+| Expo Go로 열면 Firebase 모듈 에러가 나요   | Expo Go가 아니라 개발용 빌드(4번)로 열어요                         |
+| 네이티브 패키지를 바꾼 뒤 앱이 바로 꺼져요 | 개발용 빌드를 다시 만들어 설치해요                                 |
+| `Native module ... is not registered`      | 설치한 개발용 빌드에 그 모듈이 없어요. 개발용 빌드를 다시 만들어요 |
+| 패키지를 바꾼 뒤 이상한 에러가 나요        | `npx expo start -c`로 Metro 캐시를 지우고 실행해요                 |
+| 로그인 · 저장에서 Firebase 에러가 나요     | `google-services.json`이 맞는 프로젝트 · 패키지 이름인지 확인해요  |
+| 의존성 버전이 맞는지 궁금해요              | `npx expo-doctor`, `npx expo install --check`로 검사해요           |
 
 ## 패키지 추가하기
 
