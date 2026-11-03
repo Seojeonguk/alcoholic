@@ -4,6 +4,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   orderBy,
   query,
   setDoc,
@@ -12,6 +13,7 @@ import {
 } from '@react-native-firebase/firestore';
 import { deleteObject, getStorage, listAll, ref } from '@react-native-firebase/storage';
 import { db } from '../firebaseConfig';
+import { toGalleryPost } from '../lib';
 
 const usersRef = collection(db, 'users');
 const postsRef = collection(db, 'posts');
@@ -30,28 +32,17 @@ const createNewPost = async (data) => {
   await setDoc(doc(postsRef), data);
 };
 
-// 내 글 전체를 한 번에 불러옴. 정렬 · 월 묶음은 화면에서 마신 날짜(day) 기준으로 함(lib/postSections)
-const getPosts = async (email) => {
+// 내 글 목록을 구독함. 처음에 한 번 전체를 받고, 그 뒤로는 바뀐 글만 받아 목록 전체를 다시 넘겨 줌(#300)
+// 기기 캐시를 먼저 보여 주고, 이 기기에서 쓰거나 고치거나 지운 글은 서버 응답 전에 바로 반영됨
+// 정렬 · 월 묶음은 화면에서 마신 날짜(day) 기준으로 함(lib/postSections). 돌려준 함수를 부르면 구독을 끊음
+const subscribePosts = (email, onNext, onError) => {
   const q = query(postsRef, where('writer', '==', email), orderBy('createdAt', 'desc'));
 
-  const docs = await getDocs(q);
-
-  const ret = [];
-
-  docs.forEach((doc) => {
-    const data = doc.data();
-    ret.push({
-      docId: doc.id,
-      // 사진이 없는 글은 null. 화면에서 기본 이미지(DEFAULT_PHOTO)를 보여 줌
-      presentivePhoto: data?.photos?.[0] ?? null,
-      day: data?.day,
-      // 갤러리에서 태그로 거를 때 씀
-      tags: data?.tags ?? [],
-      createdAt: data?.createdAt?.toMillis?.() ?? 0,
-    });
-  });
-
-  return ret;
+  return onSnapshot(
+    q,
+    (snapshot) => onNext(snapshot.docs.map((post) => toGalleryPost(post.id, post.data()))),
+    onError
+  );
 };
 
 const updateDocForId = async (id, data) => {
@@ -107,6 +98,6 @@ export {
   deletePost,
   deleteUserData,
   getPost,
-  getPosts,
+  subscribePosts,
   updateDocForId,
 };
