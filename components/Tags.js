@@ -34,6 +34,7 @@ export default function Tags() {
         {tags.map((tag, idx) => (
           <PressableScale
             accessibilityLabel={`${tag} 태그 지우기`}
+            accessibilityRole="button"
             key={`${tag}_${idx}`}
             onPress={() => dispatch(deleteTag(idx))}
             style={styles.chip}
@@ -58,7 +59,12 @@ export default function Tags() {
             value={newTag}
           />
         ) : (
-          <PressableScale onPress={() => setIsEditing(true)} style={styles.addChip}>
+          <PressableScale
+            accessibilityLabel="태그 추가"
+            accessibilityRole="button"
+            onPress={() => setIsEditing(true)}
+            style={styles.addChip}
+          >
             <Text style={styles.addText}>+ 추가</Text>
           </PressableScale>
         )}

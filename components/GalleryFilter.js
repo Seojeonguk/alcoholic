@@ -56,6 +56,7 @@ export default function GalleryFilter({ tags, filter, onChange }) {
       >
         <PressableScale
           accessibilityLabel={hasPeriod ? '기간 조건 지우기' : '기간으로 찾기'}
+          accessibilityRole="button"
           onPress={handlePeriodPress}
           style={[styles.chip, hasPeriod && styles.selectedChip]}
         >
@@ -71,6 +72,7 @@ export default function GalleryFilter({ tags, filter, onChange }) {
           return (
             <PressableScale
               accessibilityLabel={isSelected ? `${tag} 태그 조건 지우기` : `${tag} 태그로 찾기`}
+              accessibilityRole="button"
               key={tag}
               onPress={() => handleTagPress(tag)}
               style={[styles.chip, isSelected && styles.selectedChip]}

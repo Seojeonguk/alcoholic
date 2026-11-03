@@ -85,7 +85,12 @@ export default function Photo() {
       showsHorizontalScrollIndicator={false}
       style={styles.container}
     >
-      <PressableScale accessibilityLabel="사진 추가" onPress={chooseSource} style={styles.addBtn}>
+      <PressableScale
+        accessibilityLabel="사진 추가"
+        accessibilityRole="button"
+        onPress={chooseSource}
+        style={styles.addBtn}
+      >
         <Ionicons color={COLORS.TEXT_SUB} name="add" size={28} />
       </PressableScale>
 
@@ -94,6 +99,7 @@ export default function Photo() {
           <Image contentFit="cover" source={{ uri: photo }} style={styles.photo} />
           <PressableScale
             accessibilityLabel={`${index + 1}번째 사진 빼기`}
+            accessibilityRole="button"
             hitSlop={8}
             onPress={() => dispatch(deletePhoto(index))}
             style={styles.removeBtn}

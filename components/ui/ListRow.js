@@ -23,7 +23,11 @@ export default function ListRow({ title, value, onPress, showChevron = !!onPress
   if (!onPress) {
     return content;
   }
-  return <PressableScale onPress={onPress}>{content}</PressableScale>;
+  return (
+    <PressableScale accessibilityRole="button" onPress={onPress}>
+      {content}
+    </PressableScale>
+  );
 }
 
 const styles = StyleSheet.create({

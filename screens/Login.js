@@ -126,7 +126,11 @@ export default function Login({ navigation }) {
         returnKeyType="done"
         value={password}
       />
-      <PressableScale onPress={handleForgotPasswordBtn} style={styles.forgotPassword}>
+      <PressableScale
+        accessibilityRole="button"
+        onPress={handleForgotPasswordBtn}
+        style={styles.forgotPassword}
+      >
         <Text style={styles.forgotPasswordText}>비밀번호를 잊으셨나요?</Text>
       </PressableScale>
     </AuthScreen>

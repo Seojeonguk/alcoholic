@@ -15,6 +15,7 @@ export default function PasswordInput(props) {
       right={
         <Pressable
           accessibilityLabel={isHidden ? '비밀번호 보기' : '비밀번호 숨기기'}
+          accessibilityRole="button"
           hitSlop={8}
           onPress={() => setIsHidden(!isHidden)}
         >
