@@ -30,7 +30,9 @@ export default function Day() {
       <ListRow onPress={showDatePicker} title="날짜" value={formatDay(date)} />
 
       {isShowDatePicker && (
+        // 오늘 이후 날짜는 고를 수 없음
         <DateTimePicker
+          maximumDate={new Date()}
           mode="date"
           onDismiss={hideDatePicker}
           onValueChange={handleChangeDate}
