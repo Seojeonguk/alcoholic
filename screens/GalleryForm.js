@@ -16,6 +16,8 @@ import { COLORS, NAVIGATOR } from '../constants';
 import {
   createLocalPost,
   createNewPost,
+  deleteLocalPhotos,
+  deletePhotos,
   isLocalPhoto,
   isMember,
   saveLocalPhoto,
@@ -25,6 +27,7 @@ import {
 import {
   getImageContentType,
   getPostLimitError,
+  getRemovedPhotos,
   resizeForUpload,
   showToast,
   usePreventLeave,
@@ -49,6 +52,9 @@ export default function GalleryForm({ navigation, route }) {
   const dispatch = useDispatch();
   const gallery = useSelector((state) => state.gallery);
   const docId = route.params?.docId;
+  // 고치기 전 사진. 상세 화면이 폼을 채운 뒤 이 화면으로 오므로 처음 값이 원래 글의 사진임
+  // 저장한 뒤 글에서 빠진 사진을 지울 때 씀(#291)
+  const [originalPhotos] = useState(() => (docId ? gallery.photos : []));
   // 저장 중에 나갔다가 다시 들어와 저장하면 글이 두 번 만들어지므로 저장이 끝날 때까지 못 나가게 함
   usePreventLeave(navigation, isSavingRef);
 
@@ -115,13 +121,24 @@ export default function GalleryForm({ navigation, route }) {
       done: 0,
       total: member ? gallery.photos.filter((uri) => !isUploaded(uri)).length : 0,
     });
+    // 이번 저장에서 새로 올리거나 기기에 복사한 사진. 저장에 실패하면 지움(#291)
+    let newPhotos = [];
     try {
       // 사진 줄이기는 메모리를 많이 써서 한 장씩 하고, 올리기는 동시에 함
       const photoUris = [];
       for (const photo of gallery.photos) {
         photoUris.push(isUploaded(photo) ? photo : await resizeForUpload(photo));
       }
-      const savedPhotos = await Promise.all(photoUris.map(member ? uploadPhoto : keepOnDevice));
+      // 하나가 실패해도 나머지가 끝날 때까지 기다려야 올라간 사진을 빠짐없이 지울 수 있음
+      const results = await Promise.allSettled(photoUris.map(member ? uploadPhoto : keepOnDevice));
+      newPhotos = results
+        .filter((result, i) => result.status === 'fulfilled' && !isUploaded(gallery.photos[i]))
+        .map((result) => result.value);
+      const failed = results.find((result) => result.status === 'rejected');
+      if (failed) {
+        throw failed.reason;
+      }
+      const savedPhotos = results.map((result) => result.value);
 
       const data = {
         title: gallery.title,
@@ -132,6 +149,9 @@ export default function GalleryForm({ navigation, route }) {
         tags: gallery.tags,
       };
 
+      // 여기부터 실패하면 글이 이미 저장됐을 수도 있어서 사진을 지우지 않음
+      // (createNewPost는 글을 쓴 뒤 사용자 문서를 따로 고침, #292)
+      newPhotos = [];
       if (!member) {
         if (docId) {
           await updateLocalPost(docId, data);
@@ -141,6 +161,8 @@ export default function GalleryForm({ navigation, route }) {
       } else if (docId) {
         // 수정할 때 createdAt을 바꾸면 목록 순서가 바뀌므로 그대로 둠
         await updateDocForId(docId, { ...data, writer: getAuth().currentUser.email });
+        // 글을 고친 뒤에 빠진 사진을 지움. 기다리지 않고, 실패해도 저장은 끝난 것으로 봄
+        deletePhotos(getRemovedPhotos(originalPhotos, savedPhotos), getAuth().currentUser.uid);
       } else {
         const email = getAuth().currentUser.email;
         await createNewPost({ ...data, writer: email, createdAt: new Date() }, email);
@@ -152,6 +174,12 @@ export default function GalleryForm({ navigation, route }) {
       isSavingRef.current = false;
       navigation.popTo(NAVIGATOR.BOTTOM_TAB_NAV, { screen: NAVIGATOR.GALLERY });
     } catch {
+      // 사진을 준비하다 실패했으면 글이 저장되지 않았으니 이번에 올린 사진은 어디에서도 쓰이지 않음
+      if (member) {
+        deletePhotos(newPhotos, getAuth().currentUser?.uid);
+      } else {
+        deleteLocalPhotos(newPhotos);
+      }
       showToast('error', '기록을 저장하지 못했어요.', '입력한 내용을 확인하고 다시 시도해 주세요.');
     } finally {
       isSavingRef.current = false;

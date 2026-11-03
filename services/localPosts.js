@@ -84,6 +84,9 @@ const saveLocalPhoto = async (uri) => {
   return target.uri;
 };
 
+// 저장에 실패한 글을 위해 복사해 둔 사진을 지움(기기 경로를 받음)
+const deleteLocalPhotos = (uris) => deletePhotoFiles(uris.filter(isLocalPhoto).map(toPhotoName));
+
 // 화면에서 받은 기기 경로를 파일 이름으로 바꿔 저장함
 const toStoredData = (data) => ({ ...data, photos: data.photos.map(toPhotoName) });
 
@@ -158,5 +161,6 @@ export {
   getLocalPosts,
   isLocalPhoto,
   saveLocalPhoto,
+  deleteLocalPhotos,
   updateLocalPost,
 };
