@@ -1,7 +1,7 @@
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useEffect, useState } from 'react';
 
 import { NAVIGATOR } from '../constants';
+import { decideStartMode, startsAtGallery } from '../lib';
 import {
   DeleteAccount,
   Details,
@@ -11,15 +11,48 @@ import {
   MainPage,
   RegistrationForm,
 } from '../screens';
+import { hasGuestFlag, leaveGuestMode, waitForAuthUser } from '../services';
 import BottomTabNav from './BottomTabNav';
+
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as SplashScreen from 'expo-splash-screen';
 
 const Stack = createNativeStackNavigator();
 
+const hideSplash = () => SplashScreen.hideAsync().catch(() => {});
+
 export default function Navigation() {
+  // 처음 보여 줄 화면. 정하기 전(null)에는 아무것도 그리지 않고 스플래시를 그대로 둠(App.js의 preventAutoHideAsync)
+  const [initialRoute, setInitialRoute] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    // 로그인 상태 · 비회원 표시를 확인해서 첫 화면을 거치지 않고 바로 맞는 화면을 보여 줌(#295)
+    // 정한 시간 안에 확인하지 못하면(null) 첫 화면부터 보여 주고, 첫 화면이 확인이 끝나는 대로 갤러리로 보냄
+    decideStartMode({ getUser: waitForAuthUser, getGuestFlag: hasGuestFlag }).then((mode) => {
+      if (mode === 'member') {
+        // 첫 화면을 거칠 때처럼 회원이면 비회원 표시를 지움(로그아웃하면 첫 화면이 보이게)
+        leaveGuestMode().catch(() => {});
+      }
+      if (active) {
+        setInitialRoute(startsAtGallery(mode) ? NAVIGATOR.BOTTOM_TAB_NAV : NAVIGATOR.MAIN_PAGE);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (initialRoute === null) {
+    return null;
+  }
+
   return (
-    <NavigationContainer>
+    // 첫 화면을 그릴 준비가 되면 스플래시를 닫음
+    <NavigationContainer onReady={hideSplash}>
       <Stack.Navigator
-        initialRouteName={NAVIGATOR.MAIN_PAGE}
+        initialRouteName={initialRoute}
         screenOptions={{ headerShown: false, statusBarStyle: 'dark' }}
       >
         <Stack.Screen name={NAVIGATOR.MAIN_PAGE} component={MainPage} />

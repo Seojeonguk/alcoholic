@@ -23,7 +23,7 @@ import {
 } from './localPosts';
 import { migrateGuestPosts } from './migrateGuestPosts';
 import useGuestMigration from './useGuestMigration';
-import { enterGuestMode, hasGuestFlag, isMember, leaveGuestMode } from './session';
+import { enterGuestMode, hasGuestFlag, isMember, leaveGuestMode, waitForAuthUser } from './session';
 
 export {
   migrateGuestPosts,
@@ -32,6 +32,7 @@ export {
   hasGuestFlag,
   isMember,
   leaveGuestMode,
+  waitForAuthUser,
   GUEST_PHOTO_DIR_URI,
   claimLocalPosts,
   createLocalPost,

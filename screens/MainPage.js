@@ -82,12 +82,13 @@ export default function MainPage({ navigation, route }) {
     };
   }, [fromGuest]);
 
+  // 로그인 상태 확인이 늦어져도 3초 뒤에는 버튼을 보여 줌(한 번만 돌면 되므로 setTimeout)
   useEffect(() => {
-    const timer = setInterval(() => {
+    const timer = setTimeout(() => {
       setIsLoading(false);
     }, 3000);
 
-    return () => clearInterval(timer);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
