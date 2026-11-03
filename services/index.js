@@ -4,7 +4,7 @@ import {
   deletePost,
   deleteUserData,
   getPost,
-  getPosts,
+  subscribePosts,
   updateDocForId,
 } from './docs';
 import {
@@ -45,6 +45,6 @@ export {
   deletePost,
   deleteUserData,
   getPost,
-  getPosts,
+  subscribePosts,
   updateDocForId,
 };

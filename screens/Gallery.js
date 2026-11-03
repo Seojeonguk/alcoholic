@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   RefreshControl,
   SectionList,
@@ -10,18 +10,22 @@ import {
 
 import { Button, GalleryFilter, Post, PressableScale, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
-import { collectTags, filterPosts, groupPostsByMonth, showToast } from '../lib';
-import { getLocalPosts, getPosts, isMember, useGuestMigration } from '../services';
+import { collectTags, filterPosts, groupPostsByMonth, memberEmail, showToast } from '../lib';
+import { getLocalPosts, subscribePosts, useGuestMigration } from '../services';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { getAuth } from '@react-native-firebase/auth';
+import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const COLUMNS = 3;
 const GAP = 6;
 const SIDE_PADDING = 20;
 const NO_FILTER = { tag: null, from: null, to: null };
+const LOAD_ERROR = ['error', '글 목록을 불러오지 못했어요.', '잠시 후 다시 시도해 주세요.'];
+
+// 지금 구독할 회원 이메일. 비회원이면 null
+const currentMemberEmail = () => memberEmail(getAuth().currentUser);
 
 // 섹션의 글을 3개씩 한 줄로 묶음
 const toRows = (posts) => {
@@ -41,21 +45,53 @@ export default function Gallery({ navigation }) {
   const { width } = useWindowDimensions();
   const photoSize = (width - SIDE_PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
 
+  // 회원: 내 글을 구독해서 처음 한 번만 전체를 읽고, 그 뒤로는 바뀐 글만 받음(#300)
+  // 비회원: 기기에 저장한 기록을 화면에 들어올 때마다 다시 읽음. 파일이라 Firestore 읽기가 없음(#201)
+  const [account, setAccount] = useState(currentMemberEmail);
+  // 바꾸면 구독을 새로 시작함(당겨서 새로 고침 · 구독 오류 뒤 다시 들어왔을 때)
+  const [subscriptionKey, setSubscriptionKey] = useState(0);
+  const subscriptionFailed = useRef(false);
+
+  // 화면이 떠 있는 동안 구독을 유지함. 상세 · 글쓰기 화면은 갤러리 위에 쌓이므로 그사이에도 끊지 않아야
+  // 돌아올 때 다시 읽지 않음. 화면이 사라지거나(로그아웃 · 탈퇴) 계정이 바뀌면 끊음
+  useEffect(() => {
+    if (!account) {
+      return undefined;
+    }
+    subscriptionFailed.current = false;
+    return subscribePosts(
+      account,
+      (userPosts) => {
+        setPosts(userPosts);
+        setIsLoaded(true);
+        setIsRefreshing(false);
+      },
+      () => {
+        subscriptionFailed.current = true;
+        setIsRefreshing(false);
+        // 로그아웃하는 사이에 끊긴 구독이면 알리지 않음
+        if (currentMemberEmail() === account) {
+          showToast(...LOAD_ERROR);
+        }
+      }
+    );
+  }, [account, subscriptionKey]);
+
+  // 로그아웃하거나 계정이 바뀌면 바로 구독 대상을 바꿈
+  useEffect(() => onAuthStateChanged(getAuth(), (user) => setAccount(memberEmail(user))), []);
+
   // isActive: 화면을 떠난 뒤 늦게 끝난 요청은 화면에 반영하지 않음
-  const loadPosts = useCallback(async (isActive = () => true) => {
+  const loadLocalPosts = useCallback(async (isActive = () => true) => {
     setIsRefreshing(true);
     try {
-      // 비회원은 기기에 저장한 기록을 보여 줌(#201)
-      const userPosts = isMember()
-        ? await getPosts(getAuth().currentUser.email)
-        : await getLocalPosts();
+      const userPosts = await getLocalPosts();
       if (isActive()) {
         setPosts(userPosts);
         setIsLoaded(true);
       }
     } catch {
       if (isActive()) {
-        showToast('error', '글 목록을 불러오지 못했어요.', '잠시 후 다시 시도해 주세요.');
+        showToast(...LOAD_ERROR);
       }
     } finally {
       if (isActive()) {
@@ -64,20 +100,37 @@ export default function Gallery({ navigation }) {
     }
   }, []);
 
-  // 회원이면 기기에 남은 비회원 기록을 계정으로 옮기고, 끝나면 목록을 다시 불러옴(#201)
-  const reloadPosts = useCallback(() => loadPosts(), [loadPosts]);
-  const { progress: migration } = useGuestMigration(reloadPosts);
-
-  // 글을 쓰고 돌아왔을 때도 새 글이 보이도록 화면에 들어올 때마다 다시 불러옴
   useFocusEffect(
     useCallback(() => {
+      const email = currentMemberEmail();
+      setAccount(email);
+      if (email) {
+        // 회원은 구독이 바뀐 글을 받아 오므로 다시 읽지 않음. 구독이 오류로 끊겼을 때만 다시 시작
+        if (subscriptionFailed.current) {
+          setSubscriptionKey((key) => key + 1);
+        }
+        return undefined;
+      }
+      // 비회원은 글을 쓰고 돌아왔을 때도 새 글이 보이도록 화면에 들어올 때마다 다시 읽음
       let active = true;
-      loadPosts(() => active);
+      loadLocalPosts(() => active);
       return () => {
         active = false;
       };
-    }, [loadPosts])
+    }, [loadLocalPosts])
   );
+
+  // 회원이면 기기에 남은 비회원 기록을 계정으로 옮김. 옮긴 글은 구독으로 목록에 들어옴(#201)
+  const { progress: migration } = useGuestMigration();
+
+  const refresh = () => {
+    if (account) {
+      setIsRefreshing(true);
+      setSubscriptionKey((key) => key + 1);
+    } else {
+      loadLocalPosts();
+    }
+  };
 
   const tags = useMemo(() => collectTags(posts), [posts]);
   // 고른 태그의 글을 모두 지워서 태그가 없어지면 태그 조건은 없는 것으로 봄
@@ -179,7 +232,7 @@ export default function Gallery({ navigation }) {
           refreshControl={
             <RefreshControl
               colors={[COLORS.ACCENT]}
-              onRefresh={() => loadPosts()}
+              onRefresh={refresh}
               refreshing={isRefreshing}
               tintColor={COLORS.ACCENT}
             />

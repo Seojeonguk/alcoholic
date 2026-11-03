@@ -8,7 +8,8 @@ import { getAuth } from '@react-native-firebase/auth';
 import { useFocusEffect } from '@react-navigation/native';
 
 // 회원이 갤러리에 들어올 때마다 기기에 남은 비회원 기록을 이 계정으로 옮김(#201)
-// 옮길 기록이 없으면 아무것도 보이지 않음. 끝나면 알림을 띄우고 onDone(목록 다시 불러오기)을 부름
+// 옮길 기록이 없으면 아무것도 보이지 않음. 끝나면 알림을 띄우고 onDone이 있으면 부름
+// 갤러리는 내 글을 구독하고 있어서 옮긴 글이 따로 다시 불러오지 않아도 목록에 들어옴(#300)
 export default function useGuestMigration(onDone) {
   const [progress, setProgress] = useState(null);
 
@@ -32,7 +33,7 @@ export default function useGuestMigration(onDone) {
             showToast('error', `기록 ${failed}개를 옮기지 못했어요. 다음에 다시 시도할게요.`);
           }
           if (active && moved > 0) {
-            onDone();
+            onDone?.();
           }
         })
         .catch(() => {
