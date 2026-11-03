@@ -66,7 +66,7 @@ export default {
       [
         'expo-image-picker',
         {
-          photosPermission: 'Allow $(PRODUCT_NAME) to access your photos.',
+          photosPermission: '기록에 남길 사진을 고를 수 있게 사진 보관함 접근을 허용해 주세요.',
           // 사진만 찍으므로 동영상 녹화용 마이크 권한은 요청하지 않음
           microphonePermission: false,
         },

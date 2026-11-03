@@ -84,8 +84,10 @@ export default function GalleryFilter({ tags, filter, onChange }) {
         })}
       </ScrollView>
 
+      {/* 오늘 이후 기록은 없으므로 시작 · 끝 날짜 모두 오늘까지만 고름 */}
       {pickingStep === 'from' && (
         <DateTimePicker
+          maximumDate={new Date()}
           mode="date"
           negativeButton={{ label: '취소' }}
           onDismiss={cancelPicking}
@@ -97,6 +99,7 @@ export default function GalleryFilter({ tags, filter, onChange }) {
       {pickingStep === 'to' && (
         // 끝 날짜는 시작 날짜보다 앞을 고를 수 없음
         <DateTimePicker
+          maximumDate={new Date()}
           minimumDate={toDate(draftFrom)}
           mode="date"
           negativeButton={{ label: '취소' }}

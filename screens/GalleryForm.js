@@ -28,6 +28,8 @@ import {
   getImageContentType,
   getPostLimitError,
   getRemovedPhotos,
+  isFormChanged,
+  isRemotePhoto,
   resizeForUpload,
   showToast,
   usePreventLeave,
@@ -41,7 +43,7 @@ import uuid from 'react-native-uuid';
 import { useDispatch, useSelector } from 'react-redux';
 
 // 이미 올라간 사진 · 기기에 저장해 둔 사진(수정할 때 남겨 둔 사진)은 다시 올리거나 복사하지 않음
-const isUploaded = (uri) => uri.includes('firebase') || isLocalPhoto(uri);
+const isUploaded = (uri) => isRemotePhoto(uri) || isLocalPhoto(uri);
 
 export default function GalleryForm({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -52,11 +54,41 @@ export default function GalleryForm({ navigation, route }) {
   const dispatch = useDispatch();
   const gallery = useSelector((state) => state.gallery);
   const docId = route.params?.docId;
-  // 고치기 전 사진. 상세 화면이 폼을 채운 뒤 이 화면으로 오므로 처음 값이 원래 글의 사진임
-  // 저장한 뒤 글에서 빠진 사진을 지울 때 씀(#291)
-  const [originalPhotos] = useState(() => (docId ? gallery.photos : []));
+  // 고치기 전 폼 값. 상세 화면이 폼을 채운 뒤 이 화면으로 오므로 처음 값이 원래 글임
+  // 저장한 뒤 글에서 빠진 사진을 지울 때(#291)와 고친 내용이 있는지 볼 때(#302) 씀
+  const [originalForm] = useState(() => (docId ? gallery : null));
+  const originalPhotos = originalForm?.photos ?? [];
+  // 저장에 성공해 갤러리로 갈 때는 고친 내용을 묻지 않음. 폼을 비운 뒤라 고친 것처럼 보이기 때문
+  const isLeavingRef = useRef(false);
   // 저장 중에 나갔다가 다시 들어와 저장하면 글이 두 번 만들어지므로 저장이 끝날 때까지 못 나가게 함
   usePreventLeave(navigation, isSavingRef);
+
+  // 글을 고치다 닫기 버튼이나 Android 뒤로 가기로 나가면 그만둘지 물어봄(#302)
+  useEffect(
+    () =>
+      navigation.addListener('beforeRemove', (e) => {
+        // 저장 중에는 usePreventLeave가 막으므로 묻지 않음
+        if (!originalForm || isSavingRef.current || isLeavingRef.current) {
+          return;
+        }
+        if (!isFormChanged(originalForm, gallery)) {
+          return;
+        }
+        e.preventDefault();
+        Alert.alert('수정을 그만둘까요?', '고친 내용은 저장되지 않아요.', [
+          { text: '계속 고칠게요', style: 'cancel' },
+          {
+            text: '그만둘게요',
+            style: 'destructive',
+            onPress: () => {
+              isLeavingRef.current = true;
+              navigation.dispatch(e.data.action);
+            },
+          },
+        ]);
+      }),
+    [navigation, originalForm, gallery]
+  );
 
   const existInput = () => {
     if (gallery.title !== '') {
@@ -171,6 +203,7 @@ export default function GalleryForm({ navigation, route }) {
       }
       newPhotos = [];
 
+      isLeavingRef.current = true;
       initForm();
 
       showToast('success', '기록을 저장했어요.');
