@@ -1,12 +1,19 @@
-import { Alert, Linking, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { Alert, Linking, Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { ListRow, PressableScale } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
 import { showToast } from '../lib';
-import { deleteVisibleLocalPosts, isMember } from '../services';
+import {
+  deleteVisibleLocalPosts,
+  getAnnouncementsEnabled,
+  isMember,
+  setAnnouncements,
+} from '../services';
 
 import { signOut } from '@react-native-firebase/auth';
+import { useFocusEffect } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -33,6 +40,25 @@ const openContactMail = async () => {
 export default function Settings({ navigation }) {
   // 비회원은 기록이 기기에만 있어서 계정 대신 백업 안내와 기기 기록 지우기를 보여 줌(#201)
   const member = isMember();
+  // 공지 알림(#304). 기록을 저장한 뒤 켤 수도 있어서 화면에 올 때마다 기기에 저장된 상태를 다시 읽음
+  const [announcements, setAnnouncementsState] = useState(false);
+  const [isChangingAnnouncements, setIsChangingAnnouncements] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      getAnnouncementsEnabled()
+        .then(setAnnouncementsState)
+        .catch(() => {});
+    }, [])
+  );
+
+  // 누르자마자 스위치를 옮기고, 권한 거절 · 실패면 결과 상태로 되돌림
+  const handleAnnouncements = async (enabled) => {
+    setAnnouncementsState(enabled);
+    setIsChangingAnnouncements(true);
+    setAnnouncementsState(await setAnnouncements(enabled));
+    setIsChangingAnnouncements(false);
+  };
 
   // 로그아웃이 끝나기 전에 첫 화면으로 가면 첫 화면이 아직 로그인된 계정을 보고 갤러리로 돌려보냄
   const handleLogout = async () => {
@@ -83,6 +109,20 @@ export default function Settings({ navigation }) {
             </Text>
           </>
         )}
+
+        <Text style={styles.sectionTitle}>알림</Text>
+        <ListRow title="공지 알림">
+          <Switch
+            accessibilityLabel="공지 알림"
+            disabled={isChangingAnnouncements}
+            onValueChange={handleAnnouncements}
+            trackColor={{ true: COLORS.ACCENT }}
+            value={announcements}
+          />
+        </ListRow>
+        <Text style={styles.guestNotice}>
+          새 버전 · 점검 같은 소식만 보내고 광고는 보내지 않아요.
+        </Text>
 
         <Text style={styles.sectionTitle}>앱 정보</Text>
         <ListRow title="버전" value={Constants.expoConfig.version} />
