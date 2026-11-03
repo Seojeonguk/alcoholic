@@ -61,7 +61,7 @@ npx eas-cli build --platform android --profile development
 npx expo start
 ```
 
-설치한 개발용 빌드(`alcoholic`)를 열면 같은 Wi-Fi의 개발 서버가 목록에 나와요. 고르거나, 터미널의 QR 코드를 개발용 빌드로 스캔해요. Android 에뮬레이터는 터미널에서 `a`를 눌러요.
+설치한 개발용 빌드(`Alcoholic`)를 열면 같은 Wi-Fi의 개발 서버가 목록에 나와요. 고르거나, 터미널의 QR 코드를 개발용 빌드로 스캔해요. Android 에뮬레이터는 터미널에서 `a`를 눌러요.
 
 휴대폰과 컴퓨터는 **같은 Wi-Fi**에 있어야 해요. 코드를 저장하면 앱에 바로 반영되고, 터미널에서 `r`을 누르면 앱을 새로 불러와요.
 
@@ -82,7 +82,7 @@ npx expo start
 
 ## 개인정보처리방침
 
-[개인정보처리방침](docs/privacy-policy.md)은 Google Play 스토어 등록정보에 링크로 넣어요. 앱이 모으는 데이터나 쓰는 서비스가 바뀌면 이 문서와 Play Console의 데이터 보안 양식을 함께 고쳐요.
+[개인정보처리방침](docs/privacy-policy.md)은 GitHub Pages(`master` 브랜치의 `docs/` 폴더)로 공개해서 [웹 페이지](https://seojeonguk.github.io/alcoholic/privacy-policy)로 열려요. 앱의 설정 화면과 Google Play 스토어 등록정보에 이 주소를 넣어요. 앱이 모으는 데이터나 쓰는 서비스가 바뀌면 이 문서와 Play Console의 데이터 보안 양식을 함께 고쳐요.
 
 ## 빌드 · 배포
 

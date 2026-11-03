@@ -1,4 +1,4 @@
-import { Alert, Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ListRow, PressableScale } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
@@ -10,8 +10,25 @@ import { signOut } from '@react-native-firebase/auth';
 import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const PRIVACY_POLICY_URL =
-  'https://github.com/Seojeonguk/alcoholic/blob/master/docs/privacy-policy.md';
+const PRIVACY_POLICY_URL = 'https://seojeonguk.github.io/alcoholic/privacy-policy';
+// 개인정보처리방침에 적힌 연락처와 같은 주소
+const CONTACT_EMAIL = 'junguk7880@naver.com';
+
+// 문의 메일에는 앱 버전과 기기 OS만 넣고 계정 정보는 넣지 않음(#298)
+const openContactMail = async () => {
+  const version = Constants.expoConfig.version;
+  const os =
+    Platform.OS === 'android' ? `Android (API ${Platform.Version})` : `iOS ${Platform.Version}`;
+  const subject = `[Alcoholic] 문의 (v${version})`;
+  const body = `\n\n---\n앱 버전: ${version}\n기기 OS: ${os}`;
+  const url = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  try {
+    await Linking.openURL(url);
+  } catch {
+    Alert.alert('메일 앱을 열 수 없어요', `${CONTACT_EMAIL}로 메일을 보내 주세요.`);
+  }
+};
 
 export default function Settings({ navigation }) {
   // 비회원은 기록이 기기에만 있어서 계정 대신 백업 안내와 기기 기록 지우기를 보여 줌(#201)
@@ -70,6 +87,7 @@ export default function Settings({ navigation }) {
         <Text style={styles.sectionTitle}>앱 정보</Text>
         <ListRow title="버전" value={Constants.expoConfig.version} />
         <ListRow onPress={() => Linking.openURL(PRIVACY_POLICY_URL)} title="개인정보처리방침" />
+        <ListRow onPress={openContactMail} title="문의하기" />
 
         <View style={styles.footer}>
           <PressableScale

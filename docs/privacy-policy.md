@@ -1,3 +1,8 @@
+---
+title: Alcoholic 개인정보처리방침
+permalink: /privacy-policy
+---
+
 # alcoholic 개인정보처리방침
 
 alcoholic(이하 "앱")은 술 사진과 기록을 남기는 앱이에요. 앱은 「개인정보 보호법」에 따라 이용자의 개인정보를 아래와 같이 처리해요.
