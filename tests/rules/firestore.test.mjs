@@ -72,8 +72,18 @@ after(async () => {
 
 describe('users/{email}', () => {
   test('회원가입 직후(이메일 인증 전)에 내 사용자 문서를 만들 수 있어요', async () => {
+    await assertSucceeds(setDoc(doc(unverifiedDb(ME), 'users', ME.email), { userEmail: ME.email }));
+  });
+
+  test('앱처럼 빈 posts를 함께 넣어 만들 수도 있어요', async () => {
     await assertSucceeds(
       setDoc(doc(unverifiedDb(ME), 'users', ME.email), { userEmail: ME.email, posts: [] })
+    );
+  });
+
+  test('글 ID가 든 posts로는 만들 수 없어요', async () => {
+    await assertFails(
+      setDoc(doc(unverifiedDb(ME), 'users', ME.email), { userEmail: ME.email, posts: ['post-1'] })
     );
   });
 
@@ -111,36 +121,36 @@ describe('users/{email}', () => {
     await assertFails(getDoc(doc(guestDb(), 'users', ME.email)));
   });
 
-  test('인증한 사용자는 내 문서의 posts에 글 ID를 추가할 수 있어요', async () => {
+  // 글 ID 목록(posts)은 더는 쓰지 않으므로 사용자 문서는 고칠 수 없음(#292)
+  test('내 문서의 posts에 글 ID를 추가할 수 없어요', async () => {
     await seed(`users/${ME.email}`, { userEmail: ME.email, posts: [] });
 
-    await assertSucceeds(
+    await assertFails(
       updateDoc(doc(verifiedDb(ME), 'users', ME.email), { posts: arrayUnion('post-1') })
     );
   });
 
-  test('글을 지울 때 내 문서의 posts에서 글 ID를 뺄 수 있어요', async () => {
+  test('이미 있는 posts에서 글 ID를 뺄 수도 없어요', async () => {
     await seed(`users/${ME.email}`, { userEmail: ME.email, posts: ['post-1', 'post-2'] });
 
-    await assertSucceeds(
+    await assertFails(
       updateDoc(doc(verifiedDb(ME), 'users', ME.email), { posts: arrayRemove('post-1') })
     );
   });
 
-  test('posts 외의 필드는 바꿀 수 없어요', async () => {
-    await seed(`users/${ME.email}`, { userEmail: ME.email, posts: [] });
+  test('내 문서의 다른 필드도 바꿀 수 없어요', async () => {
+    await seed(`users/${ME.email}`, { userEmail: ME.email });
 
     await assertFails(
       updateDoc(doc(verifiedDb(ME), 'users', ME.email), { userEmail: OTHER.email })
     );
   });
 
-  test('다른 사람 문서의 posts는 바꿀 수 없어요', async () => {
-    await seed(`users/${OTHER.email}`, { userEmail: OTHER.email, posts: [] });
+  test('posts가 남아 있는 예전 문서도 읽고 지울 수 있어요', async () => {
+    await seed(`users/${ME.email}`, { userEmail: ME.email, posts: ['post-1'] });
 
-    await assertFails(
-      updateDoc(doc(verifiedDb(ME), 'users', OTHER.email), { posts: arrayUnion('post-1') })
-    );
+    await assertSucceeds(getDoc(doc(verifiedDb(ME), 'users', ME.email)));
+    await assertSucceeds(deleteDoc(doc(verifiedDb(ME), 'users', ME.email)));
   });
 
   test('탈퇴할 때 내 사용자 문서를 지울 수 있어요', async () => {

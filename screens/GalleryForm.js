@@ -149,9 +149,8 @@ export default function GalleryForm({ navigation, route }) {
         tags: gallery.tags,
       };
 
-      // 여기부터 실패하면 글이 이미 저장됐을 수도 있어서 사진을 지우지 않음
-      // (createNewPost는 글을 쓴 뒤 사용자 문서를 따로 고침, #292)
-      newPhotos = [];
+      // 글 저장은 문서(비회원은 기기의 파일) 하나를 한 번에 씀. 실패하면 글이 저장되지 않은 것이라
+      // 이번에 올린 사진을 지우고, 성공하면 바로 지울 목록을 비움(#292)
       if (!member) {
         if (docId) {
           await updateLocalPost(docId, data);
@@ -164,9 +163,13 @@ export default function GalleryForm({ navigation, route }) {
         // 글을 고친 뒤에 빠진 사진을 지움. 기다리지 않고, 실패해도 저장은 끝난 것으로 봄
         deletePhotos(getRemovedPhotos(originalPhotos, savedPhotos), getAuth().currentUser.uid);
       } else {
-        const email = getAuth().currentUser.email;
-        await createNewPost({ ...data, writer: email, createdAt: new Date() }, email);
+        await createNewPost({
+          ...data,
+          writer: getAuth().currentUser.email,
+          createdAt: new Date(),
+        });
       }
+      newPhotos = [];
 
       initForm();
 
@@ -174,7 +177,7 @@ export default function GalleryForm({ navigation, route }) {
       isSavingRef.current = false;
       navigation.popTo(NAVIGATOR.BOTTOM_TAB_NAV, { screen: NAVIGATOR.GALLERY });
     } catch {
-      // 사진을 준비하다 실패했으면 글이 저장되지 않았으니 이번에 올린 사진은 어디에서도 쓰이지 않음
+      // 글이 저장되지 않았으니 이번에 올린 사진은 어디에서도 쓰이지 않음
       if (member) {
         deletePhotos(newPhotos, getAuth().currentUser?.uid);
       } else {

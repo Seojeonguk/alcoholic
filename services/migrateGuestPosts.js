@@ -3,10 +3,9 @@
 // 다 올라간 글만 기기에서 지우므로 중간에 끊겨도 다음에 남은 것부터 이어서 옮김
 import { db } from '../firebaseConfig';
 import { getImageContentType, photoIdFromUri, toRemotePost } from '../lib';
-import { createUserInfo } from './docs';
 import { claimLocalPosts, deleteLocalPost } from './localPosts';
 
-import { arrayUnion, doc, getDoc, setDoc, updateDoc } from '@react-native-firebase/firestore';
+import { doc, setDoc } from '@react-native-firebase/firestore';
 import { getDownloadURL, getStorage, putFile, ref } from '@react-native-firebase/storage';
 import { File } from 'expo-file-system';
 
@@ -32,7 +31,6 @@ const migratePost = async (post, uid, email) => {
     urls.push(await uploadOnce(uid, uri));
   }
   await setDoc(doc(db, 'posts', post.id), toRemotePost(post, email, urls));
-  await updateDoc(doc(db, 'users', email), { posts: arrayUnion(post.id) });
   await deleteLocalPost(post.id);
 };
 
@@ -41,11 +39,6 @@ const run = async ({ uid, email, onProgress }) => {
   if (posts.length === 0) {
     return { moved: 0, failed: 0 };
   }
-  // 가입할 때 사용자 문서를 만들지 못한 계정이면 먼저 만듦
-  if (!(await getDoc(doc(db, 'users', email))).exists()) {
-    await createUserInfo(email);
-  }
-
   let moved = 0;
   let failed = 0;
   onProgress?.({ done: 0, total: posts.length });
