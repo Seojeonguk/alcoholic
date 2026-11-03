@@ -20,6 +20,9 @@ export default function RegistrationForm({ navigation }) {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  // 두 번 보내면 두 번째 요청이 "이미 사용 중인 이메일"로 실패하므로 ref로 한 번만 보냄
+  const isSubmittingRef = useRef(false);
   const emailRef = useRef();
   const passwordRef = useRef();
   const confirmPasswordRef = useRef();
@@ -42,18 +45,23 @@ export default function RegistrationForm({ navigation }) {
   const showSuccessToastForEmailSending = () => {
     showToast(
       'success',
-      '이메일의 메일함을 확인바랍니다',
-      `${email}로 인증 메일을 발송하였습니다. 메일이 없으면 스팸함도 확인해 주세요.`
+      '메일함에서 인증 메일을 확인해 주세요.',
+      `${email}로 인증 메일을 보냈어요. 메일이 없으면 스팸함도 확인해 주세요.`
     );
   };
 
   const handleRegistration = async () => {
+    if (isSubmittingRef.current) {
+      return;
+    }
     if (password !== confirmPassword) {
-      setConfirmPasswordError('비밀번호가 일치하지 않습니다.');
+      setConfirmPasswordError('비밀번호가 일치하지 않아요.');
       confirmPasswordRef.current.focus();
       return;
     }
 
+    isSubmittingRef.current = true;
+    setIsLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       await sendVerificationEmail(auth.currentUser);
@@ -69,12 +77,22 @@ export default function RegistrationForm({ navigation }) {
       } else {
         setPasswordError(korErrorMsg);
       }
+    } finally {
+      isSubmittingRef.current = false;
+      setIsLoading(false);
     }
   };
 
   return (
     <AuthScreen
-      bottom={<Button onPress={handleRegistration} title="가입하기" />}
+      bottom={
+        <Button
+          loading={isLoading}
+          loadingTitle="가입하는 중…"
+          onPress={handleRegistration}
+          title="가입하기"
+        />
+      }
       onBack={() => navigation.goBack()}
       title="이메일로 회원가입"
     >
