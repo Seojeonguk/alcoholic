@@ -154,6 +154,7 @@ export default function Gallery({ navigation }) {
         <Text style={styles.title}>내 기록</Text>
         <PressableScale
           accessibilityLabel="새 기록 남기기"
+          accessibilityRole="button"
           onPress={moveGalleryForm}
           style={styles.addButton}
         >

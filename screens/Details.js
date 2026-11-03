@@ -170,6 +170,7 @@ function Details({ route, navigation }) {
           onPressLeft={() => navigation.goBack()}
           onPressRight={showMenu}
           right="ellipsis-horizontal"
+          rightLabel="더보기"
         />
       </LinearGradient>
     </View>
