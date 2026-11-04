@@ -12,7 +12,7 @@
 
 - **alcoholic**: 술 사진과 기록(제목 · 내용 · 날짜 · 장소 · 태그)을 남기는 React Native(Expo) 앱.
 - 스택: Expo SDK 58, React 19, React Native 0.88, React Navigation 7, Redux Toolkit 2, Firebase(`@react-native-firebase` 27: Auth · Firestore · Storage), expo-image.
-- 목표: v1.0.0을 Android(Google Play)로 첫 출시. 진행 상황은 #220(v1.0.0 Release Plan)과 마일스톤 `v1.0.0`에서 관리함. iOS 출시는 `v1.1.0`(#266). 처음 `v1.1.0`으로 계획했다가 먼저 끝난 이슈(#201 비회원 사용 등)는 `v1.0.0`으로 옮김(#220의 Phase 2.7).
+- 목표: v1.0.0을 Android(Google Play)로 첫 출시. 진행 상황은 #220(v1.0.0 Release Plan)과 마일스톤 `v1.0.0`에서 관리함. Android 기능 · 개선은 모두 `v1.0.0`에 넣고 production 출시 전에 끝냄. iOS 출시만 `v2.0.0`(#266).
 
 ### 구조
 
