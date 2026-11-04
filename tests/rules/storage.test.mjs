@@ -121,11 +121,22 @@ describe('posts/{uid}/{fileId}', () => {
 });
 
 describe('예전 경로와 기본 이미지', () => {
-  test('예전 사진(posts/{파일})은 읽을 수만 있어요', async () => {
+  // 예전 사진(posts/{파일})은 규칙에서 허용을 뺐어요. 앱은 토큰이 붙은 다운로드 URL로 보여 줘서 규칙과 상관없어요
+  test('예전 사진(posts/{파일})은 누구도 읽거나 쓰거나 지울 수 없어요', async () => {
     await seed('posts/old.jpg');
-    await assertSucceeds(getBytes(ref(verifiedStorage(ME), 'posts/old.jpg')));
-    await assertFails(uploadBytes(ref(verifiedStorage(ME), 'posts/new.jpg'), IMAGE, JPEG));
-    await assertFails(deleteObject(ref(verifiedStorage(ME), 'posts/old.jpg')));
+    for (const storage of [verifiedStorage(ME), unverifiedStorage(ME), guestStorage()]) {
+      await assertFails(getBytes(ref(storage, 'posts/old.jpg')));
+      await assertFails(uploadBytes(ref(storage, 'posts/new.jpg'), IMAGE, JPEG));
+      await assertFails(deleteObject(ref(storage, 'posts/old.jpg')));
+    }
+  });
+
+  test('posts 폴더 전체의 목록은 볼 수 없어요', async () => {
+    await seed('posts/old.jpg');
+    await seed(`posts/${OTHER.uid}/a.jpg`);
+    for (const storage of [verifiedStorage(ME), unverifiedStorage(ME), guestStorage()]) {
+      await assertFails(listAll(ref(storage, 'posts')));
+    }
   });
 
   // 기본 이미지는 앱 안(assets/default-photo.png)으로 옮겼어요. 예전 빌드는 토큰 URL로 받아서 규칙과 상관없어요
