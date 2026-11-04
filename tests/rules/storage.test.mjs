@@ -8,6 +8,8 @@ import {
 } from '@firebase/rules-unit-testing';
 import { deleteObject, getBytes, listAll, ref, uploadBytes } from 'firebase/storage';
 
+import { getImageContentType } from '../../lib/imageContentType.js';
+
 const ME = { uid: 'me-uid', email: 'me@example.com' };
 const OTHER = { uid: 'other-uid', email: 'other@example.com' };
 const IMAGE = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
@@ -66,6 +68,25 @@ describe('posts/{uid}/{fileId}', () => {
         contentType: 'text/plain',
       })
     );
+  });
+
+  test('앱이 올리는 이미지 형식은 모두 올릴 수 있어요', async () => {
+    const files = ['type.jpg', 'type.png', 'type.webp', 'type.heic', 'type.heif', 'type.gif'];
+    for (const file of files) {
+      await assertSucceeds(
+        uploadBytes(ref(verifiedStorage(ME), `posts/${ME.uid}/${file}`), IMAGE, {
+          contentType: getImageContentType(file),
+        })
+      );
+    }
+  });
+
+  test('SVG 같은 다른 이미지 형식은 올릴 수 없어요', async () => {
+    for (const contentType of ['image/svg+xml', 'image/x-icon', 'image/jpegx', 'image/']) {
+      await assertFails(
+        uploadBytes(ref(verifiedStorage(ME), `posts/${ME.uid}/a`), IMAGE, { contentType })
+      );
+    }
   });
 
   test('10MB 이상은 올릴 수 없어요', async () => {

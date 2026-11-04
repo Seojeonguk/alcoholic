@@ -12,7 +12,8 @@ service firebase.storage {
         && request.auth.uid == uid
         && request.auth.token.email_verified == true
         && request.resource.size < 10 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+        // 앱이 넣는 형식(lib/imageContentType.js)만 받음. SVG처럼 스크립트가 들 수 있는 형식은 막음
+        && request.resource.contentType.matches('image/(jpeg|png|webp|heic|heif|gif)');
       allow update: if false;
       // 탈퇴할 때 본인 폴더의 사진을 지움
       allow delete: if request.auth != null && request.auth.uid == uid;
