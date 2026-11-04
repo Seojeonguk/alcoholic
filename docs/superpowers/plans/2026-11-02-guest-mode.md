@@ -238,4 +238,4 @@ test('다른 사람이 정한 문서 ID로 옮긴 글에 다시 쓸 수 없어�
 - [ ] **Step 2: README · CLAUDE.md** — 구조 · 주의사항에 비회원 모드(`services/localPosts.js`, `isMember()`로 갈림, 비회원 기록은 서버로 보내지 않음, 옮기기는 처음 시작한 계정에만)를 짧게 적어요.
 - [ ] **Step 3: 전체 확인** — `npm run lint` → 0, `npm run test:unit` → `ℹ fail 0`, `npx expo-doctor`, `npx expo install --check`, `npx expo export --platform android`, `npm run test:rules` → `ℹ fail 0`
 - [ ] **Step 4: 커밋을 하나로 합치기** — `git reset --soft master` 후 `timeout 60 git commit -s -m "회원가입 없이 쓰기" -m "가입하지 않고 기기에 기록을 남기고, 가입하면 계정으로 옮길 수 있게 합니다."`
-- [ ] **Step 5: PR** — `Closes #201`, `## 요약` · `## 확인한 것` · `## 기기에서 확인해 주세요`(스펙의 "확인 방법" 기기 확인 목록 + **새 빌드 필요**), 레이블 `feat`, `--assignee @me`, 마일스톤 `v1.1.0`. 본문은 scratchpad 파일로 `-F`.
+- [ ] **Step 5: PR** — `Closes #201`, `## 요약` · `## 확인한 것` · `## 기기에서 확인해 주세요`(스펙의 "확인 방법" 기기 확인 목록 + **새 빌드 필요**), 레이블 `feat`, `--assignee @me`, 마일스톤 `v1.0.0`. 본문은 scratchpad 파일로 `-F`.
