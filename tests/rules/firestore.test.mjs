@@ -25,6 +25,7 @@ import {
 } from 'firebase/firestore';
 
 import { POST_LIMITS } from '../../constants/postLimits.js';
+import { toRemotePost } from '../../lib/guestPosts.js';
 
 const ME = { uid: 'me-uid', email: 'me@example.com' };
 const OTHER = { uid: 'other-uid', email: 'other@example.com' };
@@ -317,6 +318,55 @@ describe('posts/{postId}', () => {
       await assertFails(write({ tags: ['맥주', text(POST_LIMITS.TAG_LENGTH + 1)] }));
       await assertFails(write({ tags: [text(POST_LIMITS.TAG_LENGTH + 1)] }));
       await assertFails(write({ tags: ['맥주', ''] }));
+    });
+
+    test('날짜는 YYYY-MM-DD 형식만 쓸 수 있어요', async () => {
+      await assertSucceeds(write({ day: '2026-01-01' }));
+      await assertSucceeds(write({ day: '1999-12-31' }));
+      for (const day of [
+        '',
+        '2026-1-1',
+        '2026/01/01',
+        '2026-13-01',
+        '2026-00-10',
+        '2026-01-32',
+        '2026-01-01 ',
+        '2026-01-01' + '0'.repeat(1000),
+        20260101,
+      ]) {
+        await assertFails(write({ day }));
+      }
+    });
+
+    test('사진은 비어 있지 않은 1000자 이하 문자열만 쓸 수 있어요', async () => {
+      await assertSucceeds(write({ photos: [`https://example.com/${'a'.repeat(980)}`] }));
+      await assertFails(write({ photos: [`https://example.com/${'a'.repeat(981)}`] }));
+      await assertFails(write({ photos: [''] }));
+      await assertFails(write({ photos: [123] }));
+      await assertFails(write({ photos: [{ url: 'https://example.com/a' }] }));
+      await assertFails(write({ photos: ['https://example.com/a', null] }));
+      // 마지막 칸까지 검사하는지
+      await assertFails(write({ photos: [...list(POST_LIMITS.PHOTOS - 1, 'https://a/'), 1] }));
+    });
+
+    test('비회원 기록을 옮길 때 만드는 글은 규칙을 통과해요', async () => {
+      const guestPost = {
+        id: 'local-1',
+        title: '맥주',
+        day: '2026-10-25',
+        photos: ['local-1-0.jpg'],
+        content: '',
+        location: '',
+        tags: ['맥주'],
+        createdAt: Date.now(),
+        owner: ME.uid,
+      };
+      const url =
+        'https://firebasestorage.googleapis.com/v0/b/alcoholic-12345.firebasestorage.app/o/' +
+        `posts%2F${ME.uid}%2Flocal-1-0.jpg?alt=media&token=00000000-0000-0000-0000-000000000000`;
+      await assertSucceeds(
+        setDoc(doc(verifiedDb(ME), 'posts', guestPost.id), toRemotePost(guestPost, ME.email, [url]))
+      );
     });
 
     test('상한을 넘는 예전 글은 줄이지 않으면 수정할 수 없지만 지울 수는 있어요', async () => {

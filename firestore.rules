@@ -36,13 +36,34 @@ service cloud.firestore {
         && (tags.size() == 0 || tags.join('\n').matches('[^\n]{1,20}(\n[^\n]{1,20})*'));
     }
 
+    // 마신 날짜: 앱의 toLocalDateString이 만드는 YYYY-MM-DD. matches는 문자열 전체가 맞아야 해서 길이도 10자로 정해짐
+    function validDay(day) {
+      return day is string
+        && day.matches('[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])');
+    }
+
+    // 사진 하나: 다운로드 URL(200자 남짓). 버킷 이름이 길어도 들어가게 1000자까지 받음
+    function validPhotoAt(photos, i) {
+      return photos.size() <= i
+        || (photos[i] is string && photos[i].size() >= 1 && photos[i].size() <= 1000);
+    }
+
+    // 사진은 10장까지. 반복문이 없어서 칸마다 검사함
+    function validPhotos(photos) {
+      return photos is list && photos.size() <= 10
+        && validPhotoAt(photos, 0) && validPhotoAt(photos, 1) && validPhotoAt(photos, 2)
+        && validPhotoAt(photos, 3) && validPhotoAt(photos, 4) && validPhotoAt(photos, 5)
+        && validPhotoAt(photos, 6) && validPhotoAt(photos, 7) && validPhotoAt(photos, 8)
+        && validPhotoAt(photos, 9);
+    }
+
     // 길이 · 개수 상한은 앱의 constants/postLimits.js와 같아야 함
     function validPost(data) {
       return data.keys().hasOnly(['title', 'day', 'photos', 'content', 'location', 'tags', 'writer', 'createdAt'])
         && data.writer == myEmail()
         && data.title is string && data.title.size() <= 40
-        && data.day is string
-        && data.photos is list && data.photos.size() <= 10
+        && validDay(data.day)
+        && validPhotos(data.photos)
         && data.content is string && data.content.size() <= 2000
         && data.location is string && data.location.size() <= 50
         && validTags(data.tags)
