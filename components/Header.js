@@ -28,7 +28,7 @@ export default function Header({
   onPressRight,
 }) {
   const leftIcon = LEFT_ICONS[left];
-  const color = light ? '#FFFFFF' : COLORS.TEXT;
+  const color = light ? COLORS.ON_PHOTO : COLORS.TEXT;
 
   const renderIcon = (name, onPress, label) =>
     name ? (
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   },
   lightIcon: {
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: COLORS.PHOTO_ICON_BG,
     borderRadius: 18,
     height: 36,
     justifyContent: 'center',

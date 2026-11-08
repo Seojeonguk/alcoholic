@@ -136,7 +136,7 @@ export default function Photo() {
               onPress={() => dispatch(deletePhoto(index))}
               style={styles.removeBtn}
             >
-              <Ionicons color="#FFFFFF" name="close" size={12} />
+              <Ionicons color={COLORS.ON_PHOTO} name="close" size={12} />
             </PressableScale>
           </View>
         ))}
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     marginHorizontal: -20,
   },
   coverBadge: {
-    backgroundColor: 'rgba(25, 31, 40, 0.7)',
+    backgroundColor: COLORS.PHOTO_BADGE,
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
     bottom: 0,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     right: 0,
   },
   coverText: {
-    color: '#FFFFFF',
+    color: COLORS.ON_PHOTO,
     fontSize: 11,
     fontWeight: '600',
     textAlign: 'center',
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   },
   removeBtn: {
     alignItems: 'center',
-    backgroundColor: 'rgba(25, 31, 40, 0.7)',
+    backgroundColor: COLORS.PHOTO_BADGE,
     borderRadius: 10,
     height: 20,
     justifyContent: 'center',
