@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { collectTags, filterPosts } from '../../lib/postFilter.js';
+import { collectTags, countTags, filterPosts, searchTags } from '../../lib/postFilter.js';
 
 const posts = [
   { docId: 'a', day: '2026-10-01', tags: ['맥주', '수제'] },
@@ -37,4 +37,43 @@ test('filterPosts: 태그와 기간을 함께 걸 수 있어요', () => {
   assert.deepEqual(ids(filterPosts(posts, { tag: '맥주', from: '2026-10-01', to: '2026-10-31' })), [
     'a',
   ]);
+});
+
+test('countTags: 태그별로 쓴 글 수를 많이 쓴 순서로 세요', () => {
+  assert.deepEqual(countTags(posts), [
+    { tag: '맥주', count: 3 },
+    { tag: '수제', count: 1 },
+    { tag: '와인', count: 1 },
+  ]);
+});
+
+test('countTags: 한 글에 같은 태그가 두 번 있어도 한 번으로 세요', () => {
+  assert.deepEqual(countTags([{ tags: ['맥주', '맥주'] }]), [{ tag: '맥주', count: 1 }]);
+});
+
+const tagCounts = [
+  { tag: '맥주', count: 3 },
+  { tag: '수제맥주', count: 2 },
+  { tag: 'IPA', count: 1 },
+];
+
+test('searchTags: 이름에 검색어가 들어 있는 태그만 순서를 지켜 남겨요', () => {
+  assert.deepEqual(
+    searchTags(tagCounts, '맥주').map(({ tag }) => tag),
+    ['맥주', '수제맥주']
+  );
+});
+
+test('searchTags: 앞의 #와 공백은 빼고, 영문 대소문자는 가리지 않아요', () => {
+  assert.deepEqual(
+    searchTags(tagCounts, '  #ipa ').map(({ tag }) => tag),
+    ['IPA']
+  );
+});
+
+test('searchTags: 검색어가 비면 모두, 맞는 게 없으면 빈 목록이에요', () => {
+  assert.equal(searchTags(tagCounts, '').length, 3);
+  assert.equal(searchTags(tagCounts, '#').length, 3);
+  assert.equal(searchTags(tagCounts, undefined).length, 3);
+  assert.deepEqual(searchTags(tagCounts, '와인'), []);
 });

@@ -10,6 +10,7 @@ import Photo from './Photo';
 import Post from './Post';
 import { PostFormProvider, usePostForm } from './PostForm';
 import Tags from './Tags';
+import TagSheet from './TagSheet';
 import Title from './Title';
 
 export * from './ui';
@@ -26,6 +27,7 @@ export {
   Post,
   PostFormProvider,
   Tags,
+  TagSheet,
   Title,
   usePostForm,
 };

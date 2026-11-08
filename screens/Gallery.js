@@ -11,7 +11,7 @@ import {
 import { Button, GalleryFilter, Post, PressableScale, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
-import { collectTags, filterPosts, groupPostsByMonth, memberEmail, showToast } from '../lib';
+import { countTags, filterPosts, groupPostsByMonth, memberEmail, showToast } from '../lib';
 import { subscribeGallery, useGuestMigration } from '../services';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -113,7 +113,9 @@ export default function Gallery({ navigation }) {
     setSubscriptionKey((key) => key + 1);
   };
 
-  const tags = useMemo(() => collectTags(posts), [posts]);
+  // 태그 시트에 개수와 함께 보여 줄 태그(#331)
+  const tagCounts = useMemo(() => countTags(posts), [posts]);
+  const tags = useMemo(() => tagCounts.map(({ tag }) => tag), [tagCounts]);
   // 고른 태그의 글을 모두 지워서 태그가 없어지면 태그 조건은 없는 것으로 봄
   const activeFilter = useMemo(
     () => ({ ...filter, tag: tags.includes(filter.tag) ? filter.tag : null }),
@@ -224,7 +226,7 @@ export default function Gallery({ navigation }) {
       ) : null}
 
       {isLoaded && posts.length > 0 ? (
-        <GalleryFilter filter={activeFilter} onChange={setFilter} tags={tags} />
+        <GalleryFilter filter={activeFilter} onChange={setFilter} tagCounts={tagCounts} />
       ) : null}
 
       {isLoaded ? (

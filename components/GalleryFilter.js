@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { COLORS } from '../constants';
 import { formatDay, toLocalDateString } from '../lib';
+import TagSheet from './TagSheet';
 import { PressableScale } from './ui';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -11,9 +12,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 // 'YYYY-MM-DD'만 넘기면 UTC로 해석되므로 기기 시간대의 자정으로 만듦
 const toDate = (day) => new Date(`${day}T00:00:00`);
 
-// 갤러리 위의 필터 줄. 기간 칩과 내 태그 칩을 가로로 넘겨 봄
-// 고른 칩을 다시 누르면 그 조건을 지움
-export default function GalleryFilter({ tags, filter, onChange }) {
+// 갤러리 위의 필터 줄. [기간] [태그] 두 칩만 둠(#331)
+// 기간: 고른 칩을 다시 누르면 지움. 태그: 칩을 누르면 시트에서 고르고, 고른 뒤에는 ✕로 지움
+// tagCounts: 많이 쓴 순서의 [{ tag, count }](lib의 countTags)
+export default function GalleryFilter({ tagCounts, filter, onChange }) {
   // 기간은 시작 날짜 → 끝 날짜 순서로 두 번 고름
   const [pickingStep, setPickingStep] = useState(null);
   const [draftFrom, setDraftFrom] = useState(null);
@@ -41,8 +43,16 @@ export default function GalleryFilter({ tags, filter, onChange }) {
     setPickingStep(null);
   };
 
-  const handleTagPress = (tag) => {
-    onChange({ ...filter, tag: filter.tag === tag ? null : tag });
+  const [isTagSheetOpen, setIsTagSheetOpen] = useState(false);
+  const hasTag = !!filter.tag;
+
+  const handleSelectTag = (tag) => {
+    setIsTagSheetOpen(false);
+    onChange({ ...filter, tag });
+  };
+
+  const clearTag = () => {
+    onChange({ ...filter, tag: null });
   };
 
   return (
@@ -67,22 +77,47 @@ export default function GalleryFilter({ tags, filter, onChange }) {
           {hasPeriod ? <Ionicons color="#FFFFFF" name="close" size={14} /> : null}
         </PressableScale>
 
-        {tags.map((tag) => {
-          const isSelected = filter.tag === tag;
-          return (
+        {/* 쓴 태그가 없으면 고를 것이 없으므로 칩을 숨김 */}
+        {tagCounts.length > 0 && (
+          <View style={[styles.chip, hasTag && styles.selectedChip]}>
             <PressableScale
-              accessibilityLabel={isSelected ? `${tag} 태그 조건 지우기` : `${tag} 태그로 찾기`}
+              accessibilityLabel={
+                hasTag ? `${filter.tag} 태그로 찾는 중, 태그 바꾸기` : '태그로 찾기'
+              }
               accessibilityRole="button"
-              key={tag}
-              onPress={() => handleTagPress(tag)}
-              style={[styles.chip, isSelected && styles.selectedChip]}
+              onPress={() => setIsTagSheetOpen(true)}
+              style={styles.chipBody}
             >
-              <Text style={[styles.chipText, isSelected && styles.selectedText]}>#{tag}</Text>
-              {isSelected ? <Ionicons color="#FFFFFF" name="close" size={14} /> : null}
+              <Ionicons
+                color={hasTag ? '#FFFFFF' : COLORS.TEXT}
+                name="pricetag-outline"
+                size={14}
+              />
+              <Text style={[styles.chipText, hasTag && styles.selectedText]}>
+                {hasTag ? `#${filter.tag}` : '태그'}
+              </Text>
             </PressableScale>
-          );
-        })}
+            {hasTag ? (
+              <PressableScale
+                accessibilityLabel="태그 조건 지우기"
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={clearTag}
+              >
+                <Ionicons color="#FFFFFF" name="close" size={14} />
+              </PressableScale>
+            ) : null}
+          </View>
+        )}
       </ScrollView>
+
+      <TagSheet
+        onClose={() => setIsTagSheetOpen(false)}
+        onSelect={handleSelectTag}
+        selected={filter.tag}
+        tagCounts={tagCounts}
+        visible={isTagSheetOpen}
+      />
 
       {/* 오늘 이후 기록은 없으므로 시작 · 끝 날짜 모두 오늘까지만 고름 */}
       {pickingStep === 'from' && (
@@ -126,6 +161,11 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingHorizontal: 12,
     paddingVertical: 6,
+  },
+  chipBody: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 4,
   },
   chipText: {
     color: COLORS.TEXT,
