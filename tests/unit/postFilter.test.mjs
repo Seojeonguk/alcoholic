@@ -77,3 +77,38 @@ test('searchTags: 검색어가 비면 모두, 맞는 게 없으면 빈 목록이
   assert.equal(searchTags(tagCounts, undefined).length, 3);
   assert.deepEqual(searchTags(tagCounts, '와인'), []);
 });
+
+const searchable = [
+  { docId: 's1', title: '하이네켄', location: '홍대 펍', content: '', tags: ['맥주'] },
+  { docId: 's2', title: '샤또', location: '집', content: 'Merlot 한 병', tags: ['와인'] },
+  { docId: 's3', title: '', location: '', content: '', tags: ['수제맥주'], day: '2026-10-01' },
+  { docId: 's4', title: '이름 없음' },
+];
+
+test('filterPosts: 검색어가 제목 · 장소 · 내용 · 태그 어디에든 있으면 남아요', () => {
+  assert.deepEqual(ids(filterPosts(searchable, { query: '하이네' })), ['s1']);
+  assert.deepEqual(ids(filterPosts(searchable, { query: '홍대' })), ['s1']);
+  assert.deepEqual(ids(filterPosts(searchable, { query: '한 병' })), ['s2']);
+  assert.deepEqual(ids(filterPosts(searchable, { query: '맥주' })), ['s1', 's3']);
+});
+
+test('filterPosts: 검색어는 영문 대소문자를 가리지 않고 앞뒤 공백을 빼요', () => {
+  assert.deepEqual(ids(filterPosts(searchable, { query: '  merlot ' })), ['s2']);
+});
+
+test('filterPosts: 여러 단어는 모두 들어 있어야 하고, 칸이 달라도 돼요', () => {
+  assert.deepEqual(ids(filterPosts(searchable, { query: '샤또   집' })), ['s2']);
+  assert.deepEqual(ids(filterPosts(searchable, { query: '샤또 홍대' })), []);
+});
+
+test('filterPosts: 공백뿐인 검색어는 조건이 없는 것으로 봐요', () => {
+  assert.equal(filterPosts(searchable, { query: '   ' }).length, 4);
+});
+
+test('filterPosts: 검색어는 태그 · 기간 조건과 함께 걸려요', () => {
+  assert.deepEqual(ids(filterPosts(searchable, { query: '맥주', tag: '수제맥주' })), ['s3']);
+  assert.deepEqual(
+    ids(filterPosts(searchable, { query: '맥주', from: '2026-10-01', to: '2026-10-31' })),
+    ['s3']
+  );
+});
