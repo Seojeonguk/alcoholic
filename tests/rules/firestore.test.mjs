@@ -439,3 +439,53 @@ describe('별점 · 주종(#341)', () => {
     await assertFails(updateDoc(ref, { rating: 6 }));
   });
 });
+
+describe('갤러리 썸네일(#338)', () => {
+  const write = (overrides) =>
+    addDoc(collection(verifiedDb(ME), 'posts'), newPost(ME.email, overrides));
+
+  test('썸네일 없이도 쓸 수 있어요(예전 글 · 사진 없는 글)', async () => {
+    await assertSucceeds(write({}));
+    await assertSucceeds(write({ thumbnail: null }));
+  });
+
+  test('썸네일은 비어 있지 않은 1000자 이하 문자열만 쓸 수 있어요', async () => {
+    await assertSucceeds(write({ thumbnail: 'https://example.com/t' }));
+    await assertSucceeds(write({ thumbnail: `https://example.com/${'a'.repeat(980)}` }));
+    for (const thumbnail of ['', `https://example.com/${'a'.repeat(981)}`, 1, ['https://a']]) {
+      await assertFails(write({ thumbnail }));
+    }
+  });
+
+  test('수정할 때 썸네일을 바꾸거나 지울 수 있어요', async () => {
+    await seed('posts/old', newPost(ME.email));
+    const ref = doc(verifiedDb(ME), 'posts', 'old');
+    await assertSucceeds(updateDoc(ref, { thumbnail: 'https://example.com/t' }));
+    await assertSucceeds(updateDoc(ref, { thumbnail: null }));
+  });
+
+  test('비회원 기록을 옮길 때 썸네일도 함께 넣어요', async () => {
+    const guestPost = {
+      id: 'local-3',
+      title: '맥주',
+      day: '2026-10-25',
+      photos: ['local-3-0.jpg'],
+      content: '',
+      location: '',
+      tags: [],
+      createdAt: Date.now(),
+      owner: ME.uid,
+    };
+    const db = verifiedDb(ME);
+    await assertSucceeds(
+      setDoc(
+        doc(db, 'posts', guestPost.id),
+        toRemotePost(guestPost, ME.email, ['https://example.com/p'], 'https://example.com/t')
+      )
+    );
+    assert.equal(
+      (await getDoc(doc(db, 'posts', guestPost.id))).data().thumbnail,
+      'https://example.com/t'
+    );
+  });
+});

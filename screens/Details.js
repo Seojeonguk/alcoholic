@@ -13,6 +13,7 @@ import {
   toLocalDateString,
   toRepeatDraft,
   usePreventLeave,
+  withThumbnail,
   makeStyles,
   useColors,
 } from '../lib';
@@ -109,7 +110,8 @@ export default function Details({ route, navigation }) {
     const member = isMember();
     try {
       // queued: 연결이 없어 기기에서 먼저 지움. 연결되면 서버에서도 지워짐(#323)
-      const { queued } = await removePost(docId, photos);
+      // 갤러리 썸네일(#338)도 함께 지움
+      const { queued } = await removePost(docId, withThumbnail(photos, myPost.thumbnail));
       if (queued) {
         showToast('info', '연결되면 삭제가 반영돼요.', '목록에서는 먼저 빠져요.');
       } else {

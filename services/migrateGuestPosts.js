@@ -2,7 +2,7 @@
 // 다시 시도해도 두 번 올라가지 않게 사진은 같은 경로, 글은 기기 글 ID를 문서 ID로 씀
 // 다 올라간 글만 기기에서 지우므로 중간에 끊겨도 다음에 남은 것부터 이어서 옮김
 import { db } from '../firebaseConfig';
-import { getImageContentType, photoIdFromUri, toRemotePost } from '../lib';
+import { getImageContentType, makeThumbnail, photoIdFromUri, toRemotePost } from '../lib';
 import { claimLocalPosts, deleteLocalPost } from './localPosts';
 
 import { doc, setDoc } from '@react-native-firebase/firestore';
@@ -10,8 +10,9 @@ import { getDownloadURL, getStorage, putFile, ref } from '@react-native-firebase
 import { File } from 'expo-file-system';
 
 // 이미 올라가 있으면(지난번에 올리다 끊김) 규칙상 덮어쓸 수 없으므로 URL만 받음
-const uploadOnce = async (uid, uri) => {
-  const photoRef = ref(getStorage(), `posts/${uid}/${photoIdFromUri(uri)}`);
+// name: Storage 파일 이름. 다시 시도해도 같은 이름이 되도록 기기 파일 이름으로 정함
+const uploadOnce = async (uid, uri, name = photoIdFromUri(uri)) => {
+  const photoRef = ref(getStorage(), `posts/${uid}/${name}`);
   try {
     return await getDownloadURL(photoRef);
   } catch (e) {
@@ -23,6 +24,15 @@ const uploadOnce = async (uid, uri) => {
   return getDownloadURL(photoRef);
 };
 
+// 대표 사진의 갤러리 썸네일을 만들어 올림(#338). 실패해도 글은 옮김(갤러리가 원본을 보여 줌)
+const uploadThumbnailOnce = async (uid, uri) => {
+  try {
+    return await uploadOnce(uid, await makeThumbnail(uri), `${photoIdFromUri(uri)}-thumbnail`);
+  } catch {
+    return null;
+  }
+};
+
 const migratePost = async (post, uid, email) => {
   // 기기에서 사라진 사진은 빼고 옮김. 그래야 옮기기가 끝없이 실패하지 않음
   const photos = post.photos.filter((uri) => new File(uri).exists);
@@ -30,7 +40,8 @@ const migratePost = async (post, uid, email) => {
   for (const uri of photos) {
     urls.push(await uploadOnce(uid, uri));
   }
-  await setDoc(doc(db, 'posts', post.id), toRemotePost(post, email, urls));
+  const thumbnail = photos[0] ? await uploadThumbnailOnce(uid, photos[0]) : null;
+  await setDoc(doc(db, 'posts', post.id), toRemotePost(post, email, urls, thumbnail));
   await deleteLocalPost(post.id);
 };
 

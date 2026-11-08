@@ -148,6 +148,8 @@ export default function GalleryForm({ navigation, route }) {
         docId,
         form: gallery,
         originalPhotos,
+        // 고치기 전 썸네일(#338). 폼 값에는 없어서 상세 화면이 넘긴 글에서 꺼냄
+        originalThumbnail: route.params?.post?.thumbnail ?? null,
         onPhotoStored: () =>
           setUploadProgress((progress) => ({ ...progress, done: progress.done + 1 })),
       });
