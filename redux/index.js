@@ -11,14 +11,17 @@ import postFormReducer, {
   updatePhotos,
   updateTitle,
 } from './slices/gallerySlice';
+import { clearSuggestions, setSuggestions } from './slices/suggestionSlice';
 
 export {
   postFormReducer,
   addPhoto,
   addTag,
+  clearSuggestions,
   deletePhoto,
   deleteTag,
   init,
+  setSuggestions,
   updateContent,
   updateDay,
   updateGallery,

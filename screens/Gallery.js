@@ -11,13 +11,22 @@ import {
 import { Button, GalleryFilter, Post, PressableScale, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
-import { countTags, filterPosts, groupPostsByMonth, memberEmail, showToast } from '../lib';
+import {
+  collectLocations,
+  countTags,
+  filterPosts,
+  groupPostsByMonth,
+  memberEmail,
+  showToast,
+} from '../lib';
+import { clearSuggestions, setSuggestions } from '../redux';
 import { subscribeGallery, useGuestMigration } from '../services';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { onAuthStateChanged } from '@react-native-firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDispatch } from 'react-redux';
 
 const COLUMNS = 3;
 const GAP = 6;
@@ -125,6 +134,13 @@ export default function Gallery({ route, navigation }) {
   // 태그 시트에 개수와 함께 보여 줄 태그(#331)
   const tagCounts = useMemo(() => countTags(posts), [posts]);
   const tags = useMemo(() => tagCounts.map(({ tag }) => tag), [tagCounts]);
+
+  // 글을 쓸 때 전에 쓴 태그 · 장소를 추천하게 넘겨 줌(#336). 갤러리가 사라지면(로그아웃 · 탈퇴) 비움
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(setSuggestions({ tags, locations: collectLocations(posts) }));
+  }, [dispatch, tags, posts]);
+  useEffect(() => () => dispatch(clearSuggestions()), [dispatch]);
   // 고른 태그의 글을 모두 지워서 태그가 없어지면 태그 조건은 없는 것으로 봄
   const activeFilter = useMemo(
     () => ({ ...filter, tag: tags.includes(filter.tag) ? filter.tag : null }),

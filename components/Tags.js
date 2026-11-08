@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { COLORS, POST_LIMITS } from '../constants';
+import { suggestValues } from '../lib';
 import { addTag, deleteTag } from '../redux';
 import { usePostForm } from './PostForm';
+import SuggestionChips from './SuggestionChips';
 import { PressableScale } from './ui';
+
+import { useSelector } from 'react-redux';
 
 // 태그는 칩으로 보여 주고, 칩을 누르면 지움. "+ 추가"를 누르면 입력 칸이 열림
 export default function Tags() {
@@ -14,6 +18,19 @@ export default function Tags() {
     form: { tags },
     dispatch,
   } = usePostForm();
+  // 입력하는 동안 전에 쓴 태그를 추천함. 입력한 글자로 좁히고 이미 넣은 태그는 뺌(#336)
+  const usedTags = useSelector((state) => state.suggestion.tags);
+  const suggestions = useMemo(
+    () => suggestValues(usedTags, newTag, { exclude: tags }),
+    [usedTags, newTag, tags]
+  );
+  const canAdd = tags.length < POST_LIMITS.TAGS;
+
+  // 추천 칩을 누르면 바로 넣고 이어서 입력할 수 있게 입력 칸은 열어 둠
+  const handleSelect = (tag) => {
+    dispatch(addTag(tag));
+    setNewTag('');
+  };
 
   // 공백 · # 정리와 중복 확인은 addTag에서 함
   const handleSubmit = () => {
@@ -45,7 +62,7 @@ export default function Tags() {
         ))}
 
         {/* 태그가 상한만큼 차면 입력 칸과 "+ 추가"를 숨김 */}
-        {tags.length >= POST_LIMITS.TAGS ? null : isEditing ? (
+        {!canAdd ? null : isEditing ? (
           <TextInput
             autoFocus
             maxLength={POST_LIMITS.TAG_LENGTH}
@@ -70,6 +87,11 @@ export default function Tags() {
           </PressableScale>
         )}
       </View>
+      {canAdd && isEditing ? (
+        <View style={styles.suggestions}>
+          <SuggestionChips label="태그" onSelect={handleSelect} prefix="#" values={suggestions} />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -111,6 +133,9 @@ const styles = StyleSheet.create({
     color: COLORS.TEXT,
     fontSize: 14,
     minWidth: 96,
+  },
+  suggestions: {
+    marginTop: 10,
   },
   title: {
     color: COLORS.TEXT,
