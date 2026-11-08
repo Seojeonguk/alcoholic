@@ -3,19 +3,21 @@ import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { COLORS, POST_LIMITS } from '../constants';
 import { showToast } from '../lib';
 import { addPhoto, deletePhoto } from '../redux';
+import { usePostForm } from './PostForm';
 import { PressableScale } from './ui';
 
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { useDispatch, useSelector } from 'react-redux';
 
 const PHOTO_SIZE = 64;
 
 // 맨 앞 + 칸과 고른 사진 미리보기를 가로로 보여 줌
 export default function Photo() {
-  const dispatch = useDispatch();
-  const photos = useSelector((state) => state.gallery.photos);
+  const {
+    form: { photos },
+    dispatch,
+  } = usePostForm();
   const remaining = POST_LIMITS.PHOTOS - photos.length;
 
   const showLimitToast = () => {

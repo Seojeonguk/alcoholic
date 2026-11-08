@@ -8,6 +8,7 @@ import Location from './Location';
 import PasswordInput from './PasswordInput';
 import Photo from './Photo';
 import Post from './Post';
+import { PostFormProvider, usePostForm } from './PostForm';
 import Tags from './Tags';
 import Title from './Title';
 
@@ -23,6 +24,8 @@ export {
   PasswordInput,
   Photo,
   Post,
+  PostFormProvider,
   Tags,
   Title,
+  usePostForm,
 };

@@ -2,14 +2,16 @@ import { useState } from 'react';
 
 import { formatDay, toLocalDateString } from '../lib';
 import { updateDay } from '../redux';
+import { usePostForm } from './PostForm';
 import { ListRow } from './ui';
 
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useDispatch, useSelector } from 'react-redux';
 
 export default function Day() {
-  const date = useSelector((state) => state.gallery.day);
-  const dispatch = useDispatch();
+  const {
+    form: { day: date },
+    dispatch,
+  } = usePostForm();
   const [isShowDatePicker, setIsShowDatePicker] = useState(false);
 
   const handleChangeDate = (e, newDate) => {

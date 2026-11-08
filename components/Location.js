@@ -3,14 +3,15 @@ import { StyleSheet, TextInput } from 'react-native';
 
 import { COLORS, POST_LIMITS } from '../constants';
 import { updateLocation } from '../redux';
+import { usePostForm } from './PostForm';
 import { ListRow } from './ui';
-
-import { useDispatch, useSelector } from 'react-redux';
 
 // 줄 어디를 눌러도 오른쪽 입력 칸에 바로 쓸 수 있음
 export default function Location() {
-  const dispatch = useDispatch();
-  const location = useSelector((state) => state.gallery.location);
+  const {
+    form: { location },
+    dispatch,
+  } = usePostForm();
   const inputRef = useRef(null);
 
   const handleChangeLocation = (newLocation) => {

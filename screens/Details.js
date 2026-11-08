@@ -5,16 +5,13 @@ import { Carousel, Header, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
 import { formatDay, showToast, usePreventLeave, waitForWrite } from '../lib';
-import { updateGallery } from '../redux';
 import { deleteLocalPost, deletePost, getLocalPost, getPost, isMember } from '../services';
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useDispatch } from 'react-redux';
 
 export default function Details({ route, navigation }) {
   const { docId } = route.params;
-  const dispatch = useDispatch();
   const { width } = useWindowDimensions();
   const { top } = useSafeAreaInsets();
 
@@ -115,8 +112,8 @@ export default function Details({ route, navigation }) {
   };
 
   const moveEdit = () => {
-    dispatch(updateGallery(myPost));
-    navigation.navigate(NAVIGATOR.GALLERY_FORM, { docId: docId });
+    // 고칠 글은 화면 파라미터로 넘김. 새 글 초안(redux)은 건드리지 않음(#325)
+    navigation.navigate(NAVIGATOR.GALLERY_FORM, { docId, post: myPost });
   };
 
   const showMenu = () => {

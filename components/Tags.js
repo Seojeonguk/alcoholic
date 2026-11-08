@@ -3,16 +3,17 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { COLORS, POST_LIMITS } from '../constants';
 import { addTag, deleteTag } from '../redux';
+import { usePostForm } from './PostForm';
 import { PressableScale } from './ui';
-
-import { useDispatch, useSelector } from 'react-redux';
 
 // 태그는 칩으로 보여 주고, 칩을 누르면 지움. "+ 추가"를 누르면 입력 칸이 열림
 export default function Tags() {
-  const dispatch = useDispatch();
   const [newTag, setNewTag] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const tags = useSelector((state) => state.gallery.tags);
+  const {
+    form: { tags },
+    dispatch,
+  } = usePostForm();
 
   // 공백 · # 정리와 중복 확인은 addTag에서 함
   const handleSubmit = () => {

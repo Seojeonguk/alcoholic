@@ -2,12 +2,13 @@ import { StyleSheet, TextInput } from 'react-native';
 
 import { COLORS, POST_LIMITS } from '../constants';
 import { updateTitle } from '../redux';
-
-import { useDispatch, useSelector } from 'react-redux';
+import { usePostForm } from './PostForm';
 
 export default function Title() {
-  const dispatch = useDispatch();
-  const title = useSelector((state) => state.gallery.title);
+  const {
+    form: { title },
+    dispatch,
+  } = usePostForm();
 
   const handleChangeTitle = (newTitle) => {
     dispatch(updateTitle(newTitle));
