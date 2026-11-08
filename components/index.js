@@ -8,6 +8,7 @@ import Location from './Location';
 import PasswordInput from './PasswordInput';
 import Photo from './Photo';
 import Post from './Post';
+import SearchSheet from './SearchSheet';
 import { PostFormProvider, usePostForm } from './PostForm';
 import Tags from './Tags';
 import TagSheet from './TagSheet';
@@ -26,6 +27,7 @@ export {
   Photo,
   Post,
   PostFormProvider,
+  SearchSheet,
   Tags,
   TagSheet,
   Title,

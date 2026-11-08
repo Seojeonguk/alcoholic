@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { COLORS } from '../constants';
 import { formatDay, toLocalDateString } from '../lib';
+import SearchSheet from './SearchSheet';
 import TagSheet from './TagSheet';
 import { PressableScale } from './ui';
 
@@ -12,10 +13,11 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 // 'YYYY-MM-DD'만 넘기면 UTC로 해석되므로 기기 시간대의 자정으로 만듦
 const toDate = (day) => new Date(`${day}T00:00:00`);
 
-// 갤러리 위의 필터 줄. [기간] [태그] 두 칩만 둠(#331)
-// 기간: 고른 칩을 다시 누르면 지움. 태그: 칩을 누르면 시트에서 고르고, 고른 뒤에는 ✕로 지움
+// 갤러리 위의 필터 줄. [검색] [기간] [태그] 칩을 둠(#331 · #333)
+// 기간: 고른 칩을 다시 누르면 지움. 검색 · 태그: 칩을 누르면 시트에서 고르고, 고른 뒤에는 ✕로 지움
 // tagCounts: 많이 쓴 순서의 [{ tag, count }](lib의 countTags)
-export default function GalleryFilter({ tagCounts, filter, onChange }) {
+// countResults(query): 지금 조건에 그 검색어를 더하면 남는 기록 수(검색 시트에 보여 줌)
+export default function GalleryFilter({ tagCounts, filter, onChange, countResults }) {
   // 기간은 시작 날짜 → 끝 날짜 순서로 두 번 고름
   const [pickingStep, setPickingStep] = useState(null);
   const [draftFrom, setDraftFrom] = useState(null);
@@ -43,6 +45,18 @@ export default function GalleryFilter({ tagCounts, filter, onChange }) {
     setPickingStep(null);
   };
 
+  const [isSearchSheetOpen, setIsSearchSheetOpen] = useState(false);
+  const hasQuery = !!filter.query;
+
+  const handleSubmitQuery = (query) => {
+    setIsSearchSheetOpen(false);
+    onChange({ ...filter, query });
+  };
+
+  const clearQuery = () => {
+    onChange({ ...filter, query: '' });
+  };
+
   const [isTagSheetOpen, setIsTagSheetOpen] = useState(false);
   const hasTag = !!filter.tag;
 
@@ -64,6 +78,35 @@ export default function GalleryFilter({ tagCounts, filter, onChange }) {
         showsHorizontalScrollIndicator={false}
         style={styles.bar}
       >
+        <View style={[styles.chip, hasQuery && styles.selectedChip]}>
+          <PressableScale
+            accessibilityLabel={
+              hasQuery ? `${filter.query}로 찾는 중, 검색어 바꾸기` : '검색어로 찾기'
+            }
+            accessibilityRole="button"
+            onPress={() => setIsSearchSheetOpen(true)}
+            style={styles.chipBody}
+          >
+            <Ionicons color={hasQuery ? '#FFFFFF' : COLORS.TEXT} name="search" size={14} />
+            <Text
+              numberOfLines={1}
+              style={[styles.chipText, styles.queryText, hasQuery && styles.selectedText]}
+            >
+              {hasQuery ? filter.query : '검색'}
+            </Text>
+          </PressableScale>
+          {hasQuery ? (
+            <PressableScale
+              accessibilityLabel="검색어 지우기"
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={clearQuery}
+            >
+              <Ionicons color="#FFFFFF" name="close" size={14} />
+            </PressableScale>
+          ) : null}
+        </View>
+
         <PressableScale
           accessibilityLabel={hasPeriod ? '기간 조건 지우기' : '기간으로 찾기'}
           accessibilityRole="button"
@@ -111,6 +154,13 @@ export default function GalleryFilter({ tagCounts, filter, onChange }) {
         )}
       </ScrollView>
 
+      <SearchSheet
+        countResults={countResults}
+        initialQuery={filter.query}
+        onClose={() => setIsSearchSheetOpen(false)}
+        onSubmit={handleSubmitQuery}
+        visible={isSearchSheetOpen}
+      />
       <TagSheet
         onClose={() => setIsTagSheetOpen(false)}
         onSelect={handleSelectTag}
@@ -175,6 +225,10 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingBottom: 4,
     paddingHorizontal: 20,
+  },
+  // 긴 검색어는 칩이 너무 길어지지 않게 줄임
+  queryText: {
+    maxWidth: 120,
   },
   selectedChip: {
     backgroundColor: COLORS.ACCENT,

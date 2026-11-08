@@ -22,7 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const COLUMNS = 3;
 const GAP = 6;
 const SIDE_PADDING = 20;
-const NO_FILTER = { tag: null, from: null, to: null };
+const NO_FILTER = { tag: null, from: null, to: null, query: '' };
 const LOAD_ERROR = ['error', '글 목록을 불러오지 못했어요.', '잠시 후 다시 시도해 주세요.'];
 
 // 지금 구독할 회원 이메일. 비회원이면 null
@@ -121,7 +121,16 @@ export default function Gallery({ navigation }) {
     () => ({ ...filter, tag: tags.includes(filter.tag) ? filter.tag : null }),
     [filter, tags]
   );
-  const isFiltering = !!(activeFilter.tag || (activeFilter.from && activeFilter.to));
+  const isFiltering = !!(
+    activeFilter.tag ||
+    (activeFilter.from && activeFilter.to) ||
+    activeFilter.query?.trim()
+  );
+  // 검색 시트에서 입력하는 동안 맞는 기록 수를 보여 줌(#333)
+  const countResults = useCallback(
+    (query) => filterPosts(posts, { ...activeFilter, query }).length,
+    [posts, activeFilter]
+  );
 
   // 마신 날짜순으로 정렬해 월별로 묶음. 같은 날은 최근에 쓴 글이 먼저
   const sections = useMemo(
@@ -195,7 +204,7 @@ export default function Gallery({ navigation }) {
   const renderNoMatch = () => (
     <View style={styles.empty}>
       <Text style={styles.emptyTitle}>조건에 맞는 기록이 없어요.</Text>
-      <Text style={styles.emptyText}>태그나 기간을 바꿔 보세요.</Text>
+      <Text style={styles.emptyText}>검색어나 태그 · 기간을 바꿔 보세요.</Text>
       <Button
         onPress={() => setFilter(NO_FILTER)}
         style={styles.emptyButton}
@@ -226,7 +235,12 @@ export default function Gallery({ navigation }) {
       ) : null}
 
       {isLoaded && posts.length > 0 ? (
-        <GalleryFilter filter={activeFilter} onChange={setFilter} tagCounts={tagCounts} />
+        <GalleryFilter
+          countResults={countResults}
+          filter={activeFilter}
+          onChange={setFilter}
+          tagCounts={tagCounts}
+        />
       ) : null}
 
       {isLoaded ? (
