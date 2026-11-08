@@ -9,7 +9,6 @@ import {
   updateGallery,
   updateLocation,
   updatePhotos,
-  updateTags,
   updateTitle,
 } from './slices/gallerySlice';
 
@@ -24,6 +23,5 @@ export {
   updateGallery,
   updateLocation,
   updatePhotos,
-  updateTags,
   updateTitle,
 };

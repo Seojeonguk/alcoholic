@@ -13,6 +13,7 @@ import {
   Title,
 } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
+import { auth } from '../firebaseConfig';
 import {
   askAnnouncementsOnce,
   createLocalPost,
@@ -37,7 +38,6 @@ import {
 } from '../lib';
 import { init } from '../redux';
 
-import { getAuth } from '@react-native-firebase/auth';
 import { getDownloadURL, getStorage, putFile, ref } from '@react-native-firebase/storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import uuid from 'react-native-uuid';
@@ -63,6 +63,11 @@ export default function GalleryForm({ navigation, route }) {
   const isLeavingRef = useRef(false);
   // 저장 중에 나갔다가 다시 들어와 저장하면 글이 두 번 만들어지므로 저장이 끝날 때까지 못 나가게 함
   usePreventLeave(navigation, isSavingRef);
+  // 리스너가 글자를 칠 때마다 다시 등록되지 않게 지금 폼 값은 ref로 읽음
+  const galleryRef = useRef(gallery);
+  useEffect(() => {
+    galleryRef.current = gallery;
+  }, [gallery]);
 
   // 글을 고치다 닫기 버튼이나 Android 뒤로 가기로 나가면 그만둘지 물어봄(#302)
   useEffect(
@@ -72,7 +77,7 @@ export default function GalleryForm({ navigation, route }) {
         if (!originalForm || isSavingRef.current || isLeavingRef.current) {
           return;
         }
-        if (!isFormChanged(originalForm, gallery)) {
+        if (!isFormChanged(originalForm, galleryRef.current)) {
           return;
         }
         e.preventDefault();
@@ -88,27 +93,11 @@ export default function GalleryForm({ navigation, route }) {
           },
         ]);
       }),
-    [navigation, originalForm, gallery]
+    [navigation, originalForm]
   );
 
-  const existInput = () => {
-    if (gallery.title !== '') {
-      return true;
-    }
-    if (gallery.content !== '') {
-      return true;
-    }
-    if (gallery.location !== '') {
-      return true;
-    }
-    if (gallery.photos.length !== 0) {
-      return true;
-    }
-    if (gallery.tags.length !== 0) {
-      return true;
-    }
-    return false;
-  };
+  // 빈 폼과 비교해서 쓰던 내용이 있는지 봄. 날짜는 늘 채워져 있으므로 비교하지 않음
+  const existInput = () => isFormChanged({ day: gallery.day }, gallery);
 
   const initForm = () => {
     dispatch(init());
@@ -192,13 +181,13 @@ export default function GalleryForm({ navigation, route }) {
         }
       } else if (docId) {
         // 수정할 때 createdAt을 바꾸면 목록 순서가 바뀌므로 그대로 둠
-        await updateDocForId(docId, { ...data, writer: getAuth().currentUser.email });
+        await updateDocForId(docId, { ...data, writer: auth.currentUser.email });
         // 글을 고친 뒤에 빠진 사진을 지움. 기다리지 않고, 실패해도 저장은 끝난 것으로 봄
-        deletePhotos(getRemovedPhotos(originalPhotos, savedPhotos), getAuth().currentUser.uid);
+        deletePhotos(getRemovedPhotos(originalPhotos, savedPhotos), auth.currentUser.uid);
       } else {
         await createNewPost({
           ...data,
-          writer: getAuth().currentUser.email,
+          writer: auth.currentUser.email,
           createdAt: new Date(),
         });
       }
@@ -217,7 +206,7 @@ export default function GalleryForm({ navigation, route }) {
     } catch {
       // 글이 저장되지 않았으니 이번에 올린 사진은 어디에서도 쓰이지 않음
       if (member) {
-        deletePhotos(newPhotos, getAuth().currentUser?.uid);
+        deletePhotos(newPhotos, auth.currentUser?.uid);
       } else {
         deleteLocalPhotos(newPhotos);
       }
@@ -237,7 +226,7 @@ export default function GalleryForm({ navigation, route }) {
     }
     // storage.rules: 본인 uid 폴더에 이미지 타입으로만 올릴 수 있음
     // 네이티브 SDK는 기기의 파일을 바로 올림(uploadBytes는 구현돼 있지 않음)
-    const uid = getAuth().currentUser.uid;
+    const uid = auth.currentUser.uid;
     const fileRef = ref(getStorage(), `posts/${uid}/${uuid.v4()}`);
     await putFile(fileRef, uri, { contentType: getImageContentType(uri) });
 

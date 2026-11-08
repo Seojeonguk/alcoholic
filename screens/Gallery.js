@@ -10,12 +10,13 @@ import {
 
 import { Button, GalleryFilter, Post, PressableScale, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
+import { auth } from '../firebaseConfig';
 import { collectTags, filterPosts, groupPostsByMonth, memberEmail, showToast } from '../lib';
 import { getLocalPosts, subscribePosts, useGuestMigration } from '../services';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { getAuth, onAuthStateChanged } from '@react-native-firebase/auth';
+import { onAuthStateChanged } from '@react-native-firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const COLUMNS = 3;
@@ -25,7 +26,7 @@ const NO_FILTER = { tag: null, from: null, to: null };
 const LOAD_ERROR = ['error', '글 목록을 불러오지 못했어요.', '잠시 후 다시 시도해 주세요.'];
 
 // 지금 구독할 회원 이메일. 비회원이면 null
-const currentMemberEmail = () => memberEmail(getAuth().currentUser);
+const currentMemberEmail = () => memberEmail(auth.currentUser);
 
 // 섹션의 글을 3개씩 한 줄로 묶음
 const toRows = (posts) => {
@@ -78,7 +79,7 @@ export default function Gallery({ navigation }) {
   }, [account, subscriptionKey]);
 
   // 로그아웃하거나 계정이 바뀌면 바로 구독 대상을 바꿈
-  useEffect(() => onAuthStateChanged(getAuth(), (user) => setAccount(memberEmail(user))), []);
+  useEffect(() => onAuthStateChanged(auth, (user) => setAccount(memberEmail(user))), []);
 
   // isActive: 화면을 떠난 뒤 늦게 끝난 요청은 화면에 반영하지 않음
   const loadLocalPosts = useCallback(async (isActive = () => true) => {
@@ -144,6 +145,8 @@ export default function Gallery({ navigation }) {
   const sections = useMemo(
     () =>
       groupPostsByMonth(filterPosts(posts, activeFilter), new Date()).map((section) => ({
+        // 줄 key는 섹션 key + 줄 번호. 새 글이 들어와도 줄을 새로 만들지 않고 바뀐 내용만 다시 그림
+        key: section.title,
         title: section.title,
         data: toRows(section.data),
       })),
@@ -228,7 +231,7 @@ export default function Gallery({ navigation }) {
       {isLoaded ? (
         <SectionList
           contentContainerStyle={styles.list}
-          keyExtractor={(row) => row.map((post) => post.docId).join('_')}
+          keyExtractor={(row, index) => `row_${index}`}
           ListEmptyComponent={isFiltering ? renderNoMatch : renderEmpty}
           refreshControl={
             <RefreshControl

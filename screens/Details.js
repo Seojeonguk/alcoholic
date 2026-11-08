@@ -1,18 +1,18 @@
-import { memo, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { Carousel, Header, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
+import { auth } from '../firebaseConfig';
 import { formatDay, showToast, usePreventLeave } from '../lib';
 import { updateGallery } from '../redux';
 import { deleteLocalPost, deletePost, getLocalPost, getPost, isMember } from '../services';
 
-import { getAuth } from '@react-native-firebase/auth';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch } from 'react-redux';
 
-function Details({ route, navigation }) {
+export default function Details({ route, navigation }) {
   const { docId } = route.params;
   const dispatch = useDispatch();
   const { width } = useWindowDimensions();
@@ -34,12 +34,17 @@ function Details({ route, navigation }) {
   const { title, photos, location, day, content, tags } = myPost;
 
   useEffect(() => {
+    // 화면을 떠난 뒤 늦게 끝난 요청으로 goBack · setState를 부르지 않게 함
+    let active = true;
     const getPosting = async () => {
       let post;
       try {
         post = isMember() ? await getPost(docId) : await getLocalPost(docId);
       } catch {
         post = null;
+      }
+      if (!active) {
+        return;
       }
       if (!post) {
         showToast('error', '글을 불러오지 못했어요.', '잠시 후 다시 시도해 주세요.');
@@ -59,6 +64,9 @@ function Details({ route, navigation }) {
       setLoading(false);
     };
     getPosting();
+    return () => {
+      active = false;
+    };
   }, [docId, navigation]);
 
   const removePost = async () => {
@@ -69,13 +77,13 @@ function Details({ route, navigation }) {
     showToast('info', '기록을 삭제하는 중이에요.');
     try {
       if (isMember()) {
-        await deletePost(docId, getAuth().currentUser.uid, photos);
+        await deletePost(docId, auth.currentUser.uid, photos);
       } else {
         await deleteLocalPost(docId);
       }
       showToast('success', '기록을 삭제했어요.');
       isDeletingRef.current = false;
-      // 갤러리는 화면에 들어올 때마다 목록을 다시 불러옴
+      // 회원 갤러리는 구독으로, 비회원 갤러리는 화면에 다시 들어올 때 지운 글을 목록에서 뺌
       navigation.goBack();
     } catch {
       isDeletingRef.current = false;
@@ -232,5 +240,3 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
 });
-
-export default memo(Details);

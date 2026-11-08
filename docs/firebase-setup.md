@@ -59,7 +59,7 @@ App Check는 Firebase가 **진짜 이 앱에서 온 요청만** 받게 해요(#2
 
 1. Firebase 콘솔 → **App Check** → **앱** 탭에서 Android 앱의 ⋮ → **디버그 토큰 관리**를 눌러요.
 2. **디버그 토큰 추가** → 이름(예: `내 개발 PC`)을 넣고 **생성**을 눌러 나온 값을 복사해요.
-3. 프로젝트 루트의 `.env`에 넣고 개발 서버를 다시 켜요(`npx expo start -c`).
+3. 프로젝트 루트의 `.env`(없으면 `.env.example`을 복사)에 넣고 개발 서버를 다시 켜요(`npx expo start -c`).
 
    ```dotenv
    EXPO_PUBLIC_APP_CHECK_DEBUG_TOKEN=복사한-값

@@ -9,8 +9,6 @@ import {
   updateDocForId,
 } from './docs';
 import {
-  GUEST_PHOTO_DIR_URI,
-  claimLocalPosts,
   createLocalPost,
   deleteLocalPost,
   deleteVisibleLocalPosts,
@@ -21,7 +19,6 @@ import {
   deleteLocalPhotos,
   updateLocalPost,
 } from './localPosts';
-import { migrateGuestPosts } from './migrateGuestPosts';
 import {
   askAnnouncementsOnce,
   getAnnouncementsEnabled,
@@ -36,15 +33,12 @@ export {
   getAnnouncementsEnabled,
   listenAnnouncements,
   setAnnouncements,
-  migrateGuestPosts,
   useGuestMigration,
   enterGuestMode,
   hasGuestFlag,
   isMember,
   leaveGuestMode,
   waitForAuthUser,
-  GUEST_PHOTO_DIR_URI,
-  claimLocalPosts,
   createLocalPost,
   deleteLocalPost,
   deleteVisibleLocalPosts,
