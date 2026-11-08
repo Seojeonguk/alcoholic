@@ -23,6 +23,8 @@ test('toGalleryPost: 첫 사진 · 날짜 · 제목 · 장소 · 내용 · 태�
     title: '맥주',
     location: '집',
     content: '내용',
+    drinkType: 'beer',
+    rating: 4,
     writer: '보이지 않는 값',
   };
   assert.deepEqual(toGalleryPost('id1', data), {
@@ -33,6 +35,7 @@ test('toGalleryPost: 첫 사진 · 날짜 · 제목 · 장소 · 내용 · 태�
     location: '집',
     content: '내용',
     tags: ['맥주'],
+    drinkType: 'beer',
     createdAt: 1000,
   });
 });
@@ -50,6 +53,7 @@ test('toGalleryPost: 사진 · 제목 · 장소 · 내용 · 태그 · 작성 �
     location: '',
     content: '',
     tags: [],
+    drinkType: null,
     createdAt: 0,
   });
   assert.equal(toGalleryPost('id3', undefined).createdAt, 0);

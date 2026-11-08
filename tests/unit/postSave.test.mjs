@@ -15,6 +15,8 @@ test('toPostData: 폼에서 글 내용만 꺼내고 사진은 저장한 주소�
     content: '내용',
     location: '집',
     tags: ['맥주'],
+    rating: 3,
+    drinkType: 'soju',
     extra: '들어가지 않음',
   };
   assert.deepEqual(toPostData(form, ['https://x/a']), {
@@ -24,6 +26,8 @@ test('toPostData: 폼에서 글 내용만 꺼내고 사진은 저장한 주소�
     content: '내용',
     location: '집',
     tags: ['맥주'],
+    rating: 3,
+    drinkType: 'soju',
   });
 });
 
@@ -62,4 +66,13 @@ test('splitStoredPhotos: 사진이 없으면 빈 목록이에요', () => {
     failed: false,
     error: undefined,
   });
+});
+
+test('toPostData: 별점 · 주종을 고르지 않으면 null로 넣어요(수정할 때 지운 값이 남지 않게)', () => {
+  const data = toPostData(
+    { title: '', day: '2026-11-08', content: '', location: '', tags: [] },
+    []
+  );
+  assert.equal(data.rating, null);
+  assert.equal(data.drinkType, null);
 });

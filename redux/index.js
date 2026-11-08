@@ -6,9 +6,11 @@ import postFormReducer, {
   init,
   updateContent,
   updateDay,
+  updateDrinkType,
   updateGallery,
   updateLocation,
   updatePhotos,
+  updateRating,
   updateTitle,
 } from './slices/gallerySlice';
 import { clearSuggestions, setSuggestions } from './slices/suggestionSlice';
@@ -24,8 +26,10 @@ export {
   setSuggestions,
   updateContent,
   updateDay,
+  updateDrinkType,
   updateGallery,
   updateLocation,
   updatePhotos,
+  updateRating,
   updateTitle,
 };

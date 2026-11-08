@@ -3,7 +3,16 @@ import { Alert, ScrollView, Share, Text, useWindowDimensions, View } from 'react
 
 import { BottomSheet, Carousel, Header, PressableScale, Skeleton } from '../components';
 import { NAVIGATOR } from '../constants';
-import { formatDay, getShareText, showToast, usePreventLeave, makeStyles, useColors } from '../lib';
+import {
+  formatDay,
+  getDrinkLine,
+  getDrinkTypeLabel,
+  getShareText,
+  showToast,
+  usePreventLeave,
+  makeStyles,
+  useColors,
+} from '../lib';
 import { isMember, loadPost, removePost, sharePhoto } from '../services';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -40,9 +49,11 @@ export default function Details({ route, navigation }) {
     day: '',
     content: '',
     tags: [],
+    rating: null,
+    drinkType: null,
   });
 
-  const { title, photos, location, day, content, tags } = myPost;
+  const { title, photos, location, day, content, tags, rating, drinkType } = myPost;
 
   useEffect(() => {
     // 화면을 떠난 뒤 늦게 끝난 요청으로 goBack · setState를 부르지 않게 함
@@ -182,6 +193,11 @@ export default function Details({ route, navigation }) {
 
   // 날짜와 장소를 한 줄로. 장소가 없으면 날짜만
   const meta = [formatDay(day), location].filter(Boolean).join(' · ');
+  // 주종 · 별점(#341). 별 모양은 낭독기가 읽기 어려워서 점수로 읽어 줌
+  const drinkLine = getDrinkLine({ drinkType, rating });
+  const drinkLabel = [getDrinkTypeLabel(drinkType), rating ? `별점 ${rating}점` : '']
+    .filter(Boolean)
+    .join(', ');
 
   const renderSkeleton = () => (
     <View>
@@ -205,6 +221,11 @@ export default function Details({ route, navigation }) {
 
           <View style={styles.body}>
             <Text style={styles.title}>{title}</Text>
+            {drinkLine ? (
+              <Text accessibilityLabel={drinkLabel} style={styles.drink}>
+                {drinkLine}
+              </Text>
+            ) : null}
             {meta ? <Text style={styles.meta}>{meta}</Text> : null}
             {content ? <Text style={styles.content}>{content}</Text> : null}
 
@@ -298,6 +319,11 @@ const useStyles = makeStyles((colors) => ({
   menuText: {
     color: colors.TEXT,
     fontSize: 16,
+  },
+  drink: {
+    color: colors.ACCENT,
+    fontSize: 14,
+    marginTop: 8,
   },
   meta: {
     color: colors.TEXT_SUB,

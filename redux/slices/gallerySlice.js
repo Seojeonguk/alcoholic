@@ -9,6 +9,9 @@ const initialState = {
   content: '',
   location: '',
   tags: [],
+  // 별점 1~5 · 주종 코드(#341). 고르지 않으면 null
+  rating: null,
+  drinkType: null,
 };
 
 export const gallerySlice = createSlice({
@@ -23,6 +26,8 @@ export const gallerySlice = createSlice({
       state.content = initialState.content;
       state.location = initialState.location;
       state.tags = initialState.tags;
+      state.rating = initialState.rating;
+      state.drinkType = initialState.drinkType;
     },
     // 같은 태그는 한 번만 넣음
     addTag: (state, action) => {
@@ -40,6 +45,13 @@ export const gallerySlice = createSlice({
     },
     updateContent: (state, action) => {
       state.content = action.payload;
+    },
+    // 같은 값을 다시 고르면 지우는 건 입력 컴포넌트가 정해서 null을 넘김
+    updateRating: (state, action) => {
+      state.rating = action.payload;
+    },
+    updateDrinkType: (state, action) => {
+      state.drinkType = action.payload;
     },
     updateDay: (state, action) => {
       state.day = action.payload;
@@ -65,6 +77,9 @@ export const gallerySlice = createSlice({
       state.content = action.payload.content ?? state.content;
       state.location = action.payload.location ?? state.location;
       state.tags = action.payload.tags ?? state.tags;
+      // 예전 글에는 없는 필드라 없으면 null(고르지 않음)로 둠
+      state.rating = action.payload.rating ?? null;
+      state.drinkType = action.payload.drinkType ?? null;
     },
   },
 });
@@ -77,9 +92,11 @@ export const {
   init,
   updateContent,
   updateDay,
+  updateDrinkType,
   updateGallery,
   updateLocation,
   updatePhotos,
+  updateRating,
   updateTitle,
 } = gallerySlice.actions;
 export default gallerySlice.reducer;

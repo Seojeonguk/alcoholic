@@ -112,3 +112,18 @@ test('filterPosts: 검색어는 태그 · 기간 조건과 함께 걸려요', ()
     ['s3']
   );
 });
+
+test('filterPosts: 주종을 고르면 그 주종 글만 남고, 다른 조건과 함께 걸려요', () => {
+  const list = [
+    { docId: 'a', day: '2026-10-01', tags: ['맥주'], drinkType: 'beer' },
+    { docId: 'b', day: '2026-10-15', tags: [], drinkType: 'wine' },
+    { docId: 'c', day: '2026-11-01', tags: ['맥주'], drinkType: 'beer' },
+    { docId: 'd', day: '2026-11-02', tags: ['맥주'] },
+  ];
+  assert.deepEqual(ids(filterPosts(list, { drinkType: 'beer' })), ['a', 'c']);
+  assert.deepEqual(
+    ids(filterPosts(list, { drinkType: 'beer', from: '2026-10-20', to: '2026-11-30' })),
+    ['c']
+  );
+  assert.deepEqual(ids(filterPosts(list, { drinkType: null })), ['a', 'b', 'c', 'd']);
+});

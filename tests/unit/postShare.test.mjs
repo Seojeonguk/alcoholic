@@ -39,3 +39,11 @@ test('getShareText: 남길 것이 없거나 글이 없으면 빈 문자열', () 
   assert.equal(getShareText({ title: ' ', tags: [] }), '');
   assert.equal(getShareText(), '');
 });
+
+test('getShareText: 주종 · 별점은 제목 아래 줄에 넣어요', () => {
+  assert.equal(
+    getShareText({ title: '맥주', drinkType: 'beer', rating: 4, day: '2026-11-02' }),
+    '맥주\n맥주 · ★★★★☆\n2026. 11. 02'
+  );
+  assert.equal(getShareText({ title: '와인', drinkType: 'wine' }), '와인\n와인');
+});

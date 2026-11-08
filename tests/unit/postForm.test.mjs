@@ -77,3 +77,13 @@ test('hasDraft: 제목 · 내용 · 장소 · 사진 · 태그 중 하나라도 
   assert.equal(hasDraft({ ...empty, photos: ['file:///a.jpg'] }), true);
   assert.equal(hasDraft({ ...empty, tags: ['맥주'] }), true);
 });
+
+test('isFormChanged: 별점 · 주종을 바꾸면 true, 없음과 null은 같게 봐요', () => {
+  assert.equal(isFormChanged(original, { ...original, rating: 4 }), true);
+  assert.equal(isFormChanged(original, { ...original, drinkType: 'beer' }), true);
+  assert.equal(isFormChanged(original, { ...original, rating: null, drinkType: null }), false);
+  assert.equal(
+    isFormChanged({ ...original, rating: 4 }, { ...original, rating: 4, drinkType: null }),
+    false
+  );
+});

@@ -6,10 +6,12 @@ import {
   Button,
   Content,
   Day,
+  DrinkType,
   Header,
   Location,
   Photo,
   PostFormProvider,
+  Rating,
   Tags,
   Title,
 } from '../components';
@@ -199,6 +201,8 @@ export default function GalleryForm({ navigation, route }) {
           <Photo />
           <Title />
           <Day />
+          <DrinkType />
+          <Rating />
           <Location />
           <Tags />
           <Content />

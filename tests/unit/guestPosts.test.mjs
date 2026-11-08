@@ -81,7 +81,7 @@ test('parseLocalPosts: 깨진 파일은 빈 목록으로 보지 않고 에러를
 test('toGalleryItems: 주인 없는 글만 최근에 쓴 순서로 갤러리 모양으로 바꿔요', () => {
   const items = toGalleryItems(
     [
-      post({ id: 'a', createdAt: 1, photos: ['1.jpg'], tags: ['맥주'] }),
+      post({ id: 'a', createdAt: 1, photos: ['1.jpg'], tags: ['맥주'], drinkType: 'beer' }),
       post({ id: 'b', createdAt: 2, photos: [] }),
       post({ id: 'c', createdAt: 3, owner: 'uid-a' }),
     ],
@@ -100,6 +100,7 @@ test('toGalleryItems: 주인 없는 글만 최근에 쓴 순서로 갤러리 모
     location: '',
     content: '내용',
     tags: ['맥주'],
+    drinkType: 'beer',
     createdAt: 1,
   });
 });

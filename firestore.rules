@@ -57,9 +57,23 @@ service cloud.firestore {
         && validPhotoAt(photos, 9);
     }
 
+    // 별점(#341): 없거나 null(고르지 않음), 있으면 1~5 정수. 앱의 constants/drinkTypes.js의 MAX_RATING과 같아야 함
+    function validRating(data) {
+      return !('rating' in data) || data.rating == null
+        || (data.rating is int && data.rating >= 1 && data.rating <= 5);
+    }
+
+    // 주종(#341): 없거나 null(고르지 않음), 있으면 정해 둔 코드. 앱의 constants/drinkTypes.js와 같아야 함
+    function validDrinkType(data) {
+      return !('drinkType' in data) || data.drinkType == null
+        || (data.drinkType is string && data.drinkType in ['soju', 'beer', 'wine', 'whisky',
+          'spirits', 'baijiu', 'makgeolli', 'traditional', 'sake', 'cocktail', 'other']);
+    }
+
     // 길이 · 개수 상한은 앱의 constants/postLimits.js와 같아야 함
     function validPost(data) {
-      return data.keys().hasOnly(['title', 'day', 'photos', 'content', 'location', 'tags', 'writer', 'createdAt'])
+      return data.keys().hasOnly(['title', 'day', 'photos', 'content', 'location', 'tags', 'rating',
+          'drinkType', 'writer', 'createdAt'])
         && data.writer == myEmail()
         && data.title is string && data.title.size() <= 40
         && validDay(data.day)
@@ -67,6 +81,8 @@ service cloud.firestore {
         && data.content is string && data.content.size() <= 2000
         && data.location is string && data.location.size() <= 50
         && validTags(data.tags)
+        && validRating(data)
+        && validDrinkType(data)
         && data.createdAt is timestamp;
     }
 
