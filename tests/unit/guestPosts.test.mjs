@@ -101,6 +101,7 @@ test('toGalleryItems: 주인 없는 글만 최근에 쓴 순서로 갤러리 모
     content: '내용',
     tags: ['맥주'],
     drinkType: 'beer',
+    rating: null,
     createdAt: 1,
   });
 });

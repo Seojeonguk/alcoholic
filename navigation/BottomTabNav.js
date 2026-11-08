@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NAVIGATOR } from '../constants';
 import { useColors } from '../lib';
-import { Gallery, Settings } from '../screens';
+import { Gallery, Settings, Stats } from '../screens';
 import { Ionicons } from '@expo/vector-icons';
 
 const Tab = createBottomTabNavigator();
@@ -33,6 +33,11 @@ export default function BottomTabNav() {
         name={NAVIGATOR.GALLERY}
         component={Gallery}
         options={{ tabBarLabel: '기록', tabBarIcon: tabIcon('images') }}
+      />
+      <Tab.Screen
+        name={NAVIGATOR.STATS}
+        component={Stats}
+        options={{ tabBarLabel: '통계', tabBarIcon: tabIcon('stats-chart') }}
       />
       <Tab.Screen
         name={NAVIGATOR.SETTINGS}
