@@ -158,6 +158,19 @@ npx firebase deploy --only firestore:rules,firestore:indexes,storage
 
 - 콘솔에는 있는데 `firestore.indexes.json`에 없는 인덱스가 있으면 배포할 때 지울지 물어봐요. 콘솔에서 만든 인덱스는 `npx firebase firestore:indexes`로 받아 파일에 먼저 넣어요.
 
+## 계정 삭제 요청 처리하기
+
+개인정보처리방침 4번의 이메일로 계정 삭제를 요청받으면, 가입한 이메일 주소에서 보낸 메일인지 확인하고 30일 안에 콘솔에서 아래를 모두 지워요. 앱의 탈퇴(`deleteUserData` → `deleteUser`)가 지우는 것과 같아요.
+
+1. **Authentication → 사용자**에서 그 이메일을 찾아 **사용자 UID**를 적어 둬요.
+2. **Firestore → posts**에서 `writer`가 그 이메일인 문서를 모두 지워요(필터: `writer == 이메일`).
+3. **Storage**에서 `posts/{UID}/` 폴더를 통째로 지워요.
+4. **Firestore → users**에서 `{이메일}` 문서를 지워요(없을 수도 있어요).
+5. **Authentication → 사용자**에서 그 계정을 **삭제**해요.
+6. 요청한 이메일로 삭제를 마쳤다고 답장해요.
+
+> 이메일 인증을 하지 않은 계정은 글 · 사진이 없어서 4 · 5만 하면 돼요. 앱의 로그인 화면에서 직접 지울 수도 있어요(#322).
+
 ## 문제가 생기면
 
 | 증상                                                 | 확인할 것                                                                                                                                             |

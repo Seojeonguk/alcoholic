@@ -25,6 +25,8 @@ export default function Login({ navigation }) {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  // 인증하지 않은 계정으로 로그인했는지. 그 계정을 앱에서 지울 수 있게 삭제 링크를 보여 줌(#322)
+  const [isUnverified, setIsUnverified] = useState(false);
   // state는 다음 렌더링에 바뀌므로 키보드 완료 키를 빠르게 두 번 눌러도 한 번만 보내도록 ref로 막음
   const isSubmittingRef = useRef(false);
   const emailRef = useRef();
@@ -32,6 +34,7 @@ export default function Login({ navigation }) {
 
   const handleChangeEmail = (newEmail) => {
     setEmailError('');
+    setIsUnverified(false);
     setEmail(newEmail);
   };
 
@@ -95,6 +98,7 @@ export default function Login({ navigation }) {
         });
         return;
       }
+      setIsUnverified(true);
       await checkEmailRequestLimit(user);
     } catch (err) {
       const korErrorMsg = getKorErrorMsg(err.code);
@@ -157,6 +161,16 @@ export default function Login({ navigation }) {
       >
         <Text style={styles.forgotPasswordText}>비밀번호를 잊으셨나요?</Text>
       </PressableScale>
+      {/* 남의 이메일로 잘못 가입했거나 인증하지 않을 계정이면 여기서 지움. 인증 전에는 설정 화면에 들어갈 수 없음 */}
+      {isUnverified && (
+        <PressableScale
+          accessibilityRole="button"
+          onPress={() => navigation.navigate(NAVIGATOR.DELETE_ACCOUNT)}
+          style={styles.forgotPassword}
+        >
+          <Text style={styles.forgotPasswordText}>인증하지 않을 계정이면 삭제할 수 있어요</Text>
+        </PressableScale>
+      )}
     </AuthScreen>
   );
 }
