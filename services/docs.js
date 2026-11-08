@@ -82,12 +82,15 @@ const deletePost = (docId, uid, photos) => {
 };
 
 // 탈퇴할 때 내 사진 · 게시글 · 사용자 문서를 지움. 중간에 실패해도 다시 실행하면 남은 것만 지움
-const deleteUserData = async (email, uid) => {
+// verified: 이메일 인증을 했는지. 인증 전 계정은 글을 쓸 수 없고 규칙상 posts를 조회할 수도 없어서 건너뜀(#322)
+const deleteUserData = async (email, uid, { verified = true } = {}) => {
   const { items } = await listAll(ref(getStorage(), `posts/${uid}`));
   await Promise.all(items.map((item) => deleteObject(item)));
 
-  const myPosts = await getDocs(query(postsRef, where('writer', '==', email)));
-  await Promise.all(myPosts.docs.map((post) => deleteDoc(post.ref)));
+  if (verified) {
+    const myPosts = await getDocs(query(postsRef, where('writer', '==', email)));
+    await Promise.all(myPosts.docs.map((post) => deleteDoc(post.ref)));
+  }
 
   await deleteDoc(doc(usersRef, email));
 };
