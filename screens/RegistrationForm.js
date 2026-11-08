@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react';
+import { Linking, StyleSheet, Text } from 'react-native';
+
 import { AuthScreen, Button, PasswordInput, TextField } from '../components';
-import { NAVIGATOR } from '../constants';
+import { COLORS, NAVIGATOR, PRIVACY_POLICY_URL } from '../constants';
 import { createUserInfo } from '../services';
 import { auth } from '../firebaseConfig';
 import {
@@ -64,12 +66,6 @@ export default function RegistrationForm({ navigation }) {
     setIsLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      await sendVerificationEmail(auth.currentUser);
-      await setEmailRequestLimit();
-      // 문서 ID는 보안 규칙이 비교하는 로그인 토큰의 이메일(소문자)과 같아야 함
-      await createUserInfo(auth.currentUser.email);
-      showSuccessToastForEmailSending();
-      navigation.replace(NAVIGATOR.LOGIN);
     } catch (e) {
       const korErrorMsg = getKorErrorMsg(e.code);
       if (getAuthErrorField(e.code) === 'email') {
@@ -77,21 +73,66 @@ export default function RegistrationForm({ navigation }) {
       } else {
         setPasswordError(korErrorMsg);
       }
-    } finally {
       isSubmittingRef.current = false;
       setIsLoading(false);
+      return;
     }
+
+    // 여기부터는 계정이 이미 만들어졌으므로, 실패해도 이 화면에 남지 않고 로그인 화면으로 보냄(#328)
+    // 남아서 다시 누르면 "이미 사용 중인 이메일"이 나와 가입이 됐는지 알 수 없음
+    const user = auth.currentUser;
+    let emailSent = false;
+    try {
+      await sendVerificationEmail(user);
+      emailSent = true;
+      await setEmailRequestLimit();
+    } catch {
+      // 보내지 못했으면 다시 보내기 제한을 걸지 않아서 로그인할 때 바로 다시 보낼 수 있음
+    }
+    try {
+      // 문서 ID는 보안 규칙이 비교하는 로그인 토큰의 이메일(소문자)과 같아야 함
+      // 이 문서를 읽는 곳은 없고 탈퇴할 때 없어도 지우기가 실패하지 않아서, 만들지 못해도 가입은 끝난 것으로 봄
+      await createUserInfo(user.email);
+    } catch {
+      // 위와 같은 이유로 알리지 않음
+    }
+
+    if (emailSent) {
+      showSuccessToastForEmailSending();
+    } else {
+      showToast(
+        'info',
+        '가입은 됐지만 인증 메일을 보내지 못했어요.',
+        '로그인하면 인증 메일을 다시 보낼 수 있어요.'
+      );
+    }
+    isSubmittingRef.current = false;
+    setIsLoading(false);
+    navigation.replace(NAVIGATOR.LOGIN);
   };
 
   return (
     <AuthScreen
       bottom={
-        <Button
-          loading={isLoading}
-          loadingTitle="가입하는 중…"
-          onPress={handleRegistration}
-          title="가입하기"
-        />
+        <>
+          <Button
+            loading={isLoading}
+            loadingTitle="가입하는 중…"
+            onPress={handleRegistration}
+            title="가입하기"
+          />
+          <Text style={styles.notice}>
+            가입하면{' '}
+            <Text
+              accessibilityRole="link"
+              onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+              style={styles.link}
+            >
+              개인정보처리방침
+            </Text>
+            에 동의하게 돼요.
+          </Text>
+        </>
       }
       onBack={() => navigation.goBack()}
       title="이메일로 회원가입"
@@ -133,3 +174,17 @@ export default function RegistrationForm({ navigation }) {
     </AuthScreen>
   );
 }
+
+const styles = StyleSheet.create({
+  link: {
+    color: COLORS.ACCENT,
+    textDecorationLine: 'underline',
+  },
+  notice: {
+    color: COLORS.TEXT_SUB,
+    fontSize: 13,
+    lineHeight: 20,
+    paddingVertical: 4,
+    textAlign: 'center',
+  },
+});
