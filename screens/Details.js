@@ -1,13 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
-import { Carousel, Header, PressableScale, Skeleton } from '../components';
+import { BottomSheet, Carousel, Header, PressableScale, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
-import { formatDay, showToast, usePreventLeave } from '../lib';
+import { formatDay, getShareText, showToast, usePreventLeave } from '../lib';
 import { isMember, loadPost, removePost } from '../services';
 
+import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+// 더보기 메뉴. Android Alert는 버튼을 3개까지만 보여 줘서 시트로 띄움(#335)
+const MENU_ITEMS = [
+  { action: 'share', label: '공유하기', icon: 'share-social-outline' },
+  { action: 'edit', label: '수정', icon: 'create-outline' },
+  { action: 'delete', label: '삭제', icon: 'trash-outline', danger: true },
+];
 
 export default function Details({ route, navigation }) {
   const { docId } = route.params;
@@ -15,6 +31,7 @@ export default function Details({ route, navigation }) {
   const { top } = useSafeAreaInsets();
 
   const [loading, setLoading] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   // 삭제 중에 메뉴를 다시 눌러 두 번 지우지 않게 막음
   const isDeletingRef = useRef(false);
   usePreventLeave(navigation, isDeletingRef);
@@ -110,20 +127,36 @@ export default function Details({ route, navigation }) {
     navigation.navigate(NAVIGATOR.GALLERY_FORM, { docId, post: myPost });
   };
 
+  // 제목 · 날짜 · 장소 · 내용 · 태그를 텍스트로 보냄. 사진은 #344에서 함께 보냄(#335)
+  const sharePost = async () => {
+    const message = getShareText(myPost);
+    if (!message) {
+      showToast('info', '공유할 내용이 없어요.');
+      return;
+    }
+    try {
+      await Share.share({ message }, { dialogTitle: '기록 공유하기' });
+    } catch {
+      showToast('error', '공유하지 못했어요.', '잠시 후 다시 시도해 주세요.');
+    }
+  };
+
   const showMenu = () => {
     if (loading || isDeletingRef.current) {
       return;
     }
-    Alert.alert(
-      undefined,
-      undefined,
-      [
-        { text: '취소', style: 'cancel' },
-        { text: '삭제', style: 'destructive', onPress: handleDeletePost },
-        { text: '수정', onPress: moveEdit },
-      ],
-      { cancelable: true }
-    );
+    setIsMenuOpen(true);
+  };
+
+  const selectMenu = (action) => {
+    setIsMenuOpen(false);
+    if (action === 'share') {
+      sharePost();
+    } else if (action === 'edit') {
+      moveEdit();
+    } else if (action === 'delete') {
+      handleDeletePost();
+    }
   };
 
   // 태그를 누르면 그 태그로 거른 갤러리로 돌아감(#334)
@@ -200,6 +233,21 @@ export default function Details({ route, navigation }) {
           rightLabel="더보기"
         />
       </LinearGradient>
+
+      <BottomSheet onClose={() => setIsMenuOpen(false)} visible={isMenuOpen}>
+        {MENU_ITEMS.map(({ action, label, icon, danger }) => (
+          <PressableScale
+            accessibilityLabel={label}
+            accessibilityRole="button"
+            key={label}
+            onPress={() => selectMenu(action)}
+            style={styles.menuItem}
+          >
+            <Ionicons color={danger ? COLORS.DANGER : COLORS.TEXT} name={icon} size={22} />
+            <Text style={[styles.menuText, danger && styles.dangerText]}>{label}</Text>
+          </PressableScale>
+        ))}
+      </BottomSheet>
     </View>
   );
 }
@@ -219,12 +267,25 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginTop: 20,
   },
+  dangerText: {
+    color: COLORS.DANGER,
+  },
   header: {
     paddingBottom: 32,
     left: 0,
     position: 'absolute',
     right: 0,
     top: 0,
+  },
+  menuItem: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 12,
+    paddingVertical: 14,
+  },
+  menuText: {
+    color: COLORS.TEXT,
+    fontSize: 16,
   },
   meta: {
     color: COLORS.TEXT_SUB,
