@@ -3,9 +3,8 @@ import { Alert, ScrollView, StyleSheet, Text, useWindowDimensions, View } from '
 
 import { Carousel, Header, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
-import { auth } from '../firebaseConfig';
-import { formatDay, showToast, usePreventLeave, waitForWrite } from '../lib';
-import { deleteLocalPost, deletePost, getLocalPost, getPost, isMember } from '../services';
+import { formatDay, showToast, usePreventLeave } from '../lib';
+import { isMember, loadPost, removePost } from '../services';
 
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,7 +35,7 @@ export default function Details({ route, navigation }) {
     const getPosting = async () => {
       let post;
       try {
-        post = isMember() ? await getPost(docId) : await getLocalPost(docId);
+        post = await loadPost(docId);
       } catch {
         post = null;
       }
@@ -66,7 +65,7 @@ export default function Details({ route, navigation }) {
     };
   }, [docId, navigation]);
 
-  const removePost = async () => {
+  const deleteThisPost = async () => {
     if (isDeletingRef.current) {
       return;
     }
@@ -75,12 +74,7 @@ export default function Details({ route, navigation }) {
     const member = isMember();
     try {
       // queued: 연결이 없어 기기에서 먼저 지움. 연결되면 서버에서도 지워짐(#323)
-      let queued = false;
-      if (member) {
-        ({ queued } = await waitForWrite(deletePost(docId, auth.currentUser.uid, photos)));
-      } else {
-        await deleteLocalPost(docId);
-      }
+      const { queued } = await removePost(docId, photos);
       if (queued) {
         showToast('info', '연결되면 삭제가 반영돼요.', '목록에서는 먼저 빠져요.');
       } else {
@@ -105,7 +99,7 @@ export default function Details({ route, navigation }) {
       '이 기록과 사진이 삭제되며 되돌릴 수 없어요. 삭제할까요?',
       [
         { text: '취소', style: 'cancel' },
-        { text: '삭제', style: 'destructive', onPress: removePost },
+        { text: '삭제', style: 'destructive', onPress: deleteThisPost },
       ],
       { cancelable: true }
     );

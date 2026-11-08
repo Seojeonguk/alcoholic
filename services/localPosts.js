@@ -56,13 +56,19 @@ const runInQueue = (task) => {
   return result;
 };
 
-const updatePosts = (change) =>
-  runInQueue(async () => {
+// 기기 기록이 바뀌면 다시 읽을 구독자(비회원 갤러리)
+const listeners = new Set();
+
+const updatePosts = async (change) => {
+  const result = await runInQueue(async () => {
     const posts = await readPosts();
-    const { next, result } = change(posts);
+    const { next, result: changed } = change(posts);
     await writePosts(next);
-    return result;
+    return changed;
   });
+  listeners.forEach((listener) => listener());
+  return result;
+};
 
 const deletePhotoFiles = (names) => {
   names.forEach((name) => {
@@ -91,6 +97,23 @@ const deleteLocalPhotos = (uris) => deletePhotoFiles(uris.filter(isLocalPhoto).m
 const toStoredData = (data) => ({ ...data, photos: data.photos.map(toPhotoName) });
 
 const getLocalPosts = () => runInQueue(async () => toGalleryItems(await readPosts(), toPhotoUri));
+
+// 비회원 갤러리 목록을 구독함. 바로 한 번 읽고, 기기 기록을 저장 · 삭제할 때마다 다시 읽음(#339)
+// 돌려준 함수를 부르면 구독을 끊음. 끊은 뒤에 끝난 읽기는 알리지 않음
+const subscribeLocalPosts = (onNext, onError) => {
+  let active = true;
+  const load = () =>
+    getLocalPosts().then(
+      (posts) => active && onNext(posts),
+      (error) => active && onError?.(error)
+    );
+  listeners.add(load);
+  load();
+  return () => {
+    active = false;
+    listeners.delete(load);
+  };
+};
 
 const getLocalPost = (id) =>
   runInQueue(async () => {
@@ -161,5 +184,6 @@ export {
   isLocalPhoto,
   saveLocalPhoto,
   deleteLocalPhotos,
+  subscribeLocalPosts,
   updateLocalPost,
 };

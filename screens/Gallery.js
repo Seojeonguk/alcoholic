@@ -12,7 +12,7 @@ import { Button, GalleryFilter, Post, PressableScale, Skeleton } from '../compon
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
 import { collectTags, filterPosts, groupPostsByMonth, memberEmail, showToast } from '../lib';
-import { getLocalPosts, subscribePosts, useGuestMigration } from '../services';
+import { subscribeGallery, useGuestMigration } from '../services';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -51,7 +51,8 @@ export default function Gallery({ navigation }) {
   const photoSize = (width - SIDE_PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
 
   // 회원: 내 글을 구독해서 처음 한 번만 전체를 읽고, 그 뒤로는 바뀐 글만 받음(#300)
-  // 비회원: 기기에 저장한 기록을 화면에 들어올 때마다 다시 읽음. 파일이라 Firestore 읽기가 없음(#201)
+  // 비회원: 기기에 저장한 기록을 읽고, 기기에 저장 · 삭제할 때마다 다시 읽음. 파일이라 Firestore 읽기가 없음(#201)
+  // 어느 쪽인지는 subscribeGallery가 account(회원 이메일, 비회원이면 null)로 고름(#339)
   const [account, setAccount] = useState(currentMemberEmail);
   // 바꾸면 구독을 새로 시작함(당겨서 새로 고침 · 구독 오류 뒤 다시 들어왔을 때)
   const [subscriptionKey, setSubscriptionKey] = useState(0);
@@ -60,11 +61,8 @@ export default function Gallery({ navigation }) {
   // 화면이 떠 있는 동안 구독을 유지함. 상세 · 글쓰기 화면은 갤러리 위에 쌓이므로 그사이에도 끊지 않아야
   // 돌아올 때 다시 읽지 않음. 화면이 사라지거나(로그아웃 · 탈퇴) 계정이 바뀌면 끊음
   useEffect(() => {
-    if (!account) {
-      return undefined;
-    }
     subscriptionFailed.current = false;
-    return subscribePosts(
+    return subscribeGallery(
       account,
       (userPosts) => {
         setPosts(userPosts);
@@ -90,49 +88,14 @@ export default function Gallery({ navigation }) {
   // 로그아웃하거나 계정이 바뀌면 바로 구독 대상을 바꿈
   useEffect(() => onAuthStateChanged(auth, (user) => setAccount(memberEmail(user))), []);
 
-  // isActive: 화면을 떠난 뒤 늦게 끝난 요청은 화면에 반영하지 않음
-  const loadLocalPosts = useCallback(async (isActive = () => true) => {
-    setIsRefreshing(true);
-    try {
-      const userPosts = await getLocalPosts();
-      if (isActive()) {
-        setPosts(userPosts);
-        setIsLoaded(true);
-        isLoadedRef.current = true;
-        setLoadFailed(false);
-      }
-    } catch {
-      if (isActive()) {
-        setLoadFailed(true);
-        if (isLoadedRef.current) {
-          showToast(...LOAD_ERROR);
-        }
-      }
-    } finally {
-      if (isActive()) {
-        setIsRefreshing(false);
-      }
-    }
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
-      const email = currentMemberEmail();
-      setAccount(email);
-      if (email) {
-        // 회원은 구독이 바뀐 글을 받아 오므로 다시 읽지 않음. 구독이 오류로 끊겼을 때만 다시 시작
-        if (subscriptionFailed.current) {
-          setSubscriptionKey((key) => key + 1);
-        }
-        return undefined;
+      setAccount(currentMemberEmail());
+      // 구독이 바뀐 글을 받아 오므로 다시 읽지 않음. 구독이 오류로 끊겼을 때만 다시 시작
+      if (subscriptionFailed.current) {
+        setSubscriptionKey((key) => key + 1);
       }
-      // 비회원은 글을 쓰고 돌아왔을 때도 새 글이 보이도록 화면에 들어올 때마다 다시 읽음
-      let active = true;
-      loadLocalPosts(() => active);
-      return () => {
-        active = false;
-      };
-    }, [loadLocalPosts])
+    }, [])
   );
 
   // 회원이면 기기에 남은 비회원 기록을 계정으로 옮김. 옮긴 글은 구독으로 목록에 들어옴(#201)
@@ -144,13 +107,10 @@ export default function Gallery({ navigation }) {
     refresh();
   };
 
+  // 구독을 새로 시작해서 처음부터 다시 읽음
   const refresh = () => {
-    if (account) {
-      setIsRefreshing(true);
-      setSubscriptionKey((key) => key + 1);
-    } else {
-      loadLocalPosts();
-    }
+    setIsRefreshing(true);
+    setSubscriptionKey((key) => key + 1);
   };
 
   const tags = useMemo(() => collectTags(posts), [posts]);
