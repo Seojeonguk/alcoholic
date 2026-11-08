@@ -1,4 +1,5 @@
 import { createUserInfo, deleteUserData } from './docs';
+import { exportPosts, sharePhoto } from './exportPosts';
 import { deleteVisibleLocalPosts, getLocalPosts } from './localPosts';
 import {
   askAnnouncementsOnce,
@@ -15,6 +16,8 @@ export {
   getAnnouncementsEnabled,
   listenAnnouncements,
   setAnnouncements,
+  exportPosts,
+  sharePhoto,
   countPhotosToUpload,
   loadPost,
   removePost,

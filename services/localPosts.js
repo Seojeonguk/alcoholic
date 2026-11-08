@@ -121,6 +121,10 @@ const getLocalPost = (id) =>
     return post ? withPhotoUris(post) : null;
   });
 
+// 기록 내보내기(#344)에서 비회원 화면에 보이는 글 전체를 읽음(사진은 기기 경로로)
+const getLocalPostsForExport = () =>
+  runInQueue(async () => visiblePosts(await readPosts()).map(withPhotoUris));
+
 const createLocalPost = (data) =>
   updatePosts((posts) => ({
     next: [...posts, { ...toStoredData(data), id: uuid.v4(), owner: null }],
@@ -181,6 +185,7 @@ export {
   deleteVisibleLocalPosts,
   getLocalPost,
   getLocalPosts,
+  getLocalPostsForExport,
   isLocalPhoto,
   saveLocalPhoto,
   deleteLocalPhotos,

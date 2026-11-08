@@ -4,15 +4,17 @@ import { Alert, ScrollView, Share, Text, useWindowDimensions, View } from 'react
 import { BottomSheet, Carousel, Header, PressableScale, Skeleton } from '../components';
 import { NAVIGATOR } from '../constants';
 import { formatDay, getShareText, showToast, usePreventLeave, makeStyles, useColors } from '../lib';
-import { isMember, loadPost, removePost } from '../services';
+import { isMember, loadPost, removePost, sharePhoto } from '../services';
 
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // 더보기 메뉴. Android Alert는 버튼을 3개까지만 보여 줘서 시트로 띄움(#335)
+// 공유 시트는 글과 사진 파일을 한 번에 보낼 수 없어서 따로 둠(#344). 사진이 없으면 사진 공유는 숨김
 const MENU_ITEMS = [
-  { action: 'share', label: '공유하기', icon: 'share-social-outline' },
+  { action: 'share', label: '글 공유하기', icon: 'share-social-outline' },
+  { action: 'sharePhoto', label: '사진 공유하기', icon: 'image-outline', needsPhoto: true },
   { action: 'edit', label: '수정', icon: 'create-outline' },
   { action: 'delete', label: '삭제', icon: 'trash-outline', danger: true },
 ];
@@ -26,6 +28,8 @@ export default function Details({ route, navigation }) {
 
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // 캐러셀에서 보고 있는 사진 순서. 사진 공유하기로 이 사진을 보냄
+  const [photoIndex, setPhotoIndex] = useState(0);
   // 삭제 중에 메뉴를 다시 눌러 두 번 지우지 않게 막음
   const isDeletingRef = useRef(false);
   usePreventLeave(navigation, isDeletingRef);
@@ -121,7 +125,7 @@ export default function Details({ route, navigation }) {
     navigation.navigate(NAVIGATOR.GALLERY_FORM, { docId, post: myPost });
   };
 
-  // 제목 · 날짜 · 장소 · 내용 · 태그를 텍스트로 보냄. 사진은 #344에서 함께 보냄(#335)
+  // 제목 · 날짜 · 장소 · 내용 · 태그를 텍스트로 보냄(#335)
   const sharePost = async () => {
     const message = getShareText(myPost);
     if (!message) {
@@ -132,6 +136,16 @@ export default function Details({ route, navigation }) {
       await Share.share({ message }, { dialogTitle: '기록 공유하기' });
     } catch {
       showToast('error', '공유하지 못했어요.', '잠시 후 다시 시도해 주세요.');
+    }
+  };
+
+  // 보고 있는 사진 한 장을 파일로 보냄(#344)
+  const shareCurrentPhoto = async () => {
+    const uri = photos[photoIndex] ?? photos[0];
+    try {
+      await sharePhoto(uri);
+    } catch {
+      showToast('error', '사진을 공유하지 못했어요.', '연결을 확인하고 다시 시도해 주세요.');
     }
   };
 
@@ -146,6 +160,8 @@ export default function Details({ route, navigation }) {
     setIsMenuOpen(false);
     if (action === 'share') {
       sharePost();
+    } else if (action === 'sharePhoto') {
+      shareCurrentPhoto();
     } else if (action === 'edit') {
       moveEdit();
     } else if (action === 'delete') {
@@ -185,7 +201,7 @@ export default function Details({ route, navigation }) {
         renderSkeleton()
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
-          <Carousel data={photos} size={width} />
+          <Carousel data={photos} onIndexChange={setPhotoIndex} size={width} />
 
           <View style={styles.body}>
             <Text style={styles.title}>{title}</Text>
@@ -229,18 +245,20 @@ export default function Details({ route, navigation }) {
       </LinearGradient>
 
       <BottomSheet onClose={() => setIsMenuOpen(false)} visible={isMenuOpen}>
-        {MENU_ITEMS.map(({ action, label, icon, danger }) => (
-          <PressableScale
-            accessibilityLabel={label}
-            accessibilityRole="button"
-            key={label}
-            onPress={() => selectMenu(action)}
-            style={styles.menuItem}
-          >
-            <Ionicons color={danger ? colors.DANGER : colors.TEXT} name={icon} size={22} />
-            <Text style={[styles.menuText, danger && styles.dangerText]}>{label}</Text>
-          </PressableScale>
-        ))}
+        {MENU_ITEMS.filter(({ needsPhoto }) => !needsPhoto || photos.length > 0).map(
+          ({ action, label, icon, danger }) => (
+            <PressableScale
+              accessibilityLabel={label}
+              accessibilityRole="button"
+              key={label}
+              onPress={() => selectMenu(action)}
+              style={styles.menuItem}
+            >
+              <Ionicons color={danger ? colors.DANGER : colors.TEXT} name={icon} size={22} />
+              <Text style={[styles.menuText, danger && styles.dangerText]}>{label}</Text>
+            </PressableScale>
+          )
+        )}
       </BottomSheet>
     </View>
   );

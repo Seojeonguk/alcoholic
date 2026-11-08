@@ -7,6 +7,7 @@ import { auth } from '../firebaseConfig';
 import { openPrivacyPolicy, showToast, makeStyles, useColors } from '../lib';
 import {
   deleteVisibleLocalPosts,
+  exportPosts,
   getAnnouncementsEnabled,
   isMember,
   setAnnouncements,
@@ -44,6 +45,8 @@ export default function Settings({ navigation }) {
   // 공지 알림(#304). 기록을 저장한 뒤 켤 수도 있어서 화면에 올 때마다 기기에 저장된 상태를 다시 읽음
   const [announcements, setAnnouncementsState] = useState(false);
   const [isChangingAnnouncements, setIsChangingAnnouncements] = useState(false);
+  // 기록 내보내기(#344) 진행 상태. null이면 내보내는 중이 아님
+  const [exportProgress, setExportProgress] = useState(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -83,6 +86,28 @@ export default function Settings({ navigation }) {
       ],
       { cancelable: true }
     );
+  };
+
+  // 내 기록(글 + 사진)을 zip 하나로 만들어 공유 시트를 엶. 만드는 동안 다시 누르지 못하게 막음
+  const handleExport = async () => {
+    if (exportProgress) {
+      return;
+    }
+    setExportProgress('준비 중');
+    try {
+      const { empty, skipped } = await exportPosts({
+        onProgress: (done, total) => setExportProgress(`사진 ${done}/${total}`),
+      });
+      if (empty) {
+        showToast('info', '내보낼 기록이 없어요.');
+      } else if (skipped > 0) {
+        showToast('info', `사진 ${skipped}장은 받지 못해 빼고 내보냈어요.`);
+      }
+    } catch {
+      showToast('error', '기록을 내보내지 못했어요.', '연결을 확인하고 다시 시도해 주세요.');
+    } finally {
+      setExportProgress(null);
+    }
   };
 
   const removeLocalPosts = async () => {
@@ -128,6 +153,16 @@ export default function Settings({ navigation }) {
             </Text>
           </>
         )}
+
+        <Text style={styles.sectionTitle}>기록</Text>
+        <ListRow
+          onPress={handleExport}
+          title="기록 내보내기"
+          value={exportProgress ? `${exportProgress}…` : null}
+        />
+        <Text style={styles.guestNotice}>
+          글과 사진을 zip 파일 하나로 만들어 원하는 곳에 저장하거나 보낼 수 있어요.
+        </Text>
 
         <Text style={styles.sectionTitle}>알림</Text>
         <ListRow title="공지 알림">
