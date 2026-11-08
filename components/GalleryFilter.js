@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import { formatDay, toLocalDateString, makeStyles, useColors } from '../lib';
+import DrinkTypeSheet from './DrinkTypeSheet';
 import SearchSheet from './SearchSheet';
 import TagSheet from './TagSheet';
 import { PressableScale } from './ui';
@@ -12,11 +13,18 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 // 'YYYY-MM-DD'만 넘기면 UTC로 해석되므로 기기 시간대의 자정으로 만듦
 const toDate = (day) => new Date(`${day}T00:00:00`);
 
-// 갤러리 위의 필터 줄. [검색] [기간] [태그] 칩을 둠(#331 · #333)
+// 갤러리 위의 필터 줄. [검색] [기간] [주종] [태그] 칩을 둠(#331 · #333 · #341)
 // 기간: 고른 칩을 다시 누르면 지움. 검색 · 태그: 칩을 누르면 시트에서 고르고, 고른 뒤에는 ✕로 지움
 // tagCounts: 많이 쓴 순서의 [{ tag, count }](lib의 countTags)
+// drinkTypeCounts: 내가 쓴 주종 [{ code, label, count }](lib의 countDrinkTypes)
 // countResults(query): 지금 조건에 그 검색어를 더하면 남는 기록 수(검색 시트에 보여 줌)
-export default function GalleryFilter({ tagCounts, filter, onChange, countResults }) {
+export default function GalleryFilter({
+  tagCounts,
+  drinkTypeCounts,
+  filter,
+  onChange,
+  countResults,
+}) {
   const colors = useColors();
   const styles = useStyles();
   // 기간은 시작 날짜 → 끝 날짜 순서로 두 번 고름
@@ -56,6 +64,18 @@ export default function GalleryFilter({ tagCounts, filter, onChange, countResult
 
   const clearQuery = () => {
     onChange({ ...filter, query: '' });
+  };
+
+  const [isDrinkTypeSheetOpen, setIsDrinkTypeSheetOpen] = useState(false);
+  const selectedDrinkType = drinkTypeCounts.find(({ code }) => code === filter.drinkType);
+
+  const handleSelectDrinkType = (drinkType) => {
+    setIsDrinkTypeSheetOpen(false);
+    onChange({ ...filter, drinkType });
+  };
+
+  const clearDrinkType = () => {
+    onChange({ ...filter, drinkType: null });
   };
 
   const [isTagSheetOpen, setIsTagSheetOpen] = useState(false);
@@ -125,6 +145,41 @@ export default function GalleryFilter({ tagCounts, filter, onChange, countResult
           {hasPeriod ? <Ionicons color={colors.ON_ACCENT} name="close" size={14} /> : null}
         </PressableScale>
 
+        {/* 주종을 고른 기록이 없으면 고를 것이 없으므로 칩을 숨김 */}
+        {drinkTypeCounts.length > 0 && (
+          <View style={[styles.chip, selectedDrinkType && styles.selectedChip]}>
+            <PressableScale
+              accessibilityLabel={
+                selectedDrinkType
+                  ? `${selectedDrinkType.label}로 찾는 중, 주종 바꾸기`
+                  : '주종으로 찾기'
+              }
+              accessibilityRole="button"
+              onPress={() => setIsDrinkTypeSheetOpen(true)}
+              style={styles.chipBody}
+            >
+              <Ionicons
+                color={selectedDrinkType ? colors.ON_ACCENT : colors.TEXT}
+                name="wine-outline"
+                size={14}
+              />
+              <Text style={[styles.chipText, selectedDrinkType && styles.selectedText]}>
+                {selectedDrinkType ? selectedDrinkType.label : '주종'}
+              </Text>
+            </PressableScale>
+            {selectedDrinkType ? (
+              <PressableScale
+                accessibilityLabel="주종 조건 지우기"
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={clearDrinkType}
+              >
+                <Ionicons color={colors.ON_ACCENT} name="close" size={14} />
+              </PressableScale>
+            ) : null}
+          </View>
+        )}
+
         {/* 쓴 태그가 없으면 고를 것이 없으므로 칩을 숨김 */}
         {tagCounts.length > 0 && (
           <View style={[styles.chip, hasTag && styles.selectedChip]}>
@@ -165,6 +220,13 @@ export default function GalleryFilter({ tagCounts, filter, onChange, countResult
         onClose={() => setIsSearchSheetOpen(false)}
         onSubmit={handleSubmitQuery}
         visible={isSearchSheetOpen}
+      />
+      <DrinkTypeSheet
+        drinkTypeCounts={drinkTypeCounts}
+        onClose={() => setIsDrinkTypeSheetOpen(false)}
+        onSelect={handleSelectDrinkType}
+        selected={filter.drinkType}
+        visible={isDrinkTypeSheetOpen}
       />
       <TagSheet
         onClose={() => setIsTagSheetOpen(false)}

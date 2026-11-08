@@ -1,3 +1,4 @@
+import { DRINK_TYPES, MAX_RATING } from './drinkTypes';
 import { AUTH_ERRORS } from './errorMsg';
 import { DARK_COLORS, LIGHT_COLORS } from './theme';
 import { NAVIGATOR } from './nav';
@@ -9,6 +10,8 @@ export {
   DARK_COLORS,
   LIGHT_COLORS,
   AUTH_ERRORS,
+  DRINK_TYPES,
+  MAX_RATING,
   NAVIGATOR,
   DEFAULT_PHOTO,
   DEFAULT_PHOTO_DARK,

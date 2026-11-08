@@ -24,6 +24,7 @@ import {
   where,
 } from 'firebase/firestore';
 
+import { DRINK_TYPES, MAX_RATING } from '../../constants/drinkTypes.js';
 import { POST_LIMITS } from '../../constants/postLimits.js';
 import { toRemotePost } from '../../lib/guestPosts.js';
 
@@ -369,6 +370,29 @@ describe('posts/{postId}', () => {
       );
     });
 
+    test('비회원 기록에 별점 · 주종이 있으면 옮길 때도 함께 들어가요', async () => {
+      const guestPost = {
+        id: 'local-2',
+        title: '와인',
+        day: '2026-10-25',
+        photos: [],
+        content: '',
+        location: '',
+        tags: [],
+        rating: 4,
+        drinkType: 'wine',
+        createdAt: Date.now(),
+        owner: ME.uid,
+      };
+      const db = verifiedDb(ME);
+      await assertSucceeds(
+        setDoc(doc(db, 'posts', guestPost.id), toRemotePost(guestPost, ME.email, []))
+      );
+      const saved = (await getDoc(doc(db, 'posts', guestPost.id))).data();
+      assert.equal(saved.rating, 4);
+      assert.equal(saved.drinkType, 'wine');
+    });
+
     test('상한을 넘는 예전 글은 줄이지 않으면 수정할 수 없지만 지울 수는 있어요', async () => {
       await seed('posts/long', newPost(ME.email, { content: text(POST_LIMITS.CONTENT + 1) }));
       const db = verifiedDb(ME);
@@ -377,5 +401,41 @@ describe('posts/{postId}', () => {
       await assertSucceeds(updateDoc(doc(db, 'posts', 'long'), { content: '줄임' }));
       await assertSucceeds(deleteDoc(doc(db, 'posts', 'long')));
     });
+  });
+});
+
+describe('별점 · 주종(#341)', () => {
+  const write = (overrides) =>
+    addDoc(collection(verifiedDb(ME), 'posts'), newPost(ME.email, overrides));
+
+  test('별점 · 주종 없이도 쓸 수 있어요(예전 글 · 고르지 않은 글)', async () => {
+    await assertSucceeds(write({}));
+    await assertSucceeds(write({ rating: null, drinkType: null }));
+  });
+
+  test('별점은 1~MAX_RATING 정수만 쓸 수 있어요', async () => {
+    for (let rating = 1; rating <= MAX_RATING; rating += 1) {
+      await assertSucceeds(write({ rating }));
+    }
+    for (const rating of [0, MAX_RATING + 1, -1, 3.5, '3', true, [3]]) {
+      await assertFails(write({ rating }));
+    }
+  });
+
+  test('주종은 정해 둔 코드만 쓸 수 있어요', async () => {
+    for (const { code } of DRINK_TYPES) {
+      await assertSucceeds(write({ drinkType: code }));
+    }
+    for (const drinkType of ['', '맥주', 'BEER', 'vodka', 1, ['beer']]) {
+      await assertFails(write({ drinkType }));
+    }
+  });
+
+  test('수정할 때 별점 · 주종을 넣거나 지울 수 있어요', async () => {
+    await seed('posts/old', newPost(ME.email));
+    const ref = doc(verifiedDb(ME), 'posts', 'old');
+    await assertSucceeds(updateDoc(ref, { rating: 5, drinkType: 'soju' }));
+    await assertSucceeds(updateDoc(ref, { rating: null, drinkType: null }));
+    await assertFails(updateDoc(ref, { rating: 6 }));
   });
 });

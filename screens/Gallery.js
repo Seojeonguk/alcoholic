@@ -6,6 +6,7 @@ import { NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
 import {
   collectLocations,
+  countDrinkTypes,
   countTags,
   filterPosts,
   groupPostsByMonth,
@@ -26,7 +27,7 @@ import { useDispatch } from 'react-redux';
 const COLUMNS = 3;
 const GAP = 6;
 const SIDE_PADDING = 20;
-const NO_FILTER = { tag: null, from: null, to: null, query: '' };
+const NO_FILTER = { tag: null, from: null, to: null, query: '', drinkType: null };
 const LOAD_ERROR = ['error', '글 목록을 불러오지 못했어요.', '잠시 후 다시 시도해 주세요.'];
 
 // 지금 구독할 회원 이메일. 비회원이면 null
@@ -131,6 +132,7 @@ export default function Gallery({ route, navigation }) {
   // 태그 시트에 개수와 함께 보여 줄 태그(#331)
   const tagCounts = useMemo(() => countTags(posts), [posts]);
   const tags = useMemo(() => tagCounts.map(({ tag }) => tag), [tagCounts]);
+  const drinkTypeCounts = useMemo(() => countDrinkTypes(posts), [posts]);
 
   // 글을 쓸 때 전에 쓴 태그 · 장소를 추천하게 넘겨 줌(#336). 갤러리가 사라지면(로그아웃 · 탈퇴) 비움
   const dispatch = useDispatch();
@@ -138,13 +140,20 @@ export default function Gallery({ route, navigation }) {
     dispatch(setSuggestions({ tags, locations: collectLocations(posts) }));
   }, [dispatch, tags, posts]);
   useEffect(() => () => dispatch(clearSuggestions()), [dispatch]);
-  // 고른 태그의 글을 모두 지워서 태그가 없어지면 태그 조건은 없는 것으로 봄
+  // 고른 태그 · 주종의 글을 모두 지우거나 고쳐서 없어지면 그 조건은 없는 것으로 봄
   const activeFilter = useMemo(
-    () => ({ ...filter, tag: tags.includes(filter.tag) ? filter.tag : null }),
-    [filter, tags]
+    () => ({
+      ...filter,
+      tag: tags.includes(filter.tag) ? filter.tag : null,
+      drinkType: drinkTypeCounts.some(({ code }) => code === filter.drinkType)
+        ? filter.drinkType
+        : null,
+    }),
+    [filter, tags, drinkTypeCounts]
   );
   const isFiltering = !!(
     activeFilter.tag ||
+    activeFilter.drinkType ||
     (activeFilter.from && activeFilter.to) ||
     activeFilter.query?.trim()
   );
@@ -259,6 +268,7 @@ export default function Gallery({ route, navigation }) {
       {isLoaded && posts.length > 0 ? (
         <GalleryFilter
           countResults={countResults}
+          drinkTypeCounts={drinkTypeCounts}
           filter={activeFilter}
           onChange={setFilter}
           tagCounts={tagCounts}
