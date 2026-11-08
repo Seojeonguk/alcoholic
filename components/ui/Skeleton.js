@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Animated } from 'react-native';
 
-import { COLORS } from '../../constants';
+import { useColors } from '../../lib';
 
 // 처음 불러오는 동안 내용이 놓일 자리를 회색 상자로 보여 줌
 export default function Skeleton({ width, height, radius = 12, style }) {
+  const colors = useColors();
   const [opacity] = useState(() => new Animated.Value(1));
 
   useEffect(() => {
@@ -21,7 +22,7 @@ export default function Skeleton({ width, height, radius = 12, style }) {
   return (
     <Animated.View
       style={[
-        { backgroundColor: COLORS.FILL, borderRadius: radius, height, opacity, width },
+        { backgroundColor: colors.FILL, borderRadius: radius, height, opacity, width },
         style,
       ]}
     />

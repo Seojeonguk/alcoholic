@@ -1,11 +1,12 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { COLORS } from '../constants';
+import { makeStyles } from '../lib';
 import { PressableScale } from './ui';
 
 // 전에 쓴 태그 · 장소를 칩으로 보여 주고, 누르면 onSelect로 넘김(#336)
 // prefix: 칩 앞에 붙일 글자(태그는 '#'), label: TalkBack이 읽을 이름 앞부분
 export default function SuggestionChips({ values, onSelect, prefix = '', label }) {
+  const styles = useStyles();
   if (values.length === 0) {
     return null;
   }
@@ -29,16 +30,16 @@ export default function SuggestionChips({ values, onSelect, prefix = '', label }
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   chip: {
-    borderColor: COLORS.ACCENT_SOFT,
+    borderColor: colors.ACCENT_SOFT,
     borderRadius: 16,
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   chipText: {
-    color: COLORS.ACCENT,
+    color: colors.ACCENT,
     fontSize: 14,
   },
   chips: {
@@ -46,4 +47,4 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
   },
-});
+}));

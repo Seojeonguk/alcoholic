@@ -1,5 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { COLORS, NAVIGATOR } from '../constants';
+import { NAVIGATOR } from '../constants';
+import { useColors } from '../lib';
 import { Gallery, Settings } from '../screens';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -11,17 +12,18 @@ const tabIcon = (name) =>
   };
 
 export default function BottomTabNav() {
+  const colors = useColors();
   return (
     <Tab.Navigator
       initialRouteName={NAVIGATOR.GALLERY}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.TEXT,
-        tabBarInactiveTintColor: COLORS.TAB_INACTIVE,
+        tabBarActiveTintColor: colors.TEXT,
+        tabBarInactiveTintColor: colors.TAB_INACTIVE,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
         tabBarStyle: {
-          backgroundColor: COLORS.BACKGROUND,
-          borderTopColor: COLORS.LINE,
+          backgroundColor: colors.BACKGROUND,
+          borderTopColor: colors.LINE,
           borderTopWidth: 1,
           elevation: 0,
         },

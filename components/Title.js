@@ -1,10 +1,13 @@
-import { StyleSheet, TextInput } from 'react-native';
+import { TextInput } from 'react-native';
 
-import { COLORS, POST_LIMITS } from '../constants';
+import { POST_LIMITS } from '../constants';
+import { makeStyles, useColors } from '../lib';
 import { updateTitle } from '../redux';
 import { usePostForm } from './PostForm';
 
 export default function Title() {
+  const colors = useColors();
+  const styles = useStyles();
   const {
     form: { title },
     dispatch,
@@ -20,18 +23,18 @@ export default function Title() {
       multiline
       onChangeText={handleChangeTitle}
       placeholder="제목"
-      placeholderTextColor={COLORS.TEXT_SUB}
+      placeholderTextColor={colors.TEXT_SUB}
       style={styles.input}
       value={title}
     />
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   input: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 22,
     fontWeight: '700',
     paddingVertical: 12,
   },
-});
+}));

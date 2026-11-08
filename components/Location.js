@@ -1,8 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 
-import { COLORS, POST_LIMITS } from '../constants';
-import { suggestValues } from '../lib';
+import { POST_LIMITS } from '../constants';
+import { suggestValues, makeStyles, useColors } from '../lib';
 import { updateLocation } from '../redux';
 import { usePostForm } from './PostForm';
 import SuggestionChips from './SuggestionChips';
@@ -12,6 +12,8 @@ import { useSelector } from 'react-redux';
 
 // 줄 어디를 눌러도 오른쪽 입력 칸에 바로 쓸 수 있음
 export default function Location() {
+  const colors = useColors();
+  const styles = useStyles();
   const {
     form: { location },
     dispatch,
@@ -44,7 +46,7 @@ export default function Location() {
           onChangeText={handleChangeLocation}
           onFocus={() => setIsFocused(true)}
           placeholder="어디서 마셨나요?"
-          placeholderTextColor={COLORS.TEXT_SUB}
+          placeholderTextColor={colors.TEXT_SUB}
           ref={inputRef}
           style={styles.input}
           value={location}
@@ -59,17 +61,17 @@ export default function Location() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   input: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     flex: 1,
     fontSize: 15,
     padding: 0,
     textAlign: 'right',
   },
   suggestions: {
-    borderBottomColor: COLORS.LINE,
+    borderBottomColor: colors.LINE,
     borderBottomWidth: 1,
     paddingVertical: 12,
   },
-});
+}));

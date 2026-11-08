@@ -1,17 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  Alert,
-  ScrollView,
-  Share,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { Alert, ScrollView, Share, Text, useWindowDimensions, View } from 'react-native';
 
 import { BottomSheet, Carousel, Header, PressableScale, Skeleton } from '../components';
-import { COLORS, NAVIGATOR } from '../constants';
-import { formatDay, getShareText, showToast, usePreventLeave } from '../lib';
+import { NAVIGATOR } from '../constants';
+import { formatDay, getShareText, showToast, usePreventLeave, makeStyles, useColors } from '../lib';
 import { isMember, loadPost, removePost } from '../services';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -26,6 +18,8 @@ const MENU_ITEMS = [
 ];
 
 export default function Details({ route, navigation }) {
+  const colors = useColors();
+  const styles = useStyles();
   const { docId } = route.params;
   const { width } = useWindowDimensions();
   const { top } = useSafeAreaInsets();
@@ -220,7 +214,7 @@ export default function Details({ route, navigation }) {
 
       {/* 사진 위에 떠 있는 헤더. 밝은 사진에서도 흰 아이콘과 상태 표시줄 글씨가 보이게 위쪽을 어둡게 깔아 줌 */}
       <LinearGradient
-        colors={[COLORS.PHOTO_SHADE, COLORS.PHOTO_SHADE_END]}
+        colors={[colors.PHOTO_SHADE, colors.PHOTO_SHADE_END]}
         pointerEvents="box-none"
         style={[styles.header, { paddingTop: top }]}
       >
@@ -243,7 +237,7 @@ export default function Details({ route, navigation }) {
             onPress={() => selectMenu(action)}
             style={styles.menuItem}
           >
-            <Ionicons color={danger ? COLORS.DANGER : COLORS.TEXT} name={icon} size={22} />
+            <Ionicons color={danger ? colors.DANGER : colors.TEXT} name={icon} size={22} />
             <Text style={[styles.menuText, danger && styles.dangerText]}>{label}</Text>
           </PressableScale>
         ))}
@@ -252,23 +246,23 @@ export default function Details({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   body: {
     paddingHorizontal: 20,
     paddingTop: 20,
   },
   container: {
-    backgroundColor: COLORS.BACKGROUND,
+    backgroundColor: colors.BACKGROUND,
     flex: 1,
   },
   content: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 15,
     lineHeight: 24,
     marginTop: 20,
   },
   dangerText: {
-    color: COLORS.DANGER,
+    color: colors.DANGER,
   },
   header: {
     paddingBottom: 32,
@@ -284,11 +278,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   menuText: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 16,
   },
   meta: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     fontSize: 13,
     marginTop: 8,
   },
@@ -299,13 +293,13 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   tag: {
-    backgroundColor: COLORS.FILL,
+    backgroundColor: colors.FILL,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   tagText: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 14,
   },
   tags: {
@@ -315,9 +309,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   title: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 24,
     fontWeight: '800',
     letterSpacing: -0.5,
   },
-});
+}));

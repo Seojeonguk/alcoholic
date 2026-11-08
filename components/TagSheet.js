@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
-import { FlatList, StyleSheet, Text } from 'react-native';
+import { FlatList, Text } from 'react-native';
 
-import { COLORS } from '../constants';
-import { searchTags } from '../lib';
+import { searchTags, makeStyles, useColors } from '../lib';
 import { BottomSheet, PressableScale, TextField } from './ui';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +9,8 @@ import { Ionicons } from '@expo/vector-icons';
 // 갤러리 필터의 태그 고르기 시트(#331). 많이 쓴 순서로 개수와 함께 보여 주고 이름으로 찾음
 // tagCounts: [{ tag, count }], selected: 지금 고른 태그(없으면 null), onSelect(tag): 고르면 부름
 export default function TagSheet({ visible, tagCounts, selected, onSelect, onClose }) {
+  const colors = useColors();
+  const styles = useStyles();
   const [query, setQuery] = useState('');
   const results = useMemo(() => searchTags(tagCounts, query), [tagCounts, query]);
 
@@ -38,7 +39,7 @@ export default function TagSheet({ visible, tagCounts, selected, onSelect, onClo
           #{tag}
         </Text>
         <Text style={styles.count}>{count}</Text>
-        {isSelected ? <Ionicons color={COLORS.ACCENT} name="checkmark" size={18} /> : null}
+        {isSelected ? <Ionicons color={colors.ACCENT} name="checkmark" size={18} /> : null}
       </PressableScale>
     );
   };
@@ -68,13 +69,13 @@ export default function TagSheet({ visible, tagCounts, selected, onSelect, onClo
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   count: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     fontSize: 14,
   },
   empty: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     fontSize: 14,
     paddingVertical: 24,
     textAlign: 'center',
@@ -89,12 +90,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   selectedTag: {
-    color: COLORS.ACCENT,
+    color: colors.ACCENT,
     fontWeight: '700',
   },
   tag: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     flex: 1,
     fontSize: 15,
   },
-});
+}));

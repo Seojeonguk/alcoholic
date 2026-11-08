@@ -1,15 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  RefreshControl,
-  SectionList,
-  StyleSheet,
-  Text,
-  useWindowDimensions,
-  View,
-} from 'react-native';
+import { RefreshControl, SectionList, Text, useWindowDimensions, View } from 'react-native';
 
 import { Button, GalleryFilter, Post, PressableScale, Skeleton } from '../components';
-import { COLORS, NAVIGATOR } from '../constants';
+import { NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
 import {
   collectLocations,
@@ -18,6 +11,8 @@ import {
   groupPostsByMonth,
   memberEmail,
   showToast,
+  makeStyles,
+  useColors,
 } from '../lib';
 import { clearSuggestions, setSuggestions } from '../redux';
 import { subscribeGallery, useGuestMigration } from '../services';
@@ -47,6 +42,8 @@ const toRows = (posts) => {
 };
 
 export default function Gallery({ route, navigation }) {
+  const colors = useColors();
+  const styles = useStyles();
   const [posts, setPosts] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   // 처음 불러온 뒤 다시 불러올 때는 목록을 그대로 두고 위쪽에 로딩 표시만 보여 줌(자리 표시로 바꾸면 깜빡임)
@@ -249,7 +246,7 @@ export default function Gallery({ route, navigation }) {
           onPress={moveGalleryForm}
           style={styles.addButton}
         >
-          <Ionicons color={COLORS.ON_ACCENT} name="add" size={24} />
+          <Ionicons color={colors.ON_ACCENT} name="add" size={24} />
         </PressableScale>
       </View>
 
@@ -275,10 +272,10 @@ export default function Gallery({ route, navigation }) {
           ListEmptyComponent={isFiltering ? renderNoMatch : renderEmpty}
           refreshControl={
             <RefreshControl
-              colors={[COLORS.ACCENT]}
+              colors={[colors.ACCENT]}
               onRefresh={refresh}
               refreshing={isRefreshing}
-              tintColor={COLORS.ACCENT}
+              tintColor={colors.ACCENT}
             />
           }
           renderItem={renderRow}
@@ -297,21 +294,21 @@ export default function Gallery({ route, navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   addButton: {
     alignItems: 'center',
-    backgroundColor: COLORS.ACCENT,
+    backgroundColor: colors.ACCENT,
     borderRadius: 12,
     height: 36,
     justifyContent: 'center',
     width: 36,
   },
   container: {
-    backgroundColor: COLORS.BACKGROUND,
+    backgroundColor: colors.BACKGROUND,
     flex: 1,
   },
   migration: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     fontSize: 13,
     paddingBottom: 8,
     paddingHorizontal: SIDE_PADDING,
@@ -325,12 +322,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   emptyText: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     fontSize: 15,
     marginTop: 8,
   },
   emptyTitle: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 17,
     fontWeight: '700',
   },
@@ -352,16 +349,16 @@ const styles = StyleSheet.create({
     marginBottom: GAP,
   },
   sectionTitle: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     fontSize: 13,
     fontWeight: '700',
     marginBottom: 8,
     marginTop: 16,
   },
   title: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 24,
     fontWeight: '800',
     letterSpacing: -0.5,
   },
-});
+}));

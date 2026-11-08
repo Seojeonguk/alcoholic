@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { DEFAULT_PHOTO, NAVIGATOR } from '../constants';
-import { getPostLabel } from '../lib';
+import { NAVIGATOR } from '../constants';
+import { getPostLabel, useDefaultPhoto } from '../lib';
 import { PressableScale, Skeleton } from './ui';
 
 import { Image } from 'expo-image';
@@ -12,6 +12,7 @@ export default function Post({ item, navigation, size }) {
   const { presentivePhoto, docId, day, title } = item;
   // 사진을 다 받기 전까지 회색 자리 표시를 보여 줌. 캐시에 있는 사진은 바로 떠서 새 기록만 보임
   const [isPhotoLoaded, setIsPhotoLoaded] = useState(false);
+  const defaultPhoto = useDefaultPhoto();
 
   return (
     <PressableScale
@@ -29,7 +30,7 @@ export default function Post({ item, navigation, size }) {
           onLoad={() => setIsPhotoLoaded(true)}
           // FlatList가 칸을 재사용할 때 이전 글의 사진이 잠깐 보이지 않게 함
           recyclingKey={docId}
-          source={presentivePhoto ? { uri: presentivePhoto } : DEFAULT_PHOTO}
+          source={presentivePhoto ? { uri: presentivePhoto } : defaultPhoto}
           style={[styles.photo, { height: size, width: size }]}
           transition={150}
         />

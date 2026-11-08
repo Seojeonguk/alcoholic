@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
-import { Alert, StyleSheet, Text } from 'react-native';
+import { Alert, Text } from 'react-native';
 
 import { AuthScreen, Button, PasswordInput, PressableScale, TextField } from '../components';
-import { COLORS, NAVIGATOR } from '../constants';
+import { NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
 import {
   canResendEmail,
@@ -13,6 +13,7 @@ import {
   sendVerificationEmail,
   setEmailRequestLimit,
   showToast,
+  makeStyles,
 } from '../lib';
 import { leaveGuestMode } from '../services';
 
@@ -20,6 +21,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { signInWithEmailAndPassword } from '@react-native-firebase/auth';
 
 export default function Login({ navigation }) {
+  const styles = useStyles();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -175,14 +177,14 @@ export default function Login({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   forgotPassword: {
     alignSelf: 'flex-start',
     paddingVertical: 14,
   },
   forgotPasswordText: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     fontSize: 14,
     textDecorationLine: 'underline',
   },
-});
+}));

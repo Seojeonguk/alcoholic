@@ -56,7 +56,7 @@ npm run test:rules                 # Firestore · Storage 보안 규칙 테스�
 
 - JavaScript(타입스크립트 아님), 함수 컴포넌트 + hooks.
 - import 순서: React · react-native → 프로젝트 모듈(`../components`, `../constants` …) → 외부 라이브러리. 각 폴더의 `index.js`에서 다시 내보낸 것을 가져다 씀.
-- 네비게이션 이름은 문자열로 쓰지 않고 `constants/nav.js`의 `NAVIGATOR`를 씀. 색상은 `constants/theme.js`의 `COLORS`.
+- 네비게이션 이름은 문자열로 쓰지 않고 `constants/nav.js`의 `NAVIGATOR`를 씀. 색상은 `constants/theme.js`의 색 표를 `lib`의 `useColors()` · `makeStyles()`로 가져와 기기 테마(밝은 · 어두운)에 맞춤(#345).
 - ESLint는 `eslint.config.js`(flat config, `eslint-config-expo` + `eslint-plugin-prettier`), Prettier는 `.prettierrc.json`을 따름. 경고도 0개로 유지함.
 - 사용자에게 보이는 문구는 한국어로 씀. 알림은 `lib`의 `showToast`를 씀.
 - 주석은 주변 코드의 밀도에 맞춰 한국어로 씀.

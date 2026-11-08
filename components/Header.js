@@ -1,6 +1,6 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { COLORS } from '../constants';
+import { makeStyles, useColors } from '../lib';
 import { PressableScale } from './ui';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -27,8 +27,10 @@ export default function Header({
   onPressLeft,
   onPressRight,
 }) {
+  const colors = useColors();
+  const styles = useStyles();
   const leftIcon = LEFT_ICONS[left];
-  const color = light ? COLORS.ON_PHOTO : COLORS.TEXT;
+  const color = light ? colors.ON_PHOTO : colors.TEXT;
 
   const renderIcon = (name, onPress, label) =>
     name ? (
@@ -58,7 +60,7 @@ export default function Header({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   btn: {
     alignItems: 'center',
     height: 44,
@@ -73,7 +75,7 @@ const styles = StyleSheet.create({
   },
   lightIcon: {
     alignItems: 'center',
-    backgroundColor: COLORS.PHOTO_ICON_BG,
+    backgroundColor: colors.PHOTO_ICON_BG,
     borderRadius: 18,
     height: 36,
     justifyContent: 'center',
@@ -85,4 +87,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
-});
+}));

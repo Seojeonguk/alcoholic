@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { Text } from 'react-native';
 
 import { AuthScreen, Button, PasswordInput, TextField } from '../components';
-import { COLORS, NAVIGATOR } from '../constants';
+import { NAVIGATOR } from '../constants';
 import { createUserInfo } from '../services';
 import { auth } from '../firebaseConfig';
 import {
@@ -12,11 +12,13 @@ import {
   sendVerificationEmail,
   setEmailRequestLimit,
   showToast,
+  makeStyles,
 } from '../lib';
 
 import { createUserWithEmailAndPassword } from '@react-native-firebase/auth';
 
 export default function RegistrationForm({ navigation }) {
+  const styles = useStyles();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -172,16 +174,16 @@ export default function RegistrationForm({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   link: {
-    color: COLORS.ACCENT,
+    color: colors.ACCENT,
     textDecorationLine: 'underline',
   },
   notice: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     fontSize: 13,
     lineHeight: 20,
     paddingVertical: 4,
     textAlign: 'center',
   },
-});
+}));

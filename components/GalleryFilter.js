@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 
-import { COLORS } from '../constants';
-import { formatDay, toLocalDateString } from '../lib';
+import { formatDay, toLocalDateString, makeStyles, useColors } from '../lib';
 import SearchSheet from './SearchSheet';
 import TagSheet from './TagSheet';
 import { PressableScale } from './ui';
@@ -18,6 +17,8 @@ const toDate = (day) => new Date(`${day}T00:00:00`);
 // tagCounts: 많이 쓴 순서의 [{ tag, count }](lib의 countTags)
 // countResults(query): 지금 조건에 그 검색어를 더하면 남는 기록 수(검색 시트에 보여 줌)
 export default function GalleryFilter({ tagCounts, filter, onChange, countResults }) {
+  const colors = useColors();
+  const styles = useStyles();
   // 기간은 시작 날짜 → 끝 날짜 순서로 두 번 고름
   const [pickingStep, setPickingStep] = useState(null);
   const [draftFrom, setDraftFrom] = useState(null);
@@ -87,7 +88,7 @@ export default function GalleryFilter({ tagCounts, filter, onChange, countResult
             onPress={() => setIsSearchSheetOpen(true)}
             style={styles.chipBody}
           >
-            <Ionicons color={hasQuery ? COLORS.ON_ACCENT : COLORS.TEXT} name="search" size={14} />
+            <Ionicons color={hasQuery ? colors.ON_ACCENT : colors.TEXT} name="search" size={14} />
             <Text
               numberOfLines={1}
               style={[styles.chipText, styles.queryText, hasQuery && styles.selectedText]}
@@ -102,7 +103,7 @@ export default function GalleryFilter({ tagCounts, filter, onChange, countResult
               hitSlop={8}
               onPress={clearQuery}
             >
-              <Ionicons color={COLORS.ON_ACCENT} name="close" size={14} />
+              <Ionicons color={colors.ON_ACCENT} name="close" size={14} />
             </PressableScale>
           ) : null}
         </View>
@@ -114,14 +115,14 @@ export default function GalleryFilter({ tagCounts, filter, onChange, countResult
           style={[styles.chip, hasPeriod && styles.selectedChip]}
         >
           <Ionicons
-            color={hasPeriod ? COLORS.ON_ACCENT : COLORS.TEXT}
+            color={hasPeriod ? colors.ON_ACCENT : colors.TEXT}
             name="calendar-outline"
             size={14}
           />
           <Text style={[styles.chipText, hasPeriod && styles.selectedText]}>
             {hasPeriod ? `${formatDay(filter.from)} ~ ${formatDay(filter.to)}` : '기간'}
           </Text>
-          {hasPeriod ? <Ionicons color={COLORS.ON_ACCENT} name="close" size={14} /> : null}
+          {hasPeriod ? <Ionicons color={colors.ON_ACCENT} name="close" size={14} /> : null}
         </PressableScale>
 
         {/* 쓴 태그가 없으면 고를 것이 없으므로 칩을 숨김 */}
@@ -136,7 +137,7 @@ export default function GalleryFilter({ tagCounts, filter, onChange, countResult
               style={styles.chipBody}
             >
               <Ionicons
-                color={hasTag ? COLORS.ON_ACCENT : COLORS.TEXT}
+                color={hasTag ? colors.ON_ACCENT : colors.TEXT}
                 name="pricetag-outline"
                 size={14}
               />
@@ -151,7 +152,7 @@ export default function GalleryFilter({ tagCounts, filter, onChange, countResult
                 hitSlop={8}
                 onPress={clearTag}
               >
-                <Ionicons color={COLORS.ON_ACCENT} name="close" size={14} />
+                <Ionicons color={colors.ON_ACCENT} name="close" size={14} />
               </PressableScale>
             ) : null}
           </View>
@@ -202,14 +203,14 @@ export default function GalleryFilter({ tagCounts, filter, onChange, countResult
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   // 가로 ScrollView는 기본으로 남은 세로 공간을 차지하므로 내용 높이만 쓰게 함
   bar: {
     flexGrow: 0,
   },
   chip: {
     alignItems: 'center',
-    backgroundColor: COLORS.FILL,
+    backgroundColor: colors.FILL,
     borderRadius: 16,
     flexDirection: 'row',
     gap: 4,
@@ -222,7 +223,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   chipText: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 14,
   },
   chips: {
@@ -235,10 +236,10 @@ const styles = StyleSheet.create({
     maxWidth: 120,
   },
   selectedChip: {
-    backgroundColor: COLORS.ACCENT,
+    backgroundColor: colors.ACCENT,
   },
   selectedText: {
-    color: COLORS.ON_ACCENT,
+    color: colors.ON_ACCENT,
     fontWeight: '600',
   },
-});
+}));
