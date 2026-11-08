@@ -1,0 +1,2 @@
+# 저장소 안의 텍스트 파일은 LF로 둠. core.autocrlf=true인 Windows에서도 체크아웃 · git add 때 CRLF로 바꾸지 않음
+* text=auto eol=lf
