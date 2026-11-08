@@ -41,6 +41,11 @@ export default {
       versionCode: 1,
       // Android 13 이상의 공지 알림 권한. 앱을 켤 때가 아니라 사용자가 알림을 켤 때 요청함(#304)
       permissions: ['android.permission.POST_NOTIFICATIONS'],
+      // Expo 기본 템플릿이 넣는 다른 앱 위에 그리기 권한. 앱에서 쓰지 않음(#321)
+      blockedPermissions: ['android.permission.SYSTEM_ALERT_WINDOW'],
+      // Google 자동 백업을 끔. 비회원 기록은 기기에만 있고 앱을 지우면 사라진다고 안내함.
+      // 로그인 · 알림 · App Check 같은 Firebase 상태가 다른 기기로 복원되지 않게 함(#321)
+      allowBackup: false,
     },
     web: {
       favicon: './assets/favicon.png',
