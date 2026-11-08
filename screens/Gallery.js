@@ -37,7 +37,7 @@ const toRows = (posts) => {
   return rows;
 };
 
-export default function Gallery({ navigation }) {
+export default function Gallery({ route, navigation }) {
   const [posts, setPosts] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
   // 처음 불러온 뒤 다시 불러올 때는 목록을 그대로 두고 위쪽에 로딩 표시만 보여 줌(자리 표시로 바꾸면 깜빡임)
@@ -46,7 +46,16 @@ export default function Gallery({ navigation }) {
   // 목록을 한 번이라도 보여 줬으면 목록은 그대로 두고 토스트로만 알림
   const [loadFailed, setLoadFailed] = useState(false);
   const isLoadedRef = useRef(false);
-  const [filter, setFilter] = useState(NO_FILTER);
+  const [filter, setFilter] = useState(() => ({ ...NO_FILTER, tag: route.params?.tag ?? null }));
+  // 상세 화면에서 태그를 누르면 그 태그만 거름. 다른 조건은 지워서 그 태그의 기록이 모두 보이게 함(#334)
+  // popTo는 누를 때마다 새 파라미터 객체를 주므로, 같은 태그를 다시 눌러도 다시 적용됨
+  const [seenParams, setSeenParams] = useState(route.params);
+  if (route.params !== seenParams) {
+    setSeenParams(route.params);
+    if (route.params?.tag) {
+      setFilter({ ...NO_FILTER, tag: route.params.tag });
+    }
+  }
   const { width } = useWindowDimensions();
   const photoSize = (width - SIDE_PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS;
 
