@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
-import { Carousel, Header, Skeleton } from '../components';
+import { Carousel, Header, PressableScale, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { formatDay, showToast, usePreventLeave } from '../lib';
 import { isMember, loadPost, removePost } from '../services';
@@ -126,6 +126,17 @@ export default function Details({ route, navigation }) {
     );
   };
 
+  // 태그를 누르면 그 태그로 거른 갤러리로 돌아감(#334)
+  const showTag = (tag) => {
+    if (isDeletingRef.current) {
+      return;
+    }
+    navigation.popTo(NAVIGATOR.BOTTOM_TAB_NAV, {
+      screen: NAVIGATOR.GALLERY,
+      params: { tag },
+    });
+  };
+
   // 날짜와 장소를 한 줄로. 장소가 없으면 날짜만
   const meta = [formatDay(day), location].filter(Boolean).join(' · ');
 
@@ -157,9 +168,16 @@ export default function Details({ route, navigation }) {
             {tags?.length > 0 && (
               <View style={styles.tags}>
                 {tags.map((item, index) => (
-                  <View key={`item_${item}_${index}`} style={styles.tag}>
+                  <PressableScale
+                    accessibilityHint="이 태그를 단 기록만 갤러리에서 보여 줘요"
+                    accessibilityLabel={`태그 ${item}`}
+                    accessibilityRole="button"
+                    key={`item_${item}_${index}`}
+                    onPress={() => showTag(item)}
+                    style={styles.tag}
+                  >
                     <Text style={styles.tagText}>#{item}</Text>
-                  </View>
+                  </PressableScale>
                 ))}
               </View>
             )}
