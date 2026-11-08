@@ -36,6 +36,7 @@ test('toGalleryPost: 첫 사진 · 날짜 · 제목 · 장소 · 내용 · 태�
     content: '내용',
     tags: ['맥주'],
     drinkType: 'beer',
+    rating: 4,
     createdAt: 1000,
   });
 });
@@ -54,6 +55,7 @@ test('toGalleryPost: 사진 · 제목 · 장소 · 내용 · 태그 · 작성 �
     content: '',
     tags: [],
     drinkType: null,
+    rating: null,
     createdAt: 0,
   });
   assert.equal(toGalleryPost('id3', undefined).createdAt, 0);

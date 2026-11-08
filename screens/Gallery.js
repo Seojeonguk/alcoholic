@@ -15,7 +15,7 @@ import {
   makeStyles,
   useColors,
 } from '../lib';
-import { clearSuggestions, setSuggestions } from '../redux';
+import { clearPosts, clearSuggestions, setPosts as storePosts, setSuggestions } from '../redux';
 import { subscribeGallery, useGuestMigration } from '../services';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -140,6 +140,13 @@ export default function Gallery({ route, navigation }) {
     dispatch(setSuggestions({ tags, locations: collectLocations(posts) }));
   }, [dispatch, tags, posts]);
   useEffect(() => () => dispatch(clearSuggestions()), [dispatch]);
+  // 통계 탭(#342)이 같은 목록으로 계산하게 넘겨 줌. 처음 불러오기 전에는 넘기지 않아 빈 통계가 잠깐 보이지 않게 함
+  useEffect(() => {
+    if (isLoaded) {
+      dispatch(storePosts(posts));
+    }
+  }, [dispatch, isLoaded, posts]);
+  useEffect(() => () => dispatch(clearPosts()), [dispatch]);
   // 고른 태그 · 주종의 글을 모두 지우거나 고쳐서 없어지면 그 조건은 없는 것으로 봄
   const activeFilter = useMemo(
     () => ({

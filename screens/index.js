@@ -7,6 +7,7 @@ import Login from './Login';
 import MainPage from './MainPage';
 import RegistrationForm from './RegistrationForm';
 import Settings from './Settings';
+import Stats from './Stats';
 
 export {
   DeleteAccount,
@@ -18,4 +19,5 @@ export {
   MainPage,
   RegistrationForm,
   Settings,
+  Stats,
 };

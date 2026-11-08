@@ -7,6 +7,7 @@ const NAVIGATOR = {
   GALLERY: 'Gallery',
   GALLERY_FORM: 'GalleryForm',
   DETAILS: 'Details',
+  STATS: 'Stats',
   SETTINGS: 'Settings',
   BOTTOM_TAB_NAV: 'BottomTabNav',
 };
