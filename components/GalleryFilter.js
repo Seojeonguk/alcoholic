@@ -87,7 +87,7 @@ export default function GalleryFilter({ tagCounts, filter, onChange, countResult
             onPress={() => setIsSearchSheetOpen(true)}
             style={styles.chipBody}
           >
-            <Ionicons color={hasQuery ? '#FFFFFF' : COLORS.TEXT} name="search" size={14} />
+            <Ionicons color={hasQuery ? COLORS.ON_ACCENT : COLORS.TEXT} name="search" size={14} />
             <Text
               numberOfLines={1}
               style={[styles.chipText, styles.queryText, hasQuery && styles.selectedText]}
@@ -102,7 +102,7 @@ export default function GalleryFilter({ tagCounts, filter, onChange, countResult
               hitSlop={8}
               onPress={clearQuery}
             >
-              <Ionicons color="#FFFFFF" name="close" size={14} />
+              <Ionicons color={COLORS.ON_ACCENT} name="close" size={14} />
             </PressableScale>
           ) : null}
         </View>
@@ -113,11 +113,15 @@ export default function GalleryFilter({ tagCounts, filter, onChange, countResult
           onPress={handlePeriodPress}
           style={[styles.chip, hasPeriod && styles.selectedChip]}
         >
-          <Ionicons color={hasPeriod ? '#FFFFFF' : COLORS.TEXT} name="calendar-outline" size={14} />
+          <Ionicons
+            color={hasPeriod ? COLORS.ON_ACCENT : COLORS.TEXT}
+            name="calendar-outline"
+            size={14}
+          />
           <Text style={[styles.chipText, hasPeriod && styles.selectedText]}>
             {hasPeriod ? `${formatDay(filter.from)} ~ ${formatDay(filter.to)}` : '기간'}
           </Text>
-          {hasPeriod ? <Ionicons color="#FFFFFF" name="close" size={14} /> : null}
+          {hasPeriod ? <Ionicons color={COLORS.ON_ACCENT} name="close" size={14} /> : null}
         </PressableScale>
 
         {/* 쓴 태그가 없으면 고를 것이 없으므로 칩을 숨김 */}
@@ -132,7 +136,7 @@ export default function GalleryFilter({ tagCounts, filter, onChange, countResult
               style={styles.chipBody}
             >
               <Ionicons
-                color={hasTag ? '#FFFFFF' : COLORS.TEXT}
+                color={hasTag ? COLORS.ON_ACCENT : COLORS.TEXT}
                 name="pricetag-outline"
                 size={14}
               />
@@ -147,7 +151,7 @@ export default function GalleryFilter({ tagCounts, filter, onChange, countResult
                 hitSlop={8}
                 onPress={clearTag}
               >
-                <Ionicons color="#FFFFFF" name="close" size={14} />
+                <Ionicons color={COLORS.ON_ACCENT} name="close" size={14} />
               </PressableScale>
             ) : null}
           </View>
@@ -234,7 +238,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.ACCENT,
   },
   selectedText: {
-    color: '#FFFFFF',
+    color: COLORS.ON_ACCENT,
     fontWeight: '600',
   },
 });

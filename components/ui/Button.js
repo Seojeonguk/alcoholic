@@ -4,9 +4,9 @@ import { COLORS } from '../../constants';
 import PressableScale from './PressableScale';
 
 const VARIANTS = {
-  primary: { backgroundColor: COLORS.ACCENT, color: '#FFFFFF' },
+  primary: { backgroundColor: COLORS.ACCENT, color: COLORS.ON_ACCENT },
   soft: { backgroundColor: COLORS.ACCENT_SOFT, color: COLORS.ACCENT },
-  danger: { backgroundColor: COLORS.DANGER, color: '#FFFFFF' },
+  danger: { backgroundColor: COLORS.DANGER, color: COLORS.ON_ACCENT },
   text: { backgroundColor: 'transparent', color: COLORS.TEXT_SUB },
 };
 

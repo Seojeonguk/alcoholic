@@ -220,7 +220,7 @@ export default function Details({ route, navigation }) {
 
       {/* 사진 위에 떠 있는 헤더. 밝은 사진에서도 흰 아이콘과 상태 표시줄 글씨가 보이게 위쪽을 어둡게 깔아 줌 */}
       <LinearGradient
-        colors={['rgba(0, 0, 0, 0.5)', 'rgba(0, 0, 0, 0)']}
+        colors={[COLORS.PHOTO_SHADE, COLORS.PHOTO_SHADE_END]}
         pointerEvents="box-none"
         style={[styles.header, { paddingTop: top }]}
       >

@@ -41,7 +41,7 @@ export default function BottomSheet({ visible, title, onClose, children }) {
 
 const styles = StyleSheet.create({
   backdrop: {
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: COLORS.OVERLAY,
     flex: 1,
   },
   container: {

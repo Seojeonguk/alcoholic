@@ -249,7 +249,7 @@ export default function Gallery({ route, navigation }) {
           onPress={moveGalleryForm}
           style={styles.addButton}
         >
-          <Ionicons color="#FFFFFF" name="add" size={24} />
+          <Ionicons color={COLORS.ON_ACCENT} name="add" size={24} />
         </PressableScale>
       </View>
 

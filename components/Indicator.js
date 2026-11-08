@@ -1,5 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
+import { COLORS } from '../constants';
+
 // 사진 위에 놓이는 흰 점. 지금 보는 사진은 길쭉한 점으로 보여 줌
 export default function Indicator({ length, index }) {
   return (
@@ -13,11 +15,11 @@ export default function Indicator({ length, index }) {
 
 const styles = StyleSheet.create({
   active: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.ON_PHOTO,
     width: 16,
   },
   dot: {
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: COLORS.ON_PHOTO_DIM,
     borderRadius: 3,
     height: 6,
     width: 6,
