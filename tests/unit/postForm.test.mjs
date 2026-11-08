@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { isFormChanged, isRemotePhoto } from '../../lib/postForm.js';
+import { hasDraft, isFormChanged, isRemotePhoto } from '../../lib/postForm.js';
 
 const original = {
   title: '맥주',
@@ -62,4 +62,18 @@ test('isRemotePhoto: 비회원 기기 사진 · 그 밖의 값은 false예요', 
   assert.equal(isRemotePhoto('http://example.com/a.jpg'), false);
   assert.equal(isRemotePhoto(''), false);
   assert.equal(isRemotePhoto(undefined), false);
+});
+
+test('hasDraft: 빈 폼이면 날짜가 무엇이든 초안이 아니에요', () => {
+  const empty = { title: '', day: '2026-11-07', content: '', location: '', photos: [], tags: [] };
+  assert.equal(hasDraft(empty), false);
+});
+
+test('hasDraft: 제목 · 내용 · 장소 · 사진 · 태그 중 하나라도 있으면 초안이에요', () => {
+  const empty = { title: '', day: '2026-11-07', content: '', location: '', photos: [], tags: [] };
+  assert.equal(hasDraft({ ...empty, title: '맥주' }), true);
+  assert.equal(hasDraft({ ...empty, content: '맛있음' }), true);
+  assert.equal(hasDraft({ ...empty, location: '집' }), true);
+  assert.equal(hasDraft({ ...empty, photos: ['file:///a.jpg'] }), true);
+  assert.equal(hasDraft({ ...empty, tags: ['맥주'] }), true);
 });

@@ -30,6 +30,7 @@ import {
   getImageContentType,
   getPostLimitError,
   getRemovedPhotos,
+  hasDraft,
   isFormChanged,
   isRemotePhoto,
   resizeForUpload,
@@ -99,9 +100,6 @@ export default function GalleryForm({ navigation, route }) {
     [navigation, originalForm]
   );
 
-  // 빈 폼과 비교해서 쓰던 내용이 있는지 봄. 날짜는 늘 채워져 있으므로 비교하지 않음
-  const existInput = () => isFormChanged({ day: gallery.day }, gallery);
-
   const initForm = () => {
     dispatch(init());
   };
@@ -111,7 +109,11 @@ export default function GalleryForm({ navigation, route }) {
       // 수정하다 나가면 그 내용이 새 글 작성 폼에 남지 않게 비움
       return () => dispatch(init());
     }
-    if (existInput()) {
+    // 초안이 없으면 폼을 비워서 날짜를 오늘로 맞춤. 앱을 켜 둔 채 날짜가 바뀌어도 지난 날짜로 남지 않음(#324)
+    // 초안을 이어서 쓰면 고른 날짜를 그대로 둠
+    if (!hasDraft(gallery)) {
+      initForm();
+    } else {
       Alert.alert('작성하던 기록이 있어요.', '이어서 작성할까요?', [
         {
           text: '새로 작성',
