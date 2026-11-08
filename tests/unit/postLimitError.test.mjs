@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { POST_LIMITS } from '../../constants/postLimits.js';
-import { getPostLimitError } from '../../lib/postLimitError.js';
+import { getPostLimitError, getPostMissingError } from '../../lib/postLimitError.js';
 
 const post = (overrides = {}) => ({
   title: '제목',
@@ -55,5 +55,27 @@ test('getPostLimitError: 넘는 항목을 알려 줘요', () => {
   assert.equal(
     getPostLimitError(post({ photos: list(POST_LIMITS.PHOTOS + 1) })),
     '사진은 10장까지 넣을 수 있어요.'
+  );
+});
+
+test('getPostMissingError: 제목만 있어도 저장할 수 있어요', () => {
+  assert.equal(getPostMissingError(post({ photos: [] })), null);
+});
+
+test('getPostMissingError: 사진만 있어도 저장할 수 있어요', () => {
+  assert.equal(getPostMissingError(post({ title: '', photos: ['file:///a.jpg'] })), null);
+});
+
+test('getPostMissingError: 사진도 제목도 없으면 무엇을 넣을지 알려 줘요', () => {
+  assert.equal(
+    getPostMissingError(post({ title: '', content: '내용만 있음', photos: [] })),
+    '사진이나 제목 중 하나는 넣어 주세요.'
+  );
+});
+
+test('getPostMissingError: 공백만 넣은 제목은 없는 것으로 봐요', () => {
+  assert.equal(
+    getPostMissingError(post({ title: '  \n ', photos: [] })),
+    '사진이나 제목 중 하나는 넣어 주세요.'
   );
 });
