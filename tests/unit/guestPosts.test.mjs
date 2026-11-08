@@ -96,6 +96,7 @@ test('toGalleryItems: 주인 없는 글만 최근에 쓴 순서로 갤러리 모
     docId: 'a',
     presentivePhoto: 'file:///p/1.jpg',
     day: '2026-11-01',
+    title: '제목',
     tags: ['맥주'],
     createdAt: 1,
   });

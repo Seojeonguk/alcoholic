@@ -9,13 +9,13 @@ import { Image } from 'expo-image';
 
 // 갤러리의 사진 한 칸. 크기는 갤러리가 화면 너비로 계산해서 넘김
 export default function Post({ item, navigation, size }) {
-  const { presentivePhoto, docId, day } = item;
+  const { presentivePhoto, docId, day, title } = item;
   // 사진을 다 받기 전까지 회색 자리 표시를 보여 줌. 캐시에 있는 사진은 바로 떠서 새 기록만 보임
   const [isPhotoLoaded, setIsPhotoLoaded] = useState(false);
 
   return (
     <PressableScale
-      accessibilityLabel={getPostLabel(day)}
+      accessibilityLabel={getPostLabel({ title, day })}
       accessibilityRole="button"
       onPress={() => navigation.navigate(NAVIGATOR.DETAILS, { docId })}
     >
