@@ -34,7 +34,10 @@ import {
   isRemotePhoto,
   resizeForUpload,
   showToast,
+  UPLOAD_TIMEOUT_MS,
   usePreventLeave,
+  waitForWrite,
+  withTimeout,
 } from '../lib';
 import { init } from '../redux';
 
@@ -173,6 +176,8 @@ export default function GalleryForm({ navigation, route }) {
 
       // 글 저장은 문서(비회원은 기기의 파일) 하나를 한 번에 씀. 실패하면 글이 저장되지 않은 것이라
       // 이번에 올린 사진을 지우고, 성공하면 바로 지울 목록을 비움(#292)
+      // queued: 연결이 없어 기기에 먼저 저장됨. 연결되면 올라가므로 올린 사진을 지우지 않음(#323)
+      let queued = false;
       if (!member) {
         if (docId) {
           await updateLocalPost(docId, data);
@@ -180,23 +185,33 @@ export default function GalleryForm({ navigation, route }) {
           await createLocalPost({ ...data, createdAt: new Date().getTime() });
         }
       } else if (docId) {
+        const { uid, email } = auth.currentUser;
         // 수정할 때 createdAt을 바꾸면 목록 순서가 바뀌므로 그대로 둠
-        await updateDocForId(docId, { ...data, writer: auth.currentUser.email });
-        // 글을 고친 뒤에 빠진 사진을 지움. 기다리지 않고, 실패해도 저장은 끝난 것으로 봄
-        deletePhotos(getRemovedPhotos(originalPhotos, savedPhotos), auth.currentUser.uid);
+        const write = updateDocForId(docId, { ...data, writer: email });
+        // 고친 글이 서버에 반영된 뒤에 빠진 사진을 지움. 실패해도 저장은 끝난 것으로 봄
+        write
+          .then(() => deletePhotos(getRemovedPhotos(originalPhotos, savedPhotos), uid))
+          .catch(() => {});
+        ({ queued } = await waitForWrite(write));
       } else {
-        await createNewPost({
-          ...data,
-          writer: auth.currentUser.email,
-          createdAt: new Date(),
-        });
+        ({ queued } = await waitForWrite(
+          createNewPost({
+            ...data,
+            writer: auth.currentUser.email,
+            createdAt: new Date(),
+          })
+        ));
       }
       newPhotos = [];
 
       isLeavingRef.current = true;
       initForm();
 
-      showToast('success', '기록을 저장했어요.');
+      if (queued) {
+        showToast('info', '연결되면 기록이 올라가요.', '지금은 이 기기에만 저장돼 있어요.');
+      } else {
+        showToast('success', '기록을 저장했어요.');
+      }
       isSavingRef.current = false;
       navigation.popTo(NAVIGATOR.BOTTOM_TAB_NAV, { screen: NAVIGATOR.GALLERY });
       // 새 기록을 저장한 뒤 공지 알림을 받을지 한 번만 물어봄(#304). 실패해도 저장은 끝난 것으로 봄
@@ -210,7 +225,12 @@ export default function GalleryForm({ navigation, route }) {
       } else {
         deleteLocalPhotos(newPhotos);
       }
-      showToast('error', '기록을 저장하지 못했어요.', '입력한 내용을 확인하고 다시 시도해 주세요.');
+      // 길이 · 개수는 getPostLimitError가 먼저 거르므로 회원 저장 실패는 대부분 연결 문제임
+      showToast(
+        'error',
+        '기록을 저장하지 못했어요.',
+        member ? '인터넷 연결을 확인하고 다시 시도해 주세요.' : '잠시 후 다시 시도해 주세요.'
+      );
     } finally {
       isSavingRef.current = false;
       setIsLoading(false);
@@ -228,9 +248,21 @@ export default function GalleryForm({ navigation, route }) {
     // 네이티브 SDK는 기기의 파일을 바로 올림(uploadBytes는 구현돼 있지 않음)
     const uid = auth.currentUser.uid;
     const fileRef = ref(getStorage(), `posts/${uid}/${uuid.v4()}`);
-    await putFile(fileRef, uri, { contentType: getImageContentType(uri) });
+    // 연결이 없으면 SDK가 오래 다시 시도하므로 시간 제한을 둠. 시간이 지나면 올리기를 취소해서
+    // 저장 실패 뒤에 사진이 늦게 올라가 남지 않게 함(#323)
+    const task = putFile(fileRef, uri, { contentType: getImageContentType(uri) });
+    await withTimeout(task, UPLOAD_TIMEOUT_MS, () => {
+      task.cancel()?.catch?.(() => {});
+    });
 
-    const downloadURL = await getDownloadURL(fileRef);
+    let downloadURL;
+    try {
+      downloadURL = await withTimeout(getDownloadURL(fileRef), UPLOAD_TIMEOUT_MS);
+    } catch (e) {
+      // 올라갔지만 주소를 받지 못한 사진은 글에 들어가지 않으므로 지움
+      deletePhotos([fileRef.fullPath], uid);
+      throw e;
+    }
     setUploadProgress((progress) => ({ ...progress, done: progress.done + 1 }));
 
     return downloadURL;

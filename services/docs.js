@@ -73,11 +73,12 @@ const deletePhotos = async (urls, uid) => {
   await Promise.allSettled(myPhotos.map((photoRef) => deleteObject(photoRef)));
 };
 
-// 글과 그 글의 사진을 지움. 사진은 글을 지운 뒤에 지움
-const deletePost = async (docId, uid, photos) => {
-  await deleteDoc(doc(postsRef, docId));
-
-  await deletePhotos(photos, uid);
+// 글을 지우고, 글 삭제가 서버에 반영되면 사진을 지움. 돌려준 Promise는 글 삭제가 반영될 때 끝남
+// 오프라인이면 기기에서는 바로 지워지고(구독 목록에서도 빠짐) 연결되면 서버에 반영된 뒤 사진도 지움(#323)
+const deletePost = (docId, uid, photos) => {
+  const removed = deleteDoc(doc(postsRef, docId));
+  removed.then(() => deletePhotos(photos, uid)).catch(() => {});
+  return removed;
 };
 
 // 탈퇴할 때 내 사진 · 게시글 · 사용자 문서를 지움. 중간에 실패해도 다시 실행하면 남은 것만 지움

@@ -4,7 +4,7 @@ import { Alert, ScrollView, StyleSheet, Text, useWindowDimensions, View } from '
 import { Carousel, Header, Skeleton } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
-import { formatDay, showToast, usePreventLeave } from '../lib';
+import { formatDay, showToast, usePreventLeave, waitForWrite } from '../lib';
 import { updateGallery } from '../redux';
 import { deleteLocalPost, deletePost, getLocalPost, getPost, isMember } from '../services';
 
@@ -75,19 +75,30 @@ export default function Details({ route, navigation }) {
     }
     isDeletingRef.current = true;
     showToast('info', '기록을 삭제하는 중이에요.');
+    const member = isMember();
     try {
-      if (isMember()) {
-        await deletePost(docId, auth.currentUser.uid, photos);
+      // queued: 연결이 없어 기기에서 먼저 지움. 연결되면 서버에서도 지워짐(#323)
+      let queued = false;
+      if (member) {
+        ({ queued } = await waitForWrite(deletePost(docId, auth.currentUser.uid, photos)));
       } else {
         await deleteLocalPost(docId);
       }
-      showToast('success', '기록을 삭제했어요.');
+      if (queued) {
+        showToast('info', '연결되면 삭제가 반영돼요.', '목록에서는 먼저 빠져요.');
+      } else {
+        showToast('success', '기록을 삭제했어요.');
+      }
       isDeletingRef.current = false;
       // 회원 갤러리는 구독으로, 비회원 갤러리는 화면에 다시 들어올 때 지운 글을 목록에서 뺌
       navigation.goBack();
     } catch {
       isDeletingRef.current = false;
-      showToast('error', '기록을 삭제하지 못했어요.', '잠시 후 다시 시도해 주세요.');
+      showToast(
+        'error',
+        '기록을 삭제하지 못했어요.',
+        member ? '인터넷 연결을 확인하고 다시 시도해 주세요.' : '잠시 후 다시 시도해 주세요.'
+      );
     }
   };
 
