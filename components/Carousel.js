@@ -3,6 +3,7 @@ import { FlatList, StyleSheet, View } from 'react-native';
 
 import Indicator from './Indicator';
 import { DEFAULT_PHOTO } from '../constants';
+import { getPhotoLabel } from '../lib';
 
 import { Image } from 'expo-image';
 
@@ -24,8 +25,11 @@ function Carousel({ data, size }) {
         keyExtractor={(item, i) => `page_${i}_${item.uri ?? 'default'}`}
         onMomentumScrollEnd={scrollEnd}
         pagingEnabled
-        renderItem={({ item }) => (
+        renderItem={({ item, index: i }) => (
           <Image
+            // 사진이 여러 장이면 몇 번째인지 읽어 줌(#330). 기본 사진 한 장일 때도 '사진 1/1'
+            accessibilityLabel={getPhotoLabel(i, photos.length)}
+            accessible
             cachePolicy="memory-disk"
             contentFit="cover"
             source={item}
