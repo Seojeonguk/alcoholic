@@ -7,14 +7,17 @@ import { getPhotoLabel, useDefaultPhoto } from '../lib';
 import { Image } from 'expo-image';
 
 // 정사각형 사진을 한 장씩 넘기고, 아래쪽 가운데에 점으로 위치를 보여 줌
-function Carousel({ data, size }) {
+// onIndexChange: 넘긴 사진의 순서를 알려 줌(상세 화면의 사진 공유, #344)
+function Carousel({ data, size, onIndexChange }) {
   const [index, setIndex] = useState(0);
   const defaultPhoto = useDefaultPhoto();
   // 사진이 없는 글은 앱 안의 기본 사진을 보여 줌
   const photos = data?.length > 0 ? data.map((uri) => ({ uri })) : [defaultPhoto];
 
   const scrollEnd = (e) => {
-    setIndex(Math.round(e.nativeEvent.contentOffset.x / size));
+    const next = Math.round(e.nativeEvent.contentOffset.x / size);
+    setIndex(next);
+    onIndexChange?.(next);
   };
 
   return (

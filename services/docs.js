@@ -4,6 +4,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  getDocsFromServer,
   onSnapshot,
   orderBy,
   query,
@@ -13,7 +14,7 @@ import {
 } from '@react-native-firebase/firestore';
 import { deleteObject, getStorage, listAll, ref } from '@react-native-firebase/storage';
 import { db } from '../firebaseConfig';
-import { toGalleryPost } from '../lib';
+import { toGalleryPost, toMillis } from '../lib';
 
 const usersRef = collection(db, 'users');
 const postsRef = collection(db, 'posts');
@@ -43,6 +44,15 @@ const subscribePosts = (email, onNext, onError) => {
     (snapshot) => onNext(snapshot.docs.map((post) => toGalleryPost(post.id, post.data()))),
     onError
   );
+};
+
+// 기록 내보내기(#344)에서 내 글 전체를 한 번 읽음. 서버에서 받지 못하면 에러를 던짐(기기 캐시만으로 내보내지 않음)
+const getAllPosts = async (email) => {
+  const snapshot = await getDocsFromServer(query(postsRef, where('writer', '==', email)));
+  return snapshot.docs.map((post) => {
+    const data = post.data();
+    return { ...data, id: post.id, createdAt: toMillis(data.createdAt) };
+  });
 };
 
 const updateDocForId = async (id, data) => {
@@ -101,6 +111,7 @@ export {
   deletePhotos,
   deletePost,
   deleteUserData,
+  getAllPosts,
   getPost,
   subscribePosts,
   updateDocForId,
