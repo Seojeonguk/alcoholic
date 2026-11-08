@@ -3,5 +3,6 @@ import { COLORS } from './theme';
 import { NAVIGATOR } from './nav';
 import { DEFAULT_PHOTO } from './photo';
 import { POST_LIMITS } from './postLimits';
+import { PRIVACY_POLICY_URL } from './links';
 
-export { COLORS, AUTH_ERRORS, NAVIGATOR, DEFAULT_PHOTO, POST_LIMITS };
+export { COLORS, AUTH_ERRORS, NAVIGATOR, DEFAULT_PHOTO, POST_LIMITS, PRIVACY_POLICY_URL };

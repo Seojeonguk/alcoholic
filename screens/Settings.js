@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { Alert, Linking, Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { ListRow, PressableScale } from '../components';
-import { COLORS, NAVIGATOR } from '../constants';
+import { COLORS, NAVIGATOR, PRIVACY_POLICY_URL } from '../constants';
 import { auth } from '../firebaseConfig';
 import { showToast } from '../lib';
 import {
@@ -17,7 +17,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const PRIVACY_POLICY_URL = 'https://seojeonguk.github.io/alcoholic/privacy-policy';
 // 개인정보처리방침에 적힌 연락처와 같은 주소
 const CONTACT_EMAIL = 'junguk7880@naver.com';
 
