@@ -1,4 +1,4 @@
-import {
+import postFormReducer, {
   addPhoto,
   addTag,
   deletePhoto,
@@ -13,6 +13,7 @@ import {
 } from './slices/gallerySlice';
 
 export {
+  postFormReducer,
   addPhoto,
   addTag,
   deletePhoto,

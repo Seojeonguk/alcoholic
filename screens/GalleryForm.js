@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet } from 'react-native';
 
 import {
@@ -9,6 +9,7 @@ import {
   Header,
   Location,
   Photo,
+  PostFormProvider,
   Tags,
   Title,
 } from '../components';
@@ -40,7 +41,7 @@ import {
   waitForWrite,
   withTimeout,
 } from '../lib';
-import { init } from '../redux';
+import { init, postFormReducer, updateGallery } from '../redux';
 
 import { getDownloadURL, getStorage, putFile, ref } from '@react-native-firebase/storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -56,10 +57,17 @@ export default function GalleryForm({ navigation, route }) {
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
   // 저장 중에 다시 눌러 글이 두 번 만들어지지 않게 막음. state는 같은 프레임의 두 번째 탭에 반영되지 않아 ref를 씀
   const isSavingRef = useRef(false);
-  const dispatch = useDispatch();
-  const gallery = useSelector((state) => state.gallery);
   const docId = route.params?.docId;
-  // 고치기 전 폼 값. 상세 화면이 폼을 채운 뒤 이 화면으로 오므로 처음 값이 원래 글임
+  // 새 글은 redux의 초안을 쓰고(닫았다가 이어 쓸 수 있음), 글 수정은 이 화면의 state를 씀
+  // 그래서 다른 글을 고쳐도 새 글 초안이 덮어써지거나 지워지지 않음(#325)
+  const reduxDispatch = useDispatch();
+  const draft = useSelector((state) => state.gallery);
+  const [editing, editDispatch] = useReducer(postFormReducer, route.params?.post, (post) =>
+    postFormReducer(undefined, updateGallery(post ?? {}))
+  );
+  const gallery = docId ? editing : draft;
+  const dispatch = docId ? editDispatch : reduxDispatch;
+  // 고치기 전 폼 값. 상세 화면이 넘긴 원래 글로 시작하므로 처음 값이 원래 글임
   // 저장한 뒤 글에서 빠진 사진을 지울 때(#291)와 고친 내용이 있는지 볼 때(#302) 씀
   const [originalForm] = useState(() => (docId ? gallery : null));
   const originalPhotos = originalForm?.photos ?? [];
@@ -100,14 +108,16 @@ export default function GalleryForm({ navigation, route }) {
     [navigation, originalForm]
   );
 
+  // 새 글 초안을 비움. 글 수정은 화면을 나가면 state가 사라지므로 비울 것이 없음
   const initForm = () => {
-    dispatch(init());
+    if (!docId) {
+      reduxDispatch(init());
+    }
   };
 
   useEffect(() => {
     if (docId) {
-      // 수정하다 나가면 그 내용이 새 글 작성 폼에 남지 않게 비움
-      return () => dispatch(init());
+      return;
     }
     // 초안이 없으면 폼을 비워서 날짜를 오늘로 맞춤. 앱을 켜 둔 채 날짜가 바뀌어도 지난 날짜로 남지 않음(#324)
     // 초안을 이어서 쓰면 고른 날짜를 그대로 둠
@@ -288,12 +298,14 @@ export default function GalleryForm({ navigation, route }) {
         keyboardShouldPersistTaps="handled"
         style={isLoading && styles.locked}
       >
-        <Photo />
-        <Title />
-        <Day />
-        <Location />
-        <Tags />
-        <Content />
+        <PostFormProvider dispatch={dispatch} form={gallery}>
+          <Photo />
+          <Title />
+          <Day />
+          <Location />
+          <Tags />
+          <Content />
+        </PostFormProvider>
       </ScrollView>
 
       <BottomButtonArea>

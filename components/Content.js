@@ -2,12 +2,13 @@ import { StyleSheet, TextInput } from 'react-native';
 
 import { COLORS, POST_LIMITS } from '../constants';
 import { updateContent } from '../redux';
-
-import { useDispatch, useSelector } from 'react-redux';
+import { usePostForm } from './PostForm';
 
 export default function Content() {
-  const content = useSelector((state) => state.gallery.content);
-  const dispatch = useDispatch();
+  const {
+    form: { content },
+    dispatch,
+  } = usePostForm();
 
   const handleChangeContent = (newContent) => {
     dispatch(updateContent(newContent));
