@@ -5,7 +5,7 @@ import appIcon from '../assets/icon.png';
 import { BottomButtonArea, Button, Header } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
-import { backupMessage, getAppMode } from '../lib';
+import { backupMessage, getAppMode, showToast } from '../lib';
 import { enterGuestMode, getLocalPosts, hasGuestFlag, leaveGuestMode } from '../services';
 
 import { onAuthStateChanged } from '@react-native-firebase/auth';
@@ -32,8 +32,14 @@ export default function MainPage({ navigation, route }) {
     navigation.navigate(NAVIGATOR.REGISTRATION_FORM);
   };
 
+  // 비회원 표시를 저장하지 못하면 다음에 켤 때 첫 화면으로 돌아오므로 갤러리로 가지 않고 알려 줌(#329)
   const handleGuestBtn = async () => {
-    await enterGuestMode();
+    try {
+      await enterGuestMode();
+    } catch {
+      showToast('error', '가입 없이 시작하지 못했어요.', '잠시 후 다시 시도해 주세요.');
+      return;
+    }
     goGallery(navigation);
   };
 
@@ -42,7 +48,8 @@ export default function MainPage({ navigation, route }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       const mode = getAppMode({
         hasVerifiedUser: user?.emailVerified === true,
-        guestFlag: await hasGuestFlag(),
+        // 읽지 못하면 비회원 표시가 없는 것으로 보고 첫 화면을 보여 줌
+        guestFlag: await hasGuestFlag().catch(() => false),
       });
       // 기다리는 동안 화면을 떠났거나 로그인 상태가 바뀌었으면(로그아웃 직후 등) 이번 판단은 버림
       const isStale = () => !active || auth.currentUser?.uid !== user?.uid;
@@ -50,7 +57,8 @@ export default function MainPage({ navigation, route }) {
         return;
       }
       if (mode === 'member') {
-        await leaveGuestMode();
+        // 지우지 못해도 인증된 로그인이 있으면 회원으로 보므로 그대로 갤러리로 감
+        await leaveGuestMode().catch(() => {});
         if (!isStale()) {
           goGallery(navigation);
         }

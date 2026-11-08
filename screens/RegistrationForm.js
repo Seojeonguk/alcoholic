@@ -1,13 +1,14 @@
 import { useRef, useState } from 'react';
-import { Linking, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 
 import { AuthScreen, Button, PasswordInput, TextField } from '../components';
-import { COLORS, NAVIGATOR, PRIVACY_POLICY_URL } from '../constants';
+import { COLORS, NAVIGATOR } from '../constants';
 import { createUserInfo } from '../services';
 import { auth } from '../firebaseConfig';
 import {
   getAuthErrorField,
   getKorErrorMsg,
+  openPrivacyPolicy,
   sendVerificationEmail,
   setEmailRequestLimit,
   showToast,
@@ -123,11 +124,7 @@ export default function RegistrationForm({ navigation }) {
           />
           <Text style={styles.notice}>
             가입하면{' '}
-            <Text
-              accessibilityRole="link"
-              onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
-              style={styles.link}
-            >
+            <Text accessibilityRole="link" onPress={openPrivacyPolicy} style={styles.link}>
               개인정보처리방침
             </Text>
             에 동의하게 돼요.

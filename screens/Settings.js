@@ -2,9 +2,9 @@ import { useCallback, useState } from 'react';
 import { Alert, Linking, Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { ListRow, PressableScale } from '../components';
-import { COLORS, NAVIGATOR, PRIVACY_POLICY_URL } from '../constants';
+import { COLORS, NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
-import { showToast } from '../lib';
+import { openPrivacyPolicy, showToast } from '../lib';
 import {
   deleteVisibleLocalPosts,
   getAnnouncementsEnabled,
@@ -60,9 +60,27 @@ export default function Settings({ navigation }) {
   };
 
   // 로그아웃이 끝나기 전에 첫 화면으로 가면 첫 화면이 아직 로그인된 계정을 보고 갤러리로 돌려보냄
-  const handleLogout = async () => {
-    await signOut(auth);
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch {
+      showToast('error', '로그아웃하지 못했어요.', '잠시 후 다시 시도해 주세요.');
+      return;
+    }
     navigation.reset({ index: 0, routes: [{ name: NAVIGATOR.MAIN_PAGE }] });
+  };
+
+  // 한 번 잘못 눌러 바로 첫 화면으로 가지 않게 먼저 물어봄(#329)
+  const handleLogout = () => {
+    Alert.alert(
+      '로그아웃',
+      '로그아웃할까요? 기록은 계정에 그대로 남아 있어요.',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '로그아웃', style: 'destructive', onPress: logout },
+      ],
+      { cancelable: true }
+    );
   };
 
   const removeLocalPosts = async () => {
@@ -125,7 +143,7 @@ export default function Settings({ navigation }) {
 
         <Text style={styles.sectionTitle}>앱 정보</Text>
         <ListRow title="버전" value={Constants.expoConfig.version} />
-        <ListRow onPress={() => Linking.openURL(PRIVACY_POLICY_URL)} title="개인정보처리방침" />
+        <ListRow onPress={openPrivacyPolicy} title="개인정보처리방침" />
         <ListRow onPress={openContactMail} title="문의하기" />
 
         <View style={styles.footer}>
