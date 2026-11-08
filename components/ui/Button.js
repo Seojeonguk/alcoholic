@@ -19,12 +19,14 @@ export default function Button({
   loadingTitle,
   disabled = false,
   style,
+  accessibilityLabel,
 }) {
   const { backgroundColor, color } = VARIANTS[variant];
   const isDisabled = disabled || loading;
 
   return (
     <PressableScale
+      accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
       accessibilityState={{ busy: loading, disabled: isDisabled }}
       disabled={isDisabled}
