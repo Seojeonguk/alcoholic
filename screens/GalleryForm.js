@@ -14,43 +14,19 @@ import {
   Title,
 } from '../components';
 import { COLORS, NAVIGATOR } from '../constants';
-import { auth } from '../firebaseConfig';
+import { askAnnouncementsOnce, countPhotosToUpload, isMember, savePost } from '../services';
 import {
-  askAnnouncementsOnce,
-  createLocalPost,
-  createNewPost,
-  deleteLocalPhotos,
-  deletePhotos,
-  isLocalPhoto,
-  isMember,
-  saveLocalPhoto,
-  updateDocForId,
-  updateLocalPost,
-} from '../services';
-import {
-  getImageContentType,
   getPostLimitError,
   getPostMissingError,
-  getRemovedPhotos,
   hasDraft,
   isFormChanged,
-  isRemotePhoto,
-  resizeForUpload,
   showToast,
-  UPLOAD_TIMEOUT_MS,
   usePreventLeave,
-  waitForWrite,
-  withTimeout,
 } from '../lib';
 import { init, postFormReducer, updateGallery } from '../redux';
 
-import { getDownloadURL, getStorage, putFile, ref } from '@react-native-firebase/storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import uuid from 'react-native-uuid';
 import { useDispatch, useSelector } from 'react-redux';
-
-// 이미 올라간 사진 · 기기에 저장해 둔 사진(수정할 때 남겨 둔 사진)은 다시 올리거나 복사하지 않음
-const isUploaded = (uri) => isRemotePhoto(uri) || isLocalPhoto(uri);
 
 export default function GalleryForm({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -160,67 +136,17 @@ export default function GalleryForm({ navigation, route }) {
     setIsLoading(true);
     // 비회원은 기기에만 저장함(#201). 사진을 올리지 않으니 진행 상황 없이 "저장하는 중…"만 보여 줌
     const member = isMember();
-    setUploadProgress({
-      done: 0,
-      total: member ? gallery.photos.filter((uri) => !isUploaded(uri)).length : 0,
-    });
-    // 이번 저장에서 새로 올리거나 기기에 복사한 사진. 저장에 실패하면 지움(#291)
-    let newPhotos = [];
+    setUploadProgress({ done: 0, total: countPhotosToUpload(gallery.photos) });
     try {
-      // 사진 줄이기는 메모리를 많이 써서 한 장씩 하고, 올리기는 동시에 함
-      const photoUris = [];
-      for (const photo of gallery.photos) {
-        photoUris.push(isUploaded(photo) ? photo : await resizeForUpload(photo));
-      }
-      // 하나가 실패해도 나머지가 끝날 때까지 기다려야 올라간 사진을 빠짐없이 지울 수 있음
-      const results = await Promise.allSettled(photoUris.map(member ? uploadPhoto : keepOnDevice));
-      newPhotos = results
-        .filter((result, i) => result.status === 'fulfilled' && !isUploaded(gallery.photos[i]))
-        .map((result) => result.value);
-      const failed = results.find((result) => result.status === 'rejected');
-      if (failed) {
-        throw failed.reason;
-      }
-      const savedPhotos = results.map((result) => result.value);
-
-      const data = {
-        title: gallery.title,
-        day: gallery.day,
-        photos: savedPhotos,
-        content: gallery.content,
-        location: gallery.location,
-        tags: gallery.tags,
-      };
-
-      // 글 저장은 문서(비회원은 기기의 파일) 하나를 한 번에 씀. 실패하면 글이 저장되지 않은 것이라
-      // 이번에 올린 사진을 지우고, 성공하면 바로 지울 목록을 비움(#292)
-      // queued: 연결이 없어 기기에 먼저 저장됨. 연결되면 올라가므로 올린 사진을 지우지 않음(#323)
-      let queued = false;
-      if (!member) {
-        if (docId) {
-          await updateLocalPost(docId, data);
-        } else {
-          await createLocalPost({ ...data, createdAt: new Date().getTime() });
-        }
-      } else if (docId) {
-        const { uid, email } = auth.currentUser;
-        // 수정할 때 createdAt을 바꾸면 목록 순서가 바뀌므로 그대로 둠
-        const write = updateDocForId(docId, { ...data, writer: email });
-        // 고친 글이 서버에 반영된 뒤에 빠진 사진을 지움. 실패해도 저장은 끝난 것으로 봄
-        write
-          .then(() => deletePhotos(getRemovedPhotos(originalPhotos, savedPhotos), uid))
-          .catch(() => {});
-        ({ queued } = await waitForWrite(write));
-      } else {
-        ({ queued } = await waitForWrite(
-          createNewPost({
-            ...data,
-            writer: auth.currentUser.email,
-            createdAt: new Date(),
-          })
-        ));
-      }
-      newPhotos = [];
+      // 사진 처리 · 글 쓰기 · 실패했을 때 사진 정리는 services/posts.js가 함(#339)
+      // queued: 연결이 없어 기기에 먼저 저장됨. 연결되면 올라감(#323)
+      const { queued } = await savePost({
+        docId,
+        form: gallery,
+        originalPhotos,
+        onPhotoStored: () =>
+          setUploadProgress((progress) => ({ ...progress, done: progress.done + 1 })),
+      });
 
       isLeavingRef.current = true;
       initForm();
@@ -237,12 +163,6 @@ export default function GalleryForm({ navigation, route }) {
         askAnnouncementsOnce().catch(() => {});
       }
     } catch {
-      // 글이 저장되지 않았으니 이번에 올린 사진은 어디에서도 쓰이지 않음
-      if (member) {
-        deletePhotos(newPhotos, auth.currentUser?.uid);
-      } else {
-        deleteLocalPhotos(newPhotos);
-      }
       // 길이 · 개수는 getPostLimitError가 먼저 거르므로 회원 저장 실패는 대부분 연결 문제임
       showToast(
         'error',
@@ -253,37 +173,6 @@ export default function GalleryForm({ navigation, route }) {
       isSavingRef.current = false;
       setIsLoading(false);
     }
-  };
-
-  // 비회원: 줄인 사진을 앱 문서 폴더로 복사해 둠(캐시 폴더는 시스템이 지울 수 있음)
-  const keepOnDevice = (uri) => (isUploaded(uri) ? uri : saveLocalPhoto(uri));
-
-  const uploadPhoto = async (uri) => {
-    if (isUploaded(uri)) {
-      return uri;
-    }
-    // storage.rules: 본인 uid 폴더에 이미지 타입으로만 올릴 수 있음
-    // 네이티브 SDK는 기기의 파일을 바로 올림(uploadBytes는 구현돼 있지 않음)
-    const uid = auth.currentUser.uid;
-    const fileRef = ref(getStorage(), `posts/${uid}/${uuid.v4()}`);
-    // 연결이 없으면 SDK가 오래 다시 시도하므로 시간 제한을 둠. 시간이 지나면 올리기를 취소해서
-    // 저장 실패 뒤에 사진이 늦게 올라가 남지 않게 함(#323)
-    const task = putFile(fileRef, uri, { contentType: getImageContentType(uri) });
-    await withTimeout(task, UPLOAD_TIMEOUT_MS, () => {
-      task.cancel()?.catch?.(() => {});
-    });
-
-    let downloadURL;
-    try {
-      downloadURL = await withTimeout(getDownloadURL(fileRef), UPLOAD_TIMEOUT_MS);
-    } catch (e) {
-      // 올라갔지만 주소를 받지 못한 사진은 글에 들어가지 않으므로 지움
-      deletePhotos([fileRef.fullPath], uid);
-      throw e;
-    }
-    setUploadProgress((progress) => ({ ...progress, done: progress.done + 1 }));
-
-    return downloadURL;
   };
 
   const { done, total } = uploadProgress;
