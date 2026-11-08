@@ -30,6 +30,7 @@ import {
 import {
   getImageContentType,
   getPostLimitError,
+  getPostMissingError,
   getRemovedPhotos,
   hasDraft,
   isFormChanged,
@@ -142,6 +143,11 @@ export default function GalleryForm({ navigation, route }) {
 
   const save = async () => {
     if (isSavingRef.current) {
+      return;
+    }
+    const missingError = getPostMissingError(gallery);
+    if (missingError) {
+      showToast('info', missingError);
       return;
     }
     // 규칙에서 거절되기 전에 무엇이 넘는지 알려 줌
