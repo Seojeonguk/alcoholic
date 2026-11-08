@@ -1,10 +1,11 @@
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { COLORS, POST_LIMITS } from '../constants';
-import { showToast } from '../lib';
-import { addPhoto, deletePhoto } from '../redux';
+import { getPhotoMoves, movePhoto, showToast } from '../lib';
+import { addPhoto, deletePhoto, updatePhotos } from '../redux';
 import { usePostForm } from './PostForm';
-import { PressableScale } from './ui';
+import { BottomSheet, PressableScale } from './ui';
 
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -13,12 +14,28 @@ import * as ImagePicker from 'expo-image-picker';
 const PHOTO_SIZE = 64;
 
 // 맨 앞 + 칸과 고른 사진 미리보기를 가로로 보여 줌
+// 사진을 누르면 순서를 바꾸는 시트가 열림. 첫 사진이 갤러리 썸네일(대표 사진)이에요(#332)
 export default function Photo() {
   const {
     form: { photos },
     dispatch,
   } = usePostForm();
   const remaining = POST_LIMITS.PHOTOS - photos.length;
+  // 시트에서 고친 사진의 순서(0부터). 닫혀 있으면 null
+  const [selected, setSelected] = useState(null);
+  const moves = selected === null ? [] : getPhotoMoves(selected, photos.length);
+
+  const closeSheet = () => setSelected(null);
+
+  const move = (to) => {
+    dispatch(updatePhotos(movePhoto(photos, selected, to)));
+    closeSheet();
+  };
+
+  const removeSelected = () => {
+    dispatch(deletePhoto(selected));
+    closeSheet();
+  };
 
   const showLimitToast = () => {
     showToast('info', `사진은 ${POST_LIMITS.PHOTOS}장까지 넣을 수 있어요.`);
@@ -80,37 +97,71 @@ export default function Photo() {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.list}
-      horizontal
-      keyboardShouldPersistTaps="handled"
-      showsHorizontalScrollIndicator={false}
-      style={styles.container}
-    >
-      <PressableScale
-        accessibilityLabel="사진 추가"
-        accessibilityRole="button"
-        onPress={chooseSource}
-        style={styles.addBtn}
+    <>
+      <ScrollView
+        contentContainerStyle={styles.list}
+        horizontal
+        keyboardShouldPersistTaps="handled"
+        showsHorizontalScrollIndicator={false}
+        style={styles.container}
       >
-        <Ionicons color={COLORS.TEXT_SUB} name="add" size={28} />
-      </PressableScale>
+        <PressableScale
+          accessibilityLabel="사진 추가"
+          accessibilityRole="button"
+          onPress={chooseSource}
+          style={styles.addBtn}
+        >
+          <Ionicons color={COLORS.TEXT_SUB} name="add" size={28} />
+        </PressableScale>
 
-      {photos.map((photo, index) => (
-        <View key={photo}>
-          <Image contentFit="cover" source={{ uri: photo }} style={styles.photo} />
+        {photos.map((photo, index) => (
+          <View key={photo}>
+            <PressableScale
+              accessibilityHint="순서를 바꾸거나 뺄 수 있어요"
+              accessibilityLabel={`${index + 1}번째 사진${index === 0 ? ', 대표 사진' : ''}`}
+              accessibilityRole="button"
+              onPress={() => setSelected(index)}
+            >
+              <Image contentFit="cover" source={{ uri: photo }} style={styles.photo} />
+              {index === 0 && photos.length > 1 ? (
+                <View style={styles.coverBadge}>
+                  <Text style={styles.coverText}>대표</Text>
+                </View>
+              ) : null}
+            </PressableScale>
+            <PressableScale
+              accessibilityLabel={`${index + 1}번째 사진 빼기`}
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={() => dispatch(deletePhoto(index))}
+              style={styles.removeBtn}
+            >
+              <Ionicons color="#FFFFFF" name="close" size={12} />
+            </PressableScale>
+          </View>
+        ))}
+      </ScrollView>
+
+      <BottomSheet
+        onClose={closeSheet}
+        title={selected === null ? '' : `사진 ${selected + 1}/${photos.length}`}
+        visible={selected !== null}
+      >
+        {moves.map(({ key, label, to }) => (
           <PressableScale
-            accessibilityLabel={`${index + 1}번째 사진 빼기`}
             accessibilityRole="button"
-            hitSlop={8}
-            onPress={() => dispatch(deletePhoto(index))}
-            style={styles.removeBtn}
+            key={key}
+            onPress={() => move(to)}
+            style={styles.sheetRow}
           >
-            <Ionicons color="#FFFFFF" name="close" size={12} />
+            <Text style={styles.sheetText}>{label}</Text>
           </PressableScale>
-        </View>
-      ))}
-    </ScrollView>
+        ))}
+        <PressableScale accessibilityRole="button" onPress={removeSelected} style={styles.sheetRow}>
+          <Text style={[styles.sheetText, styles.dangerText]}>빼기</Text>
+        </PressableScale>
+      </BottomSheet>
+    </>
   );
 }
 
@@ -126,6 +177,25 @@ const styles = StyleSheet.create({
   // 화면 좌우 여백까지 가로 스크롤되게 넓힘
   container: {
     marginHorizontal: -20,
+  },
+  coverBadge: {
+    backgroundColor: 'rgba(25, 31, 40, 0.7)',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    bottom: 0,
+    left: 0,
+    paddingVertical: 2,
+    position: 'absolute',
+    right: 0,
+  },
+  coverText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  dangerText: {
+    color: COLORS.DANGER,
   },
   // 삭제 버튼이 사진 밖으로 조금 나와도 잘리지 않게 위쪽 여백을 둠
   list: {
@@ -149,5 +219,12 @@ const styles = StyleSheet.create({
     right: -6,
     top: -6,
     width: 20,
+  },
+  sheetRow: {
+    paddingVertical: 14,
+  },
+  sheetText: {
+    color: COLORS.TEXT,
+    fontSize: 15,
   },
 });
