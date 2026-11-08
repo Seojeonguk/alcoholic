@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { hasDraft, isFormChanged, isRemotePhoto } from '../../lib/postForm.js';
+import { hasDraft, isFormChanged, isRemotePhoto, toRepeatDraft } from '../../lib/postForm.js';
 
 const original = {
   title: '맥주',
@@ -86,4 +86,45 @@ test('isFormChanged: 별점 · 주종을 바꾸면 true, 없음과 null은 같�
     isFormChanged({ ...original, rating: 4 }, { ...original, rating: 4, drinkType: null }),
     false
   );
+});
+
+test('toRepeatDraft: 제목 · 태그 · 장소 · 주종만 옮기고 사진 · 내용 · 별점은 비우고 날짜는 오늘이에요', () => {
+  const post = {
+    title: '맥주',
+    day: '2026-10-01',
+    photos: ['https://a'],
+    content: '맛있어요',
+    location: '집',
+    tags: ['라거'],
+    rating: 4,
+    drinkType: 'beer',
+    writer: 'me@example.com',
+    createdAt: 1,
+  };
+  const draft = toRepeatDraft(post, '2026-11-08');
+  assert.deepEqual(draft, {
+    title: '맥주',
+    day: '2026-11-08',
+    photos: [],
+    content: '',
+    location: '집',
+    tags: ['라거'],
+    rating: null,
+    drinkType: 'beer',
+  });
+  // 원래 글의 태그 배열을 함께 쓰지 않음
+  assert.notEqual(draft.tags, post.tags);
+});
+
+test('toRepeatDraft: 예전 글처럼 값이 없으면 빈 값으로 채워요', () => {
+  assert.deepEqual(toRepeatDraft({}, '2026-11-08'), {
+    title: '',
+    day: '2026-11-08',
+    photos: [],
+    content: '',
+    location: '',
+    tags: [],
+    rating: null,
+    drinkType: null,
+  });
 });

@@ -8,22 +8,28 @@ import {
   getDrinkLine,
   getDrinkTypeLabel,
   getShareText,
+  hasDraft,
   showToast,
+  toLocalDateString,
+  toRepeatDraft,
   usePreventLeave,
   makeStyles,
   useColors,
 } from '../lib';
+import { init, updateGallery } from '../redux';
 import { isMember, loadPost, removePost, sharePhoto } from '../services';
 
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useDispatch, useSelector } from 'react-redux';
 
 // 더보기 메뉴. Android Alert는 버튼을 3개까지만 보여 줘서 시트로 띄움(#335)
 // 공유 시트는 글과 사진 파일을 한 번에 보낼 수 없어서 따로 둠(#344). 사진이 없으면 사진 공유는 숨김
 const MENU_ITEMS = [
   { action: 'share', label: '글 공유하기', icon: 'share-social-outline' },
   { action: 'sharePhoto', label: '사진 공유하기', icon: 'image-outline', needsPhoto: true },
+  { action: 'repeat', label: '같은 술 다시 기록하기', icon: 'repeat-outline' },
   { action: 'edit', label: '수정', icon: 'create-outline' },
   { action: 'delete', label: '삭제', icon: 'trash-outline', danger: true },
 ];
@@ -34,6 +40,9 @@ export default function Details({ route, navigation }) {
   const { docId } = route.params;
   const { width } = useWindowDimensions();
   const { top } = useSafeAreaInsets();
+  const dispatch = useDispatch();
+  // 쓰던 새 글 초안. 같은 술 다시 기록하기(#343)로 덮어쓰기 전에 물어봄
+  const draft = useSelector((state) => state.gallery);
 
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -160,6 +169,29 @@ export default function Details({ route, navigation }) {
     }
   };
 
+  // 이 글의 제목 · 태그 · 장소 · 주종으로 새 글 초안을 채우고 글쓰기 화면을 엶(#343)
+  const startRepeat = () => {
+    dispatch(init());
+    dispatch(updateGallery(toRepeatDraft(myPost, toLocalDateString())));
+    navigation.navigate(NAVIGATOR.GALLERY_FORM);
+  };
+
+  const handleRepeat = () => {
+    if (!hasDraft(draft)) {
+      startRepeat();
+      return;
+    }
+    Alert.alert(
+      '쓰던 기록이 있어요',
+      '이 술로 새로 채우면 쓰던 기록은 지워져요. 새로 채울까요?',
+      [
+        { text: '취소', style: 'cancel' },
+        { text: '새로 채우기', style: 'destructive', onPress: startRepeat },
+      ],
+      { cancelable: true }
+    );
+  };
+
   const showMenu = () => {
     if (loading || isDeletingRef.current) {
       return;
@@ -173,6 +205,8 @@ export default function Details({ route, navigation }) {
       sharePost();
     } else if (action === 'sharePhoto') {
       shareCurrentPhoto();
+    } else if (action === 'repeat') {
+      handleRepeat();
     } else if (action === 'edit') {
       moveEdit();
     } else if (action === 'delete') {
