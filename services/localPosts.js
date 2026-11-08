@@ -152,7 +152,6 @@ const claimLocalPosts = (uid) => {
 };
 
 export {
-  GUEST_PHOTO_DIR_URI,
   claimLocalPosts,
   createLocalPost,
   deleteLocalPost,

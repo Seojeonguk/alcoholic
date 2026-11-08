@@ -45,7 +45,7 @@ Firebase 콘솔에서 Android 앱의 `google-services.json`을 받아 **프로�
 
 - `google-services.json`은 git에 올리지 않아요(`.gitignore`에 들어 있어요). EAS 빌드에는 파일 환경 변수로 넣어요(아래 "빌드 · 배포").
 - 이 파일은 **빌드할 때 앱에 들어가요.** 바꾸면 개발용 빌드를 다시 만들어야 해요.
-- 개발용 빌드에서 App Check를 통과하려면 `.env`에 `EXPO_PUBLIC_APP_CHECK_DEBUG_TOKEN`을 넣어요. 콘솔에서 적용을 켜기 전까지는 없어도 돼요([Firebase 설정 → App Check](docs/firebase-setup.md#app-check)).
+- 개발용 빌드에서 App Check를 통과하려면 `.env.example`을 `.env`로 복사해서 `EXPO_PUBLIC_APP_CHECK_DEBUG_TOKEN`을 넣어요. `.env`에 필요한 값은 이것뿐이에요(Firebase 설정은 `google-services.json`에서 읽어요). 콘솔에서 적용을 켜기 전까지는 없어도 돼요([Firebase 설정 → App Check](docs/firebase-setup.md#app-check)).
 
 ### 4. 개발용 빌드 설치하기
 

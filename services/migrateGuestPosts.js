@@ -55,12 +55,16 @@ const run = async ({ uid, email, onProgress }) => {
 };
 
 // 갤러리에 빨리 다시 들어와도 한 번만 돌게 진행 중인 작업을 함께 씀
+// 진행 상황은 마지막으로 부른 화면에 알림(먼저 부른 화면은 이미 떠났을 수 있음)
 let running = null;
+let progressListener = null;
 
-const migrateGuestPosts = (options) => {
+const migrateGuestPosts = ({ onProgress, ...options }) => {
+  progressListener = onProgress;
   if (!running) {
-    running = run(options).finally(() => {
+    running = run({ ...options, onProgress: (next) => progressListener?.(next) }).finally(() => {
       running = null;
+      progressListener = null;
     });
   }
   return running;
