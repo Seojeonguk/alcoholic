@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { NAVIGATOR } from '../constants';
-import { decideStartMode, startsAtGallery } from '../lib';
+import { decideStartMode, startsAtGallery, useColors, useIsDark } from '../lib';
 import {
   DeleteAccount,
   Details,
@@ -14,9 +14,10 @@ import {
 import { hasGuestFlag, leaveGuestMode, waitForAuthUser } from '../services';
 import BottomTabNav from './BottomTabNav';
 
-import { NavigationContainer } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as SplashScreen from 'expo-splash-screen';
+import * as SystemUI from 'expo-system-ui';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,6 +26,29 @@ const hideSplash = () => SplashScreen.hideAsync().catch(() => {});
 export default function Navigation() {
   // 처음 보여 줄 화면. 정하기 전(null)에는 아무것도 그리지 않고 스플래시를 그대로 둠(App.js의 preventAutoHideAsync)
   const [initialRoute, setInitialRoute] = useState(null);
+  const isDark = useIsDark();
+  const colors = useColors();
+
+  // 화면 사이 · 화면 뒤 빈 곳과 Android 루트 뷰도 기기 테마의 바탕색으로 칠함(#345)
+  const theme = useMemo(() => {
+    const base = isDark ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        primary: colors.ACCENT,
+        background: colors.BACKGROUND,
+        card: colors.BACKGROUND,
+        text: colors.TEXT,
+        border: colors.LINE,
+        notification: colors.DANGER,
+      },
+    };
+  }, [isDark, colors]);
+
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync(colors.BACKGROUND).catch(() => {});
+  }, [colors]);
 
   useEffect(() => {
     let active = true;
@@ -50,10 +74,11 @@ export default function Navigation() {
 
   return (
     // 첫 화면을 그릴 준비가 되면 스플래시를 닫음
-    <NavigationContainer onReady={hideSplash}>
+    <NavigationContainer onReady={hideSplash} theme={theme}>
       <Stack.Navigator
         initialRouteName={initialRoute}
-        screenOptions={{ headerShown: false, statusBarStyle: 'dark' }}
+        // 상태 표시줄 글씨는 바탕과 반대로 함
+        screenOptions={{ headerShown: false, statusBarStyle: isDark ? 'light' : 'dark' }}
       >
         <Stack.Screen name={NAVIGATOR.MAIN_PAGE} component={MainPage} />
         <Stack.Screen name={NAVIGATOR.LOGIN} component={Login} />

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 
 import appIcon from '../assets/icon.png';
 import { BottomButtonArea, Button, Header } from '../components';
-import { COLORS, NAVIGATOR } from '../constants';
+import { NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
-import { backupMessage, getAppMode, showToast } from '../lib';
+import { backupMessage, getAppMode, showToast, makeStyles } from '../lib';
 import { enterGuestMode, getLocalPosts, hasGuestFlag, leaveGuestMode } from '../services';
 
 import { onAuthStateChanged } from '@react-native-firebase/auth';
@@ -18,6 +18,7 @@ const goGallery = (navigation) =>
   });
 
 export default function MainPage({ navigation, route }) {
+  const styles = useStyles();
   const [isLoading, setIsLoading] = useState(true);
   // 비회원이 설정의 "가입하고 기록 백업하기"로 들어옴. 비회원 표시가 있어도 갤러리로 돌려보내지 않음
   const fromGuest = route.params?.fromGuest === true;
@@ -138,9 +139,9 @@ export default function MainPage({ navigation, route }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: {
-    backgroundColor: COLORS.BACKGROUND,
+    backgroundColor: colors.BACKGROUND,
     flex: 1,
   },
   icon: {
@@ -156,16 +157,16 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   subtitle: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     fontSize: 15,
     lineHeight: 22,
     marginTop: 10,
   },
   title: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 26,
     fontWeight: '800',
     letterSpacing: -0.5,
     lineHeight: 36,
   },
-});
+}));

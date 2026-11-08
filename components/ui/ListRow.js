@@ -1,10 +1,11 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { COLORS } from '../../constants';
+import { makeStyles } from '../../lib';
 import PressableScale from './PressableScale';
 
 // 왼쪽 제목, 오른쪽 값. 누를 수 있으면 오른쪽에 ›
 export default function ListRow({ title, value, onPress, showChevron = !!onPress, children }) {
+  const styles = useStyles();
   const content = (
     <View style={styles.row}>
       <Text style={styles.title}>{title}</Text>
@@ -30,9 +31,9 @@ export default function ListRow({ title, value, onPress, showChevron = !!onPress
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   chevron: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     fontSize: 20,
     marginLeft: 6,
   },
@@ -46,7 +47,7 @@ const styles = StyleSheet.create({
   },
   row: {
     alignItems: 'center',
-    borderBottomColor: COLORS.LINE,
+    borderBottomColor: colors.LINE,
     borderBottomWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -54,12 +55,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   title: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 15,
   },
   value: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     flexShrink: 1,
     fontSize: 15,
   },
-});
+}));

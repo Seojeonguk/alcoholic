@@ -1,10 +1,13 @@
-import { StyleSheet, TextInput } from 'react-native';
+import { TextInput } from 'react-native';
 
-import { COLORS, POST_LIMITS } from '../constants';
+import { POST_LIMITS } from '../constants';
+import { makeStyles, useColors } from '../lib';
 import { updateContent } from '../redux';
 import { usePostForm } from './PostForm';
 
 export default function Content() {
+  const colors = useColors();
+  const styles = useStyles();
   const {
     form: { content },
     dispatch,
@@ -20,18 +23,18 @@ export default function Content() {
       multiline
       onChangeText={handleChangeContent}
       placeholder={'오늘 마신 술은 어땠나요?\n맛, 함께한 사람, 느낀 점을 남겨 보세요.'}
-      placeholderTextColor={COLORS.TEXT_SUB}
+      placeholderTextColor={colors.TEXT_SUB}
       style={styles.input}
       value={content}
     />
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   input: {
-    backgroundColor: COLORS.FILL,
+    backgroundColor: colors.FILL,
     borderRadius: 12,
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 15,
     lineHeight: 22,
     marginBottom: 24,
@@ -40,4 +43,4 @@ const styles = StyleSheet.create({
     padding: 14,
     textAlignVertical: 'top',
   },
-});
+}));

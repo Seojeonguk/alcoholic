@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, Text, View } from 'react-native';
 
-import { COLORS, POST_LIMITS } from '../constants';
-import { getPhotoMoves, movePhoto, showToast } from '../lib';
+import { POST_LIMITS } from '../constants';
+import { getPhotoMoves, movePhoto, showToast, makeStyles, useColors } from '../lib';
 import { addPhoto, deletePhoto, updatePhotos } from '../redux';
 import { usePostForm } from './PostForm';
 import { BottomSheet, PressableScale } from './ui';
@@ -16,6 +16,8 @@ const PHOTO_SIZE = 64;
 // 맨 앞 + 칸과 고른 사진 미리보기를 가로로 보여 줌
 // 사진을 누르면 순서를 바꾸는 시트가 열림. 첫 사진이 갤러리 썸네일(대표 사진)이에요(#332)
 export default function Photo() {
+  const colors = useColors();
+  const styles = useStyles();
   const {
     form: { photos },
     dispatch,
@@ -111,7 +113,7 @@ export default function Photo() {
           onPress={chooseSource}
           style={styles.addBtn}
         >
-          <Ionicons color={COLORS.TEXT_SUB} name="add" size={28} />
+          <Ionicons color={colors.TEXT_SUB} name="add" size={28} />
         </PressableScale>
 
         {photos.map((photo, index) => (
@@ -136,7 +138,7 @@ export default function Photo() {
               onPress={() => dispatch(deletePhoto(index))}
               style={styles.removeBtn}
             >
-              <Ionicons color={COLORS.ON_PHOTO} name="close" size={12} />
+              <Ionicons color={colors.ON_PHOTO} name="close" size={12} />
             </PressableScale>
           </View>
         ))}
@@ -165,10 +167,10 @@ export default function Photo() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   addBtn: {
     alignItems: 'center',
-    backgroundColor: COLORS.FILL,
+    backgroundColor: colors.FILL,
     borderRadius: 12,
     height: PHOTO_SIZE,
     justifyContent: 'center',
@@ -179,7 +181,7 @@ const styles = StyleSheet.create({
     marginHorizontal: -20,
   },
   coverBadge: {
-    backgroundColor: COLORS.PHOTO_BADGE,
+    backgroundColor: colors.PHOTO_BADGE,
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
     bottom: 0,
@@ -189,13 +191,13 @@ const styles = StyleSheet.create({
     right: 0,
   },
   coverText: {
-    color: COLORS.ON_PHOTO,
+    color: colors.ON_PHOTO,
     fontSize: 11,
     fontWeight: '600',
     textAlign: 'center',
   },
   dangerText: {
-    color: COLORS.DANGER,
+    color: colors.DANGER,
   },
   // 삭제 버튼이 사진 밖으로 조금 나와도 잘리지 않게 위쪽 여백을 둠
   list: {
@@ -211,7 +213,7 @@ const styles = StyleSheet.create({
   },
   removeBtn: {
     alignItems: 'center',
-    backgroundColor: COLORS.PHOTO_BADGE,
+    backgroundColor: colors.PHOTO_BADGE,
     borderRadius: 10,
     height: 20,
     justifyContent: 'center',
@@ -224,7 +226,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   sheetText: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 15,
   },
-});
+}));

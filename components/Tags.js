@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 
-import { COLORS, POST_LIMITS } from '../constants';
-import { suggestValues } from '../lib';
+import { POST_LIMITS } from '../constants';
+import { suggestValues, makeStyles, useColors } from '../lib';
 import { addTag, deleteTag } from '../redux';
 import { usePostForm } from './PostForm';
 import SuggestionChips from './SuggestionChips';
@@ -12,6 +12,8 @@ import { useSelector } from 'react-redux';
 
 // 태그는 칩으로 보여 주고, 칩을 누르면 지움. "+ 추가"를 누르면 입력 칸이 열림
 export default function Tags() {
+  const colors = useColors();
+  const styles = useStyles();
   const [newTag, setNewTag] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const {
@@ -70,7 +72,7 @@ export default function Tags() {
             onChangeText={setNewTag}
             onSubmitEditing={handleSubmit}
             placeholder="태그 입력"
-            placeholderTextColor={COLORS.TEXT_SUB}
+            placeholderTextColor={colors.TEXT_SUB}
             style={[styles.chip, styles.input]}
             // 엔터로 태그를 넣은 뒤에도 키보드를 닫지 않고 이어서 입력함
             submitBehavior="submit"
@@ -96,26 +98,26 @@ export default function Tags() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   addChip: {
-    borderColor: COLORS.LINE,
+    borderColor: colors.LINE,
     borderRadius: 16,
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   addText: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     fontSize: 14,
   },
   chip: {
-    backgroundColor: COLORS.FILL,
+    backgroundColor: colors.FILL,
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   chipText: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 14,
   },
   chips: {
@@ -125,12 +127,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   container: {
-    borderBottomColor: COLORS.LINE,
+    borderBottomColor: colors.LINE,
     borderBottomWidth: 1,
     paddingVertical: 14,
   },
   input: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 14,
     minWidth: 96,
   },
@@ -138,7 +140,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   title: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 15,
   },
-});
+}));

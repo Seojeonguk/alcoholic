@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { Alert, ScrollView, StyleSheet } from 'react-native';
+import { Alert, ScrollView } from 'react-native';
 
 import {
   BottomButtonArea,
@@ -13,7 +13,7 @@ import {
   Tags,
   Title,
 } from '../components';
-import { COLORS, NAVIGATOR } from '../constants';
+import { NAVIGATOR } from '../constants';
 import { askAnnouncementsOnce, countPhotosToUpload, isMember, savePost } from '../services';
 import {
   getPostLimitError,
@@ -22,6 +22,7 @@ import {
   isFormChanged,
   showToast,
   usePreventLeave,
+  makeStyles,
 } from '../lib';
 import { init, postFormReducer, updateGallery } from '../redux';
 
@@ -29,6 +30,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 
 export default function GalleryForm({ navigation, route }) {
+  const styles = useStyles();
   const [isLoading, setIsLoading] = useState(false);
   // 저장 버튼에 "사진 올리는 중 n/전체"를 보여 주기 위한 진행 상황. 새로 올릴 사진만 셈
   const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
@@ -210,9 +212,9 @@ export default function GalleryForm({ navigation, route }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: {
-    backgroundColor: COLORS.BACKGROUND,
+    backgroundColor: colors.BACKGROUND,
     flex: 1,
   },
   content: {
@@ -221,4 +223,4 @@ const styles = StyleSheet.create({
   locked: {
     pointerEvents: 'none',
   },
-});
+}));

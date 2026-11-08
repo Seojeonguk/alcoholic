@@ -14,7 +14,8 @@ export default {
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
-    userInterfaceStyle: 'light',
+    // 기기의 밝은 · 어두운 테마를 따름(#345). Android에서는 expo-system-ui가 있어야 적용됨
+    userInterfaceStyle: 'automatic',
     // EAS Update로 받은 JS 업데이트는 앱이 켜질 때 받아 두고 다음에 켤 때 적용함
     updates: {
       url: `https://u.expo.dev/${EAS_PROJECT_ID}`,
@@ -84,6 +85,11 @@ export default {
           imageWidth: 200,
           // 앱 아이콘 배경색과 같게 맞춤
           backgroundColor: '#F6E8D8',
+          // 기기가 다크 모드면 앱 바탕색(constants/theme.js의 DARK_COLORS.BACKGROUND)으로 띄움
+          dark: {
+            image: './assets/splash.png',
+            backgroundColor: '#17171C',
+          },
         },
       ],
       [

@@ -1,13 +1,13 @@
 import { StyleSheet, Text } from 'react-native';
 
-import { COLORS } from '../../constants';
+import { useColors } from '../../lib';
 import PressableScale from './PressableScale';
 
 const VARIANTS = {
-  primary: { backgroundColor: COLORS.ACCENT, color: COLORS.ON_ACCENT },
-  soft: { backgroundColor: COLORS.ACCENT_SOFT, color: COLORS.ACCENT },
-  danger: { backgroundColor: COLORS.DANGER, color: COLORS.ON_ACCENT },
-  text: { backgroundColor: 'transparent', color: COLORS.TEXT_SUB },
+  primary: (colors) => ({ backgroundColor: colors.ACCENT, color: colors.ON_ACCENT }),
+  soft: (colors) => ({ backgroundColor: colors.ACCENT_SOFT, color: colors.ACCENT }),
+  danger: (colors) => ({ backgroundColor: colors.DANGER, color: colors.ON_ACCENT }),
+  text: (colors) => ({ backgroundColor: 'transparent', color: colors.TEXT_SUB }),
 };
 
 // 기다리는 동안에는 화면을 덮는 스피너 대신 버튼 글씨로 진행 상황을 보여 주고 누를 수 없게 함
@@ -21,7 +21,7 @@ export default function Button({
   style,
   accessibilityLabel,
 }) {
-  const { backgroundColor, color } = VARIANTS[variant];
+  const { backgroundColor, color } = VARIANTS[variant](useColors());
   const isDisabled = disabled || loading;
 
   return (

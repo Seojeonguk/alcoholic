@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { Text } from 'react-native';
 
-import { COLORS } from '../constants';
+import { makeStyles } from '../lib';
 import { BottomSheet, Button, TextField } from './ui';
 
 // 갤러리 필터의 검색 시트(#333). 태그 시트(#331)와 같은 자리 · 흐름으로, 칩을 누르면 올라옴
 // 입력하는 동안 맞는 기록 수를 보여 주고, 찾기를 누르면 검색어를 걸고 닫힘
 // initialQuery: 지금 걸린 검색어, countResults(query): 그 검색어로 남는 기록 수, onSubmit(query)
 export default function SearchSheet({ visible, initialQuery, countResults, onSubmit, onClose }) {
+  const styles = useStyles();
   const [query, setQuery] = useState(initialQuery ?? '');
   const keyword = query.trim();
 
@@ -44,13 +45,13 @@ export default function SearchSheet({ visible, initialQuery, countResults, onSub
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   button: {
     marginTop: 16,
   },
   hint: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     fontSize: 13,
     marginTop: 8,
   },
-});
+}));

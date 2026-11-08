@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Pressable } from 'react-native';
 
-import { COLORS } from '../constants';
+import { useColors } from '../lib';
 import { TextField } from './ui';
 
 import { Ionicons } from '@expo/vector-icons';
 
 // 비밀번호는 기본으로 가리고, 오른쪽 눈 아이콘을 눌러야 보였다 가려짐
 export default function PasswordInput(props) {
+  const colors = useColors();
   const [isHidden, setIsHidden] = useState(true);
 
   return (
@@ -20,7 +21,7 @@ export default function PasswordInput(props) {
           onPress={() => setIsHidden(!isHidden)}
         >
           <Ionicons
-            color={COLORS.TEXT_SUB}
+            color={colors.TEXT_SUB}
             name={isHidden ? 'eye-outline' : 'eye-off-outline'}
             size={20}
           />

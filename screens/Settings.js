@@ -1,10 +1,10 @@
 import { useCallback, useState } from 'react';
-import { Alert, Linking, Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Linking, Platform, ScrollView, Switch, Text, View } from 'react-native';
 
 import { ListRow, PressableScale } from '../components';
-import { COLORS, NAVIGATOR } from '../constants';
+import { NAVIGATOR } from '../constants';
 import { auth } from '../firebaseConfig';
-import { openPrivacyPolicy, showToast } from '../lib';
+import { openPrivacyPolicy, showToast, makeStyles, useColors } from '../lib';
 import {
   deleteVisibleLocalPosts,
   getAnnouncementsEnabled,
@@ -37,6 +37,8 @@ const openContactMail = async () => {
 };
 
 export default function Settings({ navigation }) {
+  const colors = useColors();
+  const styles = useStyles();
   // 비회원은 기록이 기기에만 있어서 계정 대신 백업 안내와 기기 기록 지우기를 보여 줌(#201)
   const member = isMember();
   // 공지 알림(#304). 기록을 저장한 뒤 켤 수도 있어서 화면에 올 때마다 기기에 저장된 상태를 다시 읽음
@@ -133,7 +135,7 @@ export default function Settings({ navigation }) {
             accessibilityLabel="공지 알림"
             disabled={isChangingAnnouncements}
             onValueChange={handleAnnouncements}
-            trackColor={{ true: COLORS.ACCENT }}
+            trackColor={{ true: colors.ACCENT }}
             value={announcements}
           />
         </ListRow>
@@ -164,9 +166,9 @@ export default function Settings({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => ({
   container: {
-    backgroundColor: COLORS.BACKGROUND,
+    backgroundColor: colors.BACKGROUND,
     flex: 1,
   },
   content: {
@@ -174,7 +176,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   deleteAccount: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     fontSize: 13,
     textDecorationLine: 'underline',
   },
@@ -183,22 +185,22 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   guestNotice: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     fontSize: 13,
     lineHeight: 19,
     marginTop: 8,
   },
   sectionTitle: {
-    color: COLORS.TEXT_SUB,
+    color: colors.TEXT_SUB,
     fontSize: 13,
     fontWeight: '700',
     marginTop: 28,
   },
   title: {
-    color: COLORS.TEXT,
+    color: colors.TEXT,
     fontSize: 24,
     fontWeight: '800',
     letterSpacing: -0.5,
     paddingTop: 12,
   },
-});
+}));
