@@ -5,6 +5,8 @@ import {
   getImageContentType,
   getRemovedPhotos,
   isRemotePhoto,
+  makeThumbnail,
+  planThumbnail,
   resizeForUpload,
   splitStoredPhotos,
   toPostData,
@@ -33,6 +35,7 @@ import {
 import { isMember } from './session';
 
 import { getDownloadURL, getStorage, putFile, ref } from '@react-native-firebase/storage';
+import { File, Paths } from 'expo-file-system';
 import uuid from 'react-native-uuid';
 
 // 이미 올라간 사진 · 기기에 저장해 둔 사진(수정할 때 남겨 둔 사진)은 다시 올리거나 복사하지 않음
@@ -58,6 +61,32 @@ const uploadPhoto = async (uri) => {
   }
 };
 
+// 대표 사진의 썸네일을 만들어 올리고 URL을 돌려줌(#338). source: 기기 파일 또는 이미 올린 사진 URL
+// 썸네일은 갤러리를 빠르게 하려는 것이라 실패해도 글 저장은 계속함(null을 돌려주면 갤러리가 원본을 보여 줌)
+const uploadThumbnail = async (source) => {
+  let downloaded = null;
+  try {
+    let local = source;
+    if (isRemotePhoto(source)) {
+      // 대표 사진을 이미 올린 사진으로 바꾼 경우. 받아서 줄인 뒤 받은 파일은 지움
+      downloaded = await withTimeout(
+        File.downloadFileAsync(source, new File(Paths.cache, `thumbnail-${uuid.v4()}.jpg`)),
+        UPLOAD_TIMEOUT_MS
+      );
+      local = downloaded.uri;
+    }
+    return await uploadPhoto(await makeThumbnail(local));
+  } catch {
+    return null;
+  } finally {
+    try {
+      downloaded?.delete();
+    } catch {
+      // 캐시 폴더라 못 지워도 시스템이 정리함
+    }
+  }
+};
+
 // 저장소마다 같은 모양의 함수를 둠. create · update · remove는 { queued }를 돌려줌
 // queued: 연결이 없어 기기에 먼저 반영됨. 연결되면 서버에 올라감(#323). 비회원은 늘 false
 const memberStore = {
@@ -74,6 +103,7 @@ const memberStore = {
   },
   remove: (docId, photos) => waitForWrite(deletePost(docId, auth.currentUser.uid, photos)),
   storePhoto: uploadPhoto,
+  storeThumbnail: uploadThumbnail,
   discardPhotos: (uris) => deletePhotos(uris, auth.currentUser?.uid),
 };
 
@@ -96,6 +126,8 @@ const guestStore = {
   },
   // 줄인 사진을 앱 문서 폴더로 복사해 둠(캐시 폴더는 시스템이 지울 수 있음)
   storePhoto: saveLocalPhoto,
+  // 기기 사진은 받는 비용이 없어서 썸네일을 만들지 않음(#338)
+  storeThumbnail: null,
   discardPhotos: deleteLocalPhotos,
 };
 
@@ -116,8 +148,15 @@ const countPhotosToUpload = (photos) =>
 // 글을 저장함: 사진 줄이기 → 사진 올리기(비회원은 기기에 복사) → 글 쓰기
 // 글이 저장되지 않으면 이번에 새로 저장한 사진을 지우고 에러를 던짐(#291 · #292)
 // docId가 있으면 고치기. originalPhotos: 고치기 전 사진(글에서 빠진 사진을 지울 때 씀)
+// originalThumbnail: 고치기 전 갤러리 썸네일(#338). 대표 사진이 바뀌면 새로 만들고 예전 것은 지움
 // onPhotoStored: 사진 한 장을 저장할 때마다 부름. { queued }를 돌려줌
-const savePost = async ({ docId, form, originalPhotos = [], onPhotoStored }) => {
+const savePost = async ({
+  docId,
+  form,
+  originalPhotos = [],
+  originalThumbnail = null,
+  onPhotoStored,
+}) => {
   const store = getPostStore();
   let newPhotos = [];
   try {
@@ -143,11 +182,30 @@ const savePost = async ({ docId, form, originalPhotos = [], onPhotoStored }) => 
       throw split.error ?? new Error('사진을 저장하지 못했어요.');
     }
 
+    // 회원은 대표 사진의 썸네일을 둠(#338). 이번에 올린 대표 사진은 줄여 둔 기기 파일로 만듦
+    const plan = store.storeThumbnail
+      ? planThumbnail({
+          cover: split.photos[0],
+          originalCover: originalPhotos[0],
+          originalThumbnail,
+        })
+      : { action: 'none', removed: null };
+    let thumbnail = plan.action === 'keep' ? originalThumbnail : null;
+    if (plan.action === 'make') {
+      thumbnail = await store.storeThumbnail(
+        isStoredPhoto(form.photos[0]) ? split.photos[0] : uris[0]
+      );
+      if (thumbnail) {
+        newPhotos.push(thumbnail);
+      }
+    }
+
     // 글은 문서(비회원은 기기의 파일) 하나를 한 번에 씀. 실패하면 글이 저장되지 않은 것임
-    const data = toPostData(form, split.photos);
-    const result = docId
-      ? await store.update(docId, data, getRemovedPhotos(originalPhotos, split.photos))
-      : await store.create(data);
+    const data = toPostData(form, split.photos, thumbnail);
+    const removed = [...getRemovedPhotos(originalPhotos, split.photos), plan.removed].filter(
+      Boolean
+    );
+    const result = docId ? await store.update(docId, data, removed) : await store.create(data);
     // queued여도 연결되면 올라가므로 올린 사진을 지우지 않음
     newPhotos = [];
     return result;

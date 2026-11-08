@@ -28,7 +28,12 @@ test('toPostData: 폼에서 글 내용만 꺼내고 사진은 저장한 주소�
     tags: ['맥주'],
     rating: 3,
     drinkType: 'soju',
+    thumbnail: null,
   });
+});
+
+test('toPostData: 썸네일 URL을 함께 넣어요', () => {
+  assert.equal(toPostData({ tags: [] }, ['https://x/a'], 'https://x/t').thumbnail, 'https://x/t');
 });
 
 test('splitStoredPhotos: 모두 성공하면 순서대로 주소를 돌려주고 새로 저장한 사진만 따로 모아요', () => {

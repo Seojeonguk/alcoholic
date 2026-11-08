@@ -70,10 +70,16 @@ service cloud.firestore {
           'spirits', 'baijiu', 'makgeolli', 'traditional', 'sake', 'cocktail', 'other']);
     }
 
+    // 갤러리 썸네일(#338): 대표 사진을 줄인 사진의 다운로드 URL. 없거나 null이면 갤러리가 대표 사진을 보여 줌
+    function validThumbnail(data) {
+      return !('thumbnail' in data) || data.thumbnail == null
+        || (data.thumbnail is string && data.thumbnail.size() >= 1 && data.thumbnail.size() <= 1000);
+    }
+
     // 길이 · 개수 상한은 앱의 constants/postLimits.js와 같아야 함
     function validPost(data) {
       return data.keys().hasOnly(['title', 'day', 'photos', 'content', 'location', 'tags', 'rating',
-          'drinkType', 'writer', 'createdAt'])
+          'drinkType', 'thumbnail', 'writer', 'createdAt'])
         && data.writer == myEmail()
         && data.title is string && data.title.size() <= 40
         && validDay(data.day)
@@ -83,6 +89,7 @@ service cloud.firestore {
         && validTags(data.tags)
         && validRating(data)
         && validDrinkType(data)
+        && validThumbnail(data)
         && data.createdAt is timestamp;
     }
 

@@ -2,14 +2,16 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { NAVIGATOR } from '../constants';
-import { getPostLabel, useDefaultPhoto } from '../lib';
+import { getGalleryPhoto, getPostLabel, useDefaultPhoto } from '../lib';
 import { PressableScale, Skeleton } from './ui';
 
 import { Image } from 'expo-image';
 
 // 갤러리의 사진 한 칸. 크기는 갤러리가 화면 너비로 계산해서 넘김
 export default function Post({ item, navigation, size }) {
-  const { presentivePhoto, docId, day, title } = item;
+  const { docId, day, title } = item;
+  // 회원 글은 작은 썸네일을, 썸네일이 없으면 대표 사진을 받음(#338)
+  const photo = getGalleryPhoto(item);
   // 사진을 다 받기 전까지 회색 자리 표시를 보여 줌. 캐시에 있는 사진은 바로 떠서 새 기록만 보임
   const [isPhotoLoaded, setIsPhotoLoaded] = useState(false);
   const defaultPhoto = useDefaultPhoto();
@@ -30,7 +32,7 @@ export default function Post({ item, navigation, size }) {
           onLoad={() => setIsPhotoLoaded(true)}
           // FlatList가 칸을 재사용할 때 이전 글의 사진이 잠깐 보이지 않게 함
           recyclingKey={docId}
-          source={presentivePhoto ? { uri: presentivePhoto } : defaultPhoto}
+          source={photo ? { uri: photo } : defaultPhoto}
           style={[styles.photo, { height: size, width: size }]}
           transition={150}
         />

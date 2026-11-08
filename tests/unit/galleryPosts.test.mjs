@@ -30,6 +30,7 @@ test('toGalleryPost: 첫 사진 · 날짜 · 제목 · 장소 · 내용 · 태�
   assert.deepEqual(toGalleryPost('id1', data), {
     docId: 'id1',
     presentivePhoto: 'p1',
+    thumbnail: null,
     day: '2026-10-01',
     title: '맥주',
     location: '집',
@@ -49,6 +50,7 @@ test('toGalleryPost: 사진 · 제목 · 장소 · 내용 · 태그 · 작성 �
   assert.deepEqual(toGalleryPost('id2', {}), {
     docId: 'id2',
     presentivePhoto: null,
+    thumbnail: null,
     day: undefined,
     title: '',
     location: '',
