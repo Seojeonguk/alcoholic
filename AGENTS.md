@@ -1,0 +1,86 @@
+# AGENTS.md
+
+이 파일은 Codex가 이 저장소에서 작업할 때 참고하는 안내 파일입니다.
+
+## 언어
+
+- **이 프로젝트의 모든 글은 한국어로 씀**: 커밋 메시지, PR 제목 · 본문, 이슈 제목 · 본문 · 댓글, 문서, 코드 주석. 한국어는 해요체로 씀.
+- 코드 식별자(변수 · 함수 · 파일 이름), 브랜치 이름, 라이브러리 이름 같은 기술 용어는 영어 그대로 둠.
+- 2023년까지 만든 기존 이슈 · PR · 커밋은 영어로 돼 있음. 새로 쓰는 것부터 한국어로 씀.
+
+## 프로젝트 개요
+
+- **alcoholic**: 술 사진과 기록(제목 · 내용 · 날짜 · 장소 · 태그)을 남기는 React Native(Expo) 앱.
+- 목표: v1.0.0을 Android(Google Play)로 첫 출시. 진행 상황은 #220(v1.0.0 Release Plan)과 마일스톤 `v1.0.0`에서 관리함. Android 기능 · 개선은 모두 `v1.0.0`에 넣고 production 출시 전에 끝냄. iOS 출시만 `v2.0.0`(#266).
+
+- Firebase 함수 폴더는 `firebase.json`과 이름이 겹치지 않게 `firebase/`가 아니라 `services/`.
+
+## 빌드 및 실행 명령어
+
+```bash
+npm install
+npx expo start                     # 개발 서버, 개발용 빌드(eas build --profile development)로 확인
+npx expo-doctor                    # 의존성 · 설정 검사
+npm run lint                       # ESLint(eslint-config-expo + Prettier) 검사, 경고도 실패로 봄
+npm run test:unit                  # lib 함수 단위 테스트 (node --test)
+npx expo install --check           # SDK와 맞지 않는 패키지 확인 (고치려면 --fix)
+npx expo export --platform android --output-dir <scratchpad>/export   # 번들이 만들어지는지 확인
+npm run test:rules                 # Firestore · Storage 보안 규칙 테스트 (에뮬레이터, Java 21 이상)
+```
+
+- 루트에 Firebase 콘솔에서 받은 `google-services.json`이 있어야 빌드됨(git에 올리지 않음). `.env`(`EXPO_PUBLIC_*`)는 Expo CLI가 자동으로 읽음(`dotenv` 쓰지 않음).
+- 패키지는 `npm install` 대신 **`npx expo install <패키지>`**로 넣어서 SDK에 맞는 버전을 받음.
+- `export` 결과물은 저장소 안에 두지 않고 scratchpad에 만듦.
+- 보안 규칙(`firestore.rules` · `storage.rules`)을 바꾸면 `tests/rules/`에 테스트를 먼저 쓰고 `npm run test:rules`로 확인함. 배포(`npx firebase deploy --only firestore:rules,firestore:indexes,storage`)는 사용자가 함. Firestore 쿼리에 복합 인덱스가 필요하면 `firestore.indexes.json`에 함께 적음.
+- `npm run test:rules`는 `tests/rules/run.mjs`가 진짜 Java 경로로 에뮬레이터를 띄워서 끝나면 함께 꺼짐(Oracle `javapath` 중계 프로그램 때문에 남던 문제). 그래도 "port taken"이 나면 이 환경에서는 프로세스를 끄는 명령이 막혀 있으므로, 남은 프로세스를 사용자에게 알리고 끄도록 요청함(방법은 `docs/firebase-setup.md`).
+- 규칙 테스트 결과는 `ℹ pass` · `ℹ fail` 숫자로 판단함. 거절 로그는 `setLogLevel('error')`로 숨겨 둠.
+
+## 코드 스타일 및 컨벤션
+
+### 코드
+
+- JavaScript(타입스크립트 아님), 함수 컴포넌트 + hooks.
+- import 순서: React · react-native → 프로젝트 모듈(`../components`, `../constants` …) → 외부 라이브러리. 각 폴더의 `index.js`에서 다시 내보낸 것을 가져다 씀.
+- 네비게이션 이름은 문자열로 쓰지 않고 `constants/nav.js`의 `NAVIGATOR`를 씀. 색상은 `constants/theme.js`의 색 표를 `lib`의 `useColors()` · `makeStyles()`로 가져와 기기 테마(밝은 · 어두운)에 맞춤(#345).
+- ESLint는 `eslint.config.js`(flat config, `eslint-config-expo` + `eslint-plugin-prettier`), Prettier는 `.prettierrc.json`을 따름. 경고도 0개로 유지함.
+- 사용자에게 보이는 문구는 한국어로 씀. 알림은 `lib`의 `showToast`를 씀.
+- 주석은 주변 코드의 밀도에 맞춰 한국어로 씀.
+
+### 확인 방법
+
+- PR을 열면 GitHub Actions(`.github/workflows/ci.yml`)가 lint · 단위 테스트 · Android 번들 · 보안 규칙 테스트를 돌림. `npx expo export`는 네이티브 설정 파일 없이도 되므로 CI에 Firebase 값은 필요 없음.
+- 그래도 PR 전에 로컬에서 `npm run lint`, `npm run test:unit`, `npx expo-doctor`, `npx expo export --platform android`를 돌려 확인함.
+- `npx expo lint`는 `components/` 같은 일부 폴더만 검사하므로 쓰지 않고 `npm run lint`(`eslint .`)를 씀.
+- 이 환경에서는 앱을 기기에서 직접 실행해 볼 수 없음. 실제 동작은 PR 체크리스트로 사용자가 확인함. 확인하지 못한 것을 확인했다고 쓰지 않음.
+
+### Git · PR (squash merge, 브랜치 자동 삭제 켜짐)
+
+- `master`에서 브랜치를 따서 PR을 염. 브랜치 이름은 영어 snake_case(예: `upgrade_expo_sdk`, `focus_out_tag`).
+- 커밋은 `git commit -s`(Signed-off-by)로 하고 GPG 서명(`commit.gpgsign=true`)을 건너뛰지 않음. 서명이 가끔 멈추므로 `timeout 60 git commit -s ...`처럼 시간 제한을 둠.
+- **커밋 메시지**: 짧은 한국어 제목 + 본문 **한 줄** `~합니다.` 형식으로 커밋이 미치는 결과를 씀(예: 제목 `Expo SDK 업그레이드`, 본문 `Expo SDK와 의존성을 최신 버전으로 올립니다.`). 자세한 이유 · 확인 내용은 PR 본문에 씀.
+- squash merge 기본 메시지는 PR 본문이 아니라 **커밋 메시지**를 쓰도록 설정돼 있음(`squash_merge_commit_title=COMMIT_OR_PR_TITLE`, `squash_merge_commit_message=COMMIT_MESSAGES`). 그래서 PR 하나에 커밋 하나를 유지함. 리뷰 반영 등으로 커밋이 늘면 머지 전에 하나로 합침.
+- **Codex attribution 금지**: `Co-Authored-By: Codex`나 "Generated with Codex"를 커밋 · PR에 넣지 않음.
+- **PR 본문**: 맨 위에 `Closes #N` → `## 요약` → `## 확인한 것`(실행한 명령과 결과) → 마지막에 **`## 기기에서 확인해 주세요`** 체크리스트(사용자가 직접 확인할 동작을 "행동 → 기대 결과" 형식으로. `google-services.json` · `.env` · 설정 단계도 포함).
+- **PR · 이슈 생성 시**: 레이블(`feat`, `fix`, `bug`, `delete`, `documentation`, `plan`, `question`), `--assignee @me`, 맞는 마일스톤을 항상 지정함. 여러 이슈를 묶는 상위 이슈에는 `plan` 레이블을 붙이고 하위 이슈를 체크리스트로 적음.
+- **이슈 본문**: `### [문제]` → `### [기대 동작]` → `### [체크리스트]` 형식.
+
+### 버전 · 릴리스
+
+- 버전 올리기 · Release PR · 태그 · GitHub Release 절차는 `release` 스킬(`.agents/skills/release/SKILL.md`)에 있음.
+- 스토어(Google Play)에 빌드를 올리는 건 사용자가 함.
+
+## 주의사항
+
+- **`.env` · `google-services.json`은 git에 올리지 않음**(`.gitignore`, #197 · #286). Firebase 키를 코드에 직접 쓰지 않음. EAS 빌드는 파일 환경 변수 `GOOGLE_SERVICES_JSON`에서 받음. `eas.json`에는 환경 · 채널 이름만 있어서 git에 올림(#240).
+- **Firebase는 `@react-native-firebase` 네이티브 SDK**(#286): Expo Go에서 동작하지 않으므로 개발용 빌드(`eas.json`의 `development`)로 확인함. 함수는 웹 SDK처럼 modular API(`getAuth()`, `doc(db, …)`)로 쓰고 예전 namespaced API(`auth().…`, `firestore().collection`)는 쓰지 않음. 사진은 `putFile`로 올림(`uploadBytes`는 구현돼 있지 않음). 보안 규칙 테스트만 웹 SDK(`firebase`, devDependency)를 씀.
+- **Crashlytics**(#259): `firebaseConfig.js`에서 `getCrashlytics()`를 불러 처리하지 못한 JS 에러 처리기를 등록함. 개발용 빌드(debug)에서는 보내지 않아서 `preview` · `production` 빌드로 확인함. 사용자 ID · 이메일은 넣지 않음.
+- **App Check**(#260): `firebaseConfig.js`에서 Auth · Firestore보다 먼저 초기화함. 개발용 빌드는 `debug` 공급자 + `.env`의 `EXPO_PUBLIC_APP_CHECK_DEBUG_TOKEN`, 배포 빌드는 `playIntegrity`. 디버그 토큰은 preview · production 환경 변수에 넣지 않음. 적용(enforce)은 콘솔에서 사용자가 함(`docs/firebase-setup.md`).
+- **비회원(가입 없이 쓰기)**(#201): 화면은 `isMember()`(인증된 로그인이 있는지)로 갈라서 회원은 `services/docs.js`, 비회원은 `services/localPosts.js`(`expo-file-system`, 문서 폴더의 `guest/`)를 씀. 비회원 기록은 가입 전에 서버로 보내지 않음. 인증된 계정으로 갤러리에 들어오면 `useGuestMigration`이 기기 기록을 옮김: 처음 옮기기 시작한 계정의 uid를 글에 적어 두고 그 계정으로만 옮기며, 기기 글 ID를 문서 ID로 · 같은 사진 경로로 써서 다시 시도해도 두 번 올라가지 않음. 판단 · 변환은 `lib/guestPosts.js`(단위 테스트).
+- **공지 알림(FCM)**(#304): Firebase 콘솔에서 `announcements` 토픽으로만 보내고 기기 토큰을 저장하지 않음. 처음에는 꺼져 있고(`firebase.json`의 `messaging_auto_init_enabled: false`), 설정에서 켤 때 알림 권한을 요청함. `services/notifications.js`는 불러올 때 네이티브 모듈을 쓰므로 messaging이 없는 예전 빌드에서는 앱이 시작하자마자 멈춤(`NativeRNFBTurboMessaging is not registered`) → 빌드를 다시 만듦. 보내는 방법 · 테스트는 `docs/notifications.md`. 콘솔의 인앱 메시지(In-App Messaging)는 쓰지 않음.
+- **EAS Update**(`runtimeVersion` 정책 `appVersion`): 같은 `version`의 빌드에만 업데이트가 감. 패키지 · 플러그인 · 권한 같은 네이티브 변경이 들어간 PR은 새 빌드가 필요하다고 PR 본문에 적고, 스토어에 올릴 때 `version`을 꼭 올림. 배포 방법은 README의 "JS 수정 바로 배포하기".
+- **React Navigation 7**: 이미 스택에 있는 화면으로 돌아갈 때는 `navigate`가 아니라 `popTo`를 씀. 부모 스택에서 탭 안의 화면으로 갈 때는 `{ screen: ... }` 파라미터로 중첩해서 지정함. 화면 파라미터는 객체로 넘김(`{ docId }`).
+- **사진 선택은 시스템 사진 선택기**(`expo-image-picker`의 `launchImageLibraryAsync`, 여러 장 선택)를 씀(#233). `expo-media-library`로 기기 사진 전체를 읽는 방식은 Android Expo Go에서 동작하지 않고, Google Play 정책상 `READ_MEDIA_IMAGES`가 거절될 수 있어서 쓰지 않음. 사진 · 오디오 권한을 새로 추가하지 않음.
+- **expo-image**: 캐시는 `source.cache`가 아니라 `cachePolicy` prop으로 지정함(#214).
+- **아이콘**: `@expo/vector-icons` 15에서 이름이 바뀐 아이콘이 있음(`ios-*` 접두사 제거, `pluscircleo` → `plus-circle` 등). 새 아이콘 이름은 `node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/glyphmaps/*.json`에서 확인함.
+- Windows Git Bash에서 heredoc 안에 백틱이 든 스크립트를 쓰면 깨질 때가 있음. 스크립트 · 긴 본문은 scratchpad에 파일로 써서 실행함(`gh issue create -F <파일>`).
+- 저장소 루트에 녹화 · 빌드 결과물 · 임시 파일을 커밋하지 않음.
