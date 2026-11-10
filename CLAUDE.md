@@ -11,24 +11,9 @@
 ## 프로젝트 개요
 
 - **alcoholic**: 술 사진과 기록(제목 · 내용 · 날짜 · 장소 · 태그)을 남기는 React Native(Expo) 앱.
-- 스택: Expo SDK 58, React 19, React Native 0.88, React Navigation 7, Redux Toolkit 2, Firebase(`@react-native-firebase` 27: Auth · Firestore · Storage), expo-image.
 - 목표: v1.0.0을 Android(Google Play)로 첫 출시. 진행 상황은 #220(v1.0.0 Release Plan)과 마일스톤 `v1.0.0`에서 관리함. Android 기능 · 개선은 모두 `v1.0.0`에 넣고 production 출시 전에 끝냄. iOS 출시만 `v2.0.0`(#266).
 
-### 구조
-
-```text
-App.js               # Redux Provider · SafeArea · Navigation · Toast
-app.config.js        # Expo 설정, google-services.json 경로 · 플러그인
-firebaseConfig.js    # Firebase 네이티브 SDK의 auth · db (설정은 google-services.json)
-navigation/          # 루트 native stack + 하단 탭(Gallery · Settings)
-screens/             # 화면 (MainPage, Login, RegistrationForm, ForgotPassword, Gallery, GalleryForm, Details, Settings)
-components/          # 화면에서 쓰는 컴포넌트 (Photo, Carousel, Tags, Header, TouchableImage …)
-services/            # Firestore 문서 읽기 · 쓰기 함수 (firebase.json과 이름이 겹치지 않게 firebase/가 아닌 services/), 비회원 기기 저장소(localPosts) · 옮기기, 공지 알림(notifications)
-plugins/             # Expo config plugin (알림 아이콘 · 색상 · 기본 채널)
-redux/               # store, gallerySlice (게시글 작성 폼 상태)
-constants/           # 네비게이션 이름(NAVIGATOR), 색상(COLORS), 에러 메시지
-lib/                 # 공용 유틸 (showToast, 에러 메시지 변환, 이메일 재전송 제한)
-```
+- Firebase 함수 폴더는 `firebase.json`과 이름이 겹치지 않게 `firebase/`가 아니라 `services/`.
 
 ## 빌드 및 실행 명령어
 
@@ -81,9 +66,7 @@ npm run test:rules                 # Firestore · Storage 보안 규칙 테스�
 
 ### 버전 · 릴리스
 
-- **메이저**: 기존 사용자가 무언가 해야 할 때(다시 로그인 · 데이터 이전 등). **마이너**: 새 기능이나 보이는 변경. **패치**: 수정만.
-- 버전은 `app.config.js`의 `version`(Android는 `versionCode`도 올림) · `package.json` · `package-lock.json`(`npm version X --no-git-tag-version`)에 있음.
-- 마일스톤의 이슈가 끝나면 "Release X.Y.Z" PR(버전 올리기 + 본문에 릴리스 노트 초안)을 만듦. 머지 후 머지 커밋에 서명 태그 `git tag -s vX.Y.Z`를 붙이고, 사용자에게 확인받고 GitHub Release를 발행함. 그다음 마일스톤을 닫음.
+- 버전 올리기 · Release PR · 태그 · GitHub Release 절차는 `release` 스킬(`.claude/skills/release/SKILL.md`)에 있음.
 - 스토어(Google Play)에 빌드를 올리는 건 사용자가 함.
 
 ## 주의사항
