@@ -158,6 +158,32 @@ npx firebase deploy --only firestore:rules,firestore:indexes,storage
 
 - 콘솔에는 있는데 `firestore.indexes.json`에 없는 인덱스가 있으면 배포할 때 지울지 물어봐요. 콘솔에서 만든 인덱스는 `npx firebase firestore:indexes`로 받아 파일에 먼저 넣어요.
 
+## 사진으로 술 알아보기 (Cloud Functions)
+
+회원이 고른 사진을 `functions/`의 `recognizeDrink` 함수가 받아 Claude(`claude-haiku-5-5`)로 술 이름 · 주종 · 태그를 알아봐요(#380). API 키는 앱에 넣지 않고 함수의 Secret에만 둬요. Firebase 프로젝트가 Blaze 요금제여야 배포돼요.
+
+- 지역은 서울(`asia-northeast3`), 이메일 인증을 마친 회원 + App Check를 통과한 앱만 부를 수 있어요.
+- 회원마다 하루 20번(한국 자정에 다시 셈)까지예요. 사용량은 Firestore `aiUsage/{uid}`에 적고, 보안 규칙상 앱은 읽거나 쓸 수 없어요.
+- 사진은 저장하지 않아요. 로그에는 토큰 수만 남겨요.
+
+### 처음 한 번
+
+1. [Claude Console](https://platform.claude.com)에서 API 키를 만들어요. 결제 한도(Spend limit)를 낮게 걸어 두면 요금이 갑자기 늘지 않아요.
+2. 키를 Secret에 넣어요. 입력하라고 나오면 키를 붙여 넣어요.
+
+   ```bash
+   npx firebase functions:secrets:set ANTHROPIC_API_KEY
+   ```
+
+### 배포
+
+```bash
+npm ci --prefix functions
+npx firebase deploy --only functions
+```
+
+키를 바꾼 뒤에도 다시 배포해야 새 키를 써요.
+
 ## 계정 삭제 요청 처리하기
 
 개인정보처리방침 4번의 이메일로 계정 삭제를 요청받으면, 가입한 이메일 주소에서 보낸 메일인지 확인하고 30일 안에 콘솔에서 아래를 모두 지워요. 앱의 탈퇴(`deleteUserData` → `deleteUser`)가 지우는 것과 같아요.

@@ -489,3 +489,18 @@ describe('갤러리 썸네일(#338)', () => {
     );
   });
 });
+
+describe('사진 인식 하루 횟수 aiUsage(#380)', () => {
+  test('회원도 자기 사용량을 읽거나 쓸 수 없어요(함수만 씀)', async () => {
+    const db = verifiedDb(ME);
+    await assertFails(getDoc(doc(db, 'aiUsage', ME.uid)));
+    await assertFails(setDoc(doc(db, 'aiUsage', ME.uid), { day: '2026-11-11', count: 0 }));
+  });
+
+  test('비회원 · 인증 전 계정도 읽거나 쓸 수 없어요', async () => {
+    await assertFails(getDoc(doc(guestDb(), 'aiUsage', ME.uid)));
+    await assertFails(
+      setDoc(doc(unverifiedDb(ME), 'aiUsage', ME.uid), { day: '2026-11-11', count: 0 })
+    );
+  });
+});

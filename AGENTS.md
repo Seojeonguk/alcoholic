@@ -13,7 +13,7 @@
 - **alcoholic**: 술 사진과 기록(제목 · 내용 · 날짜 · 장소 · 태그)을 남기는 React Native(Expo) 앱.
 - 목표: v1.0.0을 Android(Google Play)로 첫 출시. 진행 상황은 #220(v1.0.0 Release Plan)과 마일스톤 `v1.0.0`에서 관리함. Android 기능 · 개선은 모두 `v1.0.0`에 넣고 production 출시 전에 끝냄. iOS 출시만 `v2.0.0`(#266).
 
-- Firebase 함수 폴더는 `firebase.json`과 이름이 겹치지 않게 `firebase/`가 아니라 `services/`.
+- 앱에서 Firebase를 부르는 코드 폴더는 `firebase.json`과 이름이 겹치지 않게 `firebase/`가 아니라 `services/`. 서버(Cloud Functions) 코드는 `functions/`(따로 `npm ci --prefix functions`, 배포는 `docs/firebase-setup.md`). 판단 · 변환은 `functions/drinkRecognition.js`처럼 패키지를 import하지 않는 파일에 두고 `tests/unit/`에서 테스트함.
 
 ## 빌드 및 실행 명령어
 
