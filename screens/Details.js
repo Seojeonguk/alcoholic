@@ -10,6 +10,7 @@ import {
   getShareText,
   hasDraft,
   showToast,
+  toDetailPost,
   toLocalDateString,
   toRepeatDraft,
   usePreventLeave,
@@ -52,16 +53,7 @@ export default function Details({ route, navigation }) {
   // 삭제 중에 메뉴를 다시 눌러 두 번 지우지 않게 막음
   const isDeletingRef = useRef(false);
   usePreventLeave(navigation, isDeletingRef);
-  const [myPost, setMyPost] = useState({
-    title: '',
-    photos: [],
-    location: '',
-    day: '',
-    content: '',
-    tags: [],
-    rating: null,
-    drinkType: null,
-  });
+  const [myPost, setMyPost] = useState(() => toDetailPost(null));
 
   const { title, photos, location, day, content, tags, rating, drinkType } = myPost;
 
@@ -83,16 +75,7 @@ export default function Details({ route, navigation }) {
         navigation.goBack();
         return;
       }
-      const currentPostInfo = {
-        title: post.title,
-        // 필드가 없는 예전 글도 열리게 기본값을 넣음
-        location: post.location ?? '',
-        day: post.day,
-        content: post.content,
-        tags: post.tags ?? [],
-        photos: post.photos ?? [],
-      };
-      setMyPost(currentPostInfo);
+      setMyPost(toDetailPost(post));
       setLoading(false);
     };
     getPosting();

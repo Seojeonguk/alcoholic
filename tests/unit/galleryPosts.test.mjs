@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { memberEmail, toGalleryPost } from '../../lib/galleryPosts.js';
+import { memberEmail, toDetailPost, toGalleryPost } from '../../lib/galleryPosts.js';
 
 test('memberEmail: 인증을 마친 계정이면 이메일을 돌려줘요', () => {
   assert.equal(memberEmail({ emailVerified: true, email: 'a@b.c' }), 'a@b.c');
@@ -61,4 +61,46 @@ test('toGalleryPost: 사진 · 제목 · 장소 · 내용 · 태그 · 작성 �
     createdAt: 0,
   });
   assert.equal(toGalleryPost('id3', undefined).createdAt, 0);
+});
+
+test('toDetailPost: 별점 · 주종 · 썸네일까지 저장된 필드를 모두 옮겨요(#384)', () => {
+  const data = {
+    title: '발베니',
+    location: '집',
+    day: '2026-11-01',
+    content: '좋았어요',
+    tags: ['위스키'],
+    photos: ['p1', 'p2'],
+    rating: 4,
+    drinkType: 'whisky',
+    thumbnail: 't1',
+    createdAt: 123,
+  };
+  assert.deepEqual(toDetailPost(data), {
+    title: '발베니',
+    location: '집',
+    day: '2026-11-01',
+    content: '좋았어요',
+    tags: ['위스키'],
+    photos: ['p1', 'p2'],
+    rating: 4,
+    drinkType: 'whisky',
+    thumbnail: 't1',
+  });
+});
+
+test('toDetailPost: 필드가 없는 예전 글 · null은 기본값을 넣어요', () => {
+  const empty = {
+    title: '',
+    location: '',
+    day: '',
+    content: '',
+    tags: [],
+    photos: [],
+    rating: null,
+    drinkType: null,
+    thumbnail: null,
+  };
+  assert.deepEqual(toDetailPost({}), empty);
+  assert.deepEqual(toDetailPost(null), empty);
 });
