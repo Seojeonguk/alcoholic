@@ -163,7 +163,7 @@ npx firebase deploy --only firestore:rules,firestore:indexes,storage
 회원이 고른 사진을 `functions/`의 `recognizeDrink` 함수가 받아 Claude(`claude-haiku-5-5`)로 술 이름 · 주종 · 태그를 알아봐요(#380). API 키는 앱에 넣지 않고 함수의 Secret에만 둬요. Firebase 프로젝트가 Blaze 요금제여야 배포돼요.
 
 - 지역은 서울(`asia-northeast3`), 이메일 인증을 마친 회원 + App Check를 통과한 앱만 부를 수 있어요.
-- 회원마다 하루 20번(한국 자정에 다시 셈)까지예요. 사용량은 Firestore `aiUsage/{uid}`에 적고, 보안 규칙상 앱은 읽거나 쓸 수 없어요.
+- 회원마다 하루 20번(한국 자정에 다시 셈)까지예요. 사용량은 Firestore `aiUsage/{uid}`에 적고, 보안 규칙상 앱은 읽거나 쓸 수 없어요. 탈퇴해도 남지 않게 `expireAt`(이틀 뒤)에 맞춰 Firestore TTL이 지워요. TTL 정책은 `firestore.indexes.json`의 `fieldOverrides`에 있어서 `npx firebase deploy --only firestore:indexes`로 만들어져요(콘솔의 Firestore → TTL에서 확인). 지우는 데 하루쯤 더 걸릴 수 있어요.
 - 사진은 저장하지 않아요. 로그에는 토큰 수만 남겨요.
 
 ### 처음 한 번

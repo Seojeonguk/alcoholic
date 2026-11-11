@@ -7,6 +7,7 @@
 - 이메일 회원가입 · 로그인, 이메일 인증, 비밀번호 재설정
 - 가입 없이 시작하기: 기록 · 사진을 기기에만 저장하고, 나중에 가입하면 계정으로 옮겨요(#201)
 - 술 기록 작성 · 수정: 사진(갤러리 · 카메라), 제목, 내용, 날짜, 장소, 태그
+- 사진으로 술 알아보기(회원): 첫 번째 사진을 AI(Claude)로 알아보고 제목 · 주종 · 태그를 제안해요(#380 · #381, [Firebase 설정](docs/firebase-setup.md#사진으로-술-알아보기-cloud-functions))
 - 내 기록을 갤러리로 모아 보기, 상세 보기(사진 캐러셀), 태그 · 날짜로 찾기
 - 공지 알림: 설정에서 켜면 새 버전 · 점검 소식을 받아요(#304, [공지 알림 보내기](docs/notifications.md))
 
@@ -19,6 +20,7 @@
 | 상태 관리 | Redux Toolkit 2                                                                              |
 | 백엔드    | Firebase (`@react-native-firebase` 네이티브 SDK: Authentication · Cloud Firestore · Storage) |
 | 운영      | Firebase Crashlytics · App Check · Cloud Messaging(공지 알림), EAS Update                    |
+| 서버      | Cloud Functions(`functions/`) + Claude API(`claude-haiku-5-5`, 사진으로 술 알아보기)         |
 | 이미지    | expo-image, expo-image-picker (시스템 사진 선택기)                                           |
 
 ## 로컬에서 실행하기
