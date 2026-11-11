@@ -21,7 +21,11 @@ appCheckProvider.configure({
     debugToken: process.env.EXPO_PUBLIC_APP_CHECK_DEBUG_TOKEN,
   },
 });
-initializeAppCheck(getApp(), { provider: appCheckProvider, isTokenAutoRefreshEnabled: true });
+// 사진으로 술 알아보기(#381)처럼 함수를 fetch로 부를 때 이 인스턴스로 토큰을 받음
+const appCheck = initializeAppCheck(getApp(), {
+  provider: appCheckProvider,
+  isTokenAutoRefreshEnabled: true,
+});
 
 const auth = getAuth();
 const db = getFirestore();
@@ -33,4 +37,4 @@ setLanguageCode(auth, 'ko');
 // 개발용 빌드(debug)에서는 보내지 않고 preview · production 빌드에서만 보냄
 getCrashlytics();
 
-export { auth, db };
+export { appCheck, auth, db };

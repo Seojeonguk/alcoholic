@@ -12,6 +12,7 @@ import {
   Photo,
   PostFormProvider,
   Rating,
+  RecognizeDrink,
   Tags,
   Title,
 } from '../components';
@@ -201,6 +202,7 @@ export default function GalleryForm({ navigation, route }) {
       >
         <PostFormProvider dispatch={dispatch} form={gallery}>
           <Photo />
+          <RecognizeDrink />
           <Title />
           <Day />
           <DrinkType />
