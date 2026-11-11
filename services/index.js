@@ -8,6 +8,7 @@ import {
   setAnnouncements,
 } from './notifications';
 import { countPhotosToUpload, loadPost, removePost, savePost, subscribeGallery } from './posts';
+import { RecognitionError, recognizeDrink } from './recognizeDrink';
 import useGuestMigration from './useGuestMigration';
 import { enterGuestMode, hasGuestFlag, isMember, leaveGuestMode, waitForAuthUser } from './session';
 
@@ -23,6 +24,8 @@ export {
   removePost,
   savePost,
   subscribeGallery,
+  RecognitionError,
+  recognizeDrink,
   useGuestMigration,
   enterGuestMode,
   hasGuestFlag,

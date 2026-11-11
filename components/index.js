@@ -11,6 +11,7 @@ import PasswordInput from './PasswordInput';
 import Photo from './Photo';
 import Post from './Post';
 import Rating from './Rating';
+import RecognizeDrink from './RecognizeDrink';
 import SearchSheet from './SearchSheet';
 import { PostFormProvider, usePostForm } from './PostForm';
 import Tags from './Tags';
@@ -33,6 +34,7 @@ export {
   Post,
   PostFormProvider,
   Rating,
+  RecognizeDrink,
   SearchSheet,
   Tags,
   TagSheet,
