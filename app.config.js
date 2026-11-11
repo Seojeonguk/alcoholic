@@ -39,7 +39,7 @@ export default {
       // Firebase 설정 파일. git에 올리지 않고 EAS 빌드에서는 파일 환경 변수로 받음(README "빌드 · 배포")
       googleServicesFile: process.env.GOOGLE_SERVICES_JSON ?? './google-services.json',
       // 스토어에 올릴 때마다 1씩 올림
-      versionCode: 1,
+      versionCode: 2,
       // Android 13 이상의 공지 알림 권한. 앱을 켤 때가 아니라 사용자가 알림을 켤 때 요청함(#304)
       permissions: ['android.permission.POST_NOTIFICATIONS'],
       // Expo 기본 템플릿이 넣는 다른 앱 위에 그리기 권한. 앱에서 쓰지 않음(#321)
