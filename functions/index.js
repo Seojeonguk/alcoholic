@@ -1,6 +1,6 @@
 // Cloud Functions. 배포 · 키 설정은 docs/firebase-setup.md의 "사진으로 술 알아보기" 참고
 import { initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, Timestamp } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { defineSecret } from 'firebase-functions/params';
 import { HttpsError, onCall } from 'firebase-functions/v2/https';
@@ -21,6 +21,8 @@ initializeApp();
 
 const ANTHROPIC_API_KEY = defineSecret('ANTHROPIC_API_KEY');
 const MODEL = 'claude-haiku-5-5';
+// 하루 사용량 문서는 그날이 지나면 쓸모없어서 이틀 뒤 지움
+const USAGE_TTL_MS = 2 * 24 * 60 * 60 * 1000;
 
 // 사진 속 술의 이름 · 주종 · 태그를 제안함(#380)
 // 이메일 인증을 마친 회원만, App Check를 통과한 앱에서만 부를 수 있음. 사진은 저장하지 않음
@@ -56,7 +58,11 @@ export const recognizeDrink = onCall(
       const snapshot = await tx.get(usageRef);
       const result = nextUsage(snapshot.data(), today);
       if (result.allowed) {
-        tx.set(usageRef, result.usage);
+        // 탈퇴해도 남지 않게 이틀 뒤 Firestore TTL이 지움(firestore.indexes.json의 fieldOverrides)
+        tx.set(usageRef, {
+          ...result.usage,
+          expireAt: Timestamp.fromMillis(Date.now() + USAGE_TTL_MS),
+        });
       }
       return result;
     });
