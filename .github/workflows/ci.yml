@@ -23,7 +23,12 @@ jobs:
         with:
           node-version: 24
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
       - run: npm ci
+      # lint가 functions/의 import를 확인하므로 함수 패키지도 설치함
+      - run: npm ci --prefix functions
       - run: npm run lint
       - run: npm run test:unit
       - run: npx expo export --platform android --output-dir ${{ runner.temp }}/export
