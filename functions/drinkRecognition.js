@@ -22,6 +22,13 @@ const TAG_LENGTH_LIMIT = 20;
 // 제안하는 태그는 몇 개만
 const SUGGESTED_TAGS_LIMIT = 5;
 
+// 맛 표현 · 비슷한 술(#391). 카드에 보여 주는 길이로 자름
+const TASTE_NOTE_LIMIT = 200;
+const FLAVORS_LIMIT = 5;
+const FLAVOR_LENGTH_LIMIT = 15;
+const SIMILAR_LIMIT = 3;
+const SIMILAR_REASON_LIMIT = 80;
+
 // 회원 한 명이 하루에 부를 수 있는 횟수
 const DAILY_LIMIT = 20;
 
@@ -39,8 +46,28 @@ const RESULT_SCHEMA = {
     drinkType: { type: 'string', enum: DRINK_TYPE_CODES },
     confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
     tags: { type: 'array', items: { type: 'string' } },
+    tasteNote: { type: 'string' },
+    flavors: { type: 'array', items: { type: 'string' } },
+    similar: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: { name: { type: 'string' }, reason: { type: 'string' } },
+        required: ['name', 'reason'],
+        additionalProperties: false,
+      },
+    },
   },
-  required: ['isDrink', 'name', 'drinkType', 'confidence', 'tags'],
+  required: [
+    'isDrink',
+    'name',
+    'drinkType',
+    'confidence',
+    'tags',
+    'tasteNote',
+    'flavors',
+    'similar',
+  ],
   additionalProperties: false,
 };
 
@@ -56,6 +83,9 @@ The user will save your answer as the title and tags of a diary entry, after rev
   - volume, size, or packaging (e.g. "500ml", "캔맥주", "병")
   - anything that describes the label or the company rather than the drink: claims and slogans (e.g. "비살균", "국내산 쌀", "Non pasteurized"), people or celebrities on the label, insurers, distributors
   A tag should still make sense to someone who never saw the label.
+- tasteNote: one or two short Korean sentences in polite 해요체 describing how this drink usually tastes and smells: body, sweetness, acidity, tannin, bitterness, finish, and typical aromas (e.g. "탄닌감이 있고 묵직하며 오크 · 블랙베리 향이 나요."). If confidence is low or you know only the kind, describe what that kind usually tastes like and say so (e.g. "레드 와인은 보통 …"). Do not claim facts about this exact bottle that you cannot know, such as how it was stored. Empty string if isDrink is false.
+- flavors: up to 5 short Korean taste or aroma keywords from tasteNote (e.g. "오크", "블랙베리", "묵직함"). No spaces inside a keyword.
+- similar: 2 or 3 well-known drinks that are easy to find in Korea and taste similar, each with a one-sentence Korean reason in 해요체 (e.g. { "name": "글렌피딕 12년", "reason": "같은 스페이사이드 싱글몰트로 꿀 · 과일 향이 비슷해요." }). Use real product names you are sure exist. Do not include the drink itself. Empty array if isDrink is false.
 
 Read only what is visible. Do not invent a brand you cannot see.`;
 
@@ -90,7 +120,53 @@ const nextUsage = (usage, today, limit = DAILY_LIMIT) => {
   return { allowed: true, usage: { day: today, count: count + 1 } };
 };
 
-const UNKNOWN = { isDrink: false, name: '', drinkType: null, confidence: 'low', tags: [] };
+const UNKNOWN = {
+  isDrink: false,
+  name: '',
+  drinkType: null,
+  confidence: 'low',
+  tags: [],
+  tasteNote: '',
+  flavors: [],
+  similar: [],
+};
+
+// 문자열이면 앞뒤 공백을 떼고 길이를 자름. 아니면 빈 문자열
+const cleanText = (value, limit) => (typeof value === 'string' ? value.trim().slice(0, limit) : '');
+
+// 맛 키워드: 앞의 #과 공백을 떼고 겹치지 않게 몇 개만
+const normalizeFlavors = (flavors) => {
+  const result = [];
+  for (const flavor of Array.isArray(flavors) ? flavors : []) {
+    const clean = cleanText(flavor, FLAVOR_LENGTH_LIMIT * 2)
+      .replace(/^#+/, '')
+      .trim()
+      .slice(0, FLAVOR_LENGTH_LIMIT);
+    if (clean && !result.includes(clean)) {
+      result.push(clean);
+    }
+    if (result.length === FLAVORS_LIMIT) {
+      break;
+    }
+  }
+  return result;
+};
+
+// 비슷한 술: 이름이 있고, 알아본 술과 다르고, 겹치지 않는 것만 몇 개
+const normalizeSimilar = (similar, name) => {
+  const result = [];
+  for (const item of Array.isArray(similar) ? similar : []) {
+    const similarName = cleanText(item?.name, TITLE_LIMIT);
+    if (!similarName || similarName === name || result.some((s) => s.name === similarName)) {
+      continue;
+    }
+    result.push({ name: similarName, reason: cleanText(item?.reason, SIMILAR_REASON_LIMIT) });
+    if (result.length === SIMILAR_LIMIT) {
+      break;
+    }
+  }
+  return result;
+};
 
 // 모델 답(JSON 문자열)을 앱에 돌려줄 값으로 바꿈. 모양이 다르면 "모르겠음"으로 봄
 const normalizeResult = (text) => {
@@ -123,15 +199,27 @@ const normalizeResult = (text) => {
       break;
     }
   }
-  return { isDrink: true, name, drinkType, confidence, tags };
+  return {
+    isDrink: true,
+    name,
+    drinkType,
+    confidence,
+    tags,
+    tasteNote: cleanText(parsed.tasteNote, TASTE_NOTE_LIMIT),
+    flavors: normalizeFlavors(parsed.flavors),
+    similar: normalizeSimilar(parsed.similar, name),
+  };
 };
 
 export {
   DAILY_LIMIT,
   DRINK_TYPE_CODES,
+  FLAVORS_LIMIT,
   MAX_IMAGE_BASE64_LENGTH,
   RESULT_SCHEMA,
+  SIMILAR_LIMIT,
   SYSTEM_PROMPT,
+  TASTE_NOTE_LIMIT,
   UNKNOWN,
   nextUsage,
   normalizeResult,

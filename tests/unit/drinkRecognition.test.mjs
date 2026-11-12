@@ -6,8 +6,11 @@ import { POST_LIMITS } from '../../constants/postLimits.js';
 import {
   DAILY_LIMIT,
   DRINK_TYPE_CODES,
+  FLAVORS_LIMIT,
   MAX_IMAGE_BASE64_LENGTH,
   RESULT_SCHEMA,
+  SIMILAR_LIMIT,
+  TASTE_NOTE_LIMIT,
   UNKNOWN,
   nextUsage,
   normalizeResult,
@@ -90,6 +93,9 @@ test('normalizeResult: 술이면 이름 · 주종 · 확신도 · 태그를 돌�
     drinkType: 'whisky',
     confidence: 'high',
     tags: ['싱글몰트', '스페이사이드'],
+    tasteNote: '',
+    flavors: [],
+    similar: [],
   });
 });
 
@@ -124,6 +130,9 @@ test('normalizeResult: 모르는 주종 · 확신도는 null · low로 바꿔요
     drinkType: null,
     confidence: 'low',
     tags: [],
+    tasteNote: '',
+    flavors: [],
+    similar: [],
   });
 });
 
@@ -144,4 +153,70 @@ test('normalizeResult: 이름에 이미 있는 말은 태그에서 빼요', () =
     })
   );
   assert.deepEqual(result.tags, ['싱글몰트', '스페이사이드']);
+});
+
+test('normalizeResult: 맛 표현 · 맛 키워드 · 비슷한 술을 정리해서 돌려줘요', () => {
+  const result = normalizeResult(
+    JSON.stringify({
+      isDrink: true,
+      name: '발베니 12년 더블우드',
+      drinkType: 'whisky',
+      confidence: 'high',
+      tags: [],
+      tasteNote: ' 꿀 · 바닐라 향이 나고 부드러워요. ',
+      flavors: ['#꿀', '바닐라', '꿀', '', 3],
+      similar: [
+        { name: '글렌피딕 12년', reason: ' 같은 스페이사이드라 비슷해요. ' },
+        { name: '발베니 12년 더블우드', reason: '같은 술' },
+        { name: '글렌피딕 12년', reason: '겹침' },
+        { name: '', reason: '이름 없음' },
+        { reason: '이름 없음' },
+        null,
+        { name: '맥캘란 12년', reason: 7 },
+      ],
+    })
+  );
+  assert.equal(result.tasteNote, '꿀 · 바닐라 향이 나고 부드러워요.');
+  assert.deepEqual(result.flavors, ['꿀', '바닐라']);
+  assert.deepEqual(result.similar, [
+    { name: '글렌피딕 12년', reason: '같은 스페이사이드라 비슷해요.' },
+    { name: '맥캘란 12년', reason: '' },
+  ]);
+});
+
+test('normalizeResult: 맛 표현 · 키워드 · 비슷한 술의 길이 · 개수를 줄여요', () => {
+  const result = normalizeResult(
+    JSON.stringify({
+      isDrink: true,
+      name: '소주',
+      drinkType: 'soju',
+      confidence: 'low',
+      tags: [],
+      tasteNote: '가'.repeat(500),
+      flavors: ['나'.repeat(30), 'a', 'b', 'c', 'd', 'e', 'f'],
+      similar: ['가', '나', '다', '라', '마'].map((name) => ({ name, reason: '이유' })),
+    })
+  );
+  assert.equal(result.tasteNote.length, TASTE_NOTE_LIMIT);
+  assert.equal(result.flavors.length, FLAVORS_LIMIT);
+  assert.equal(result.flavors[0].length, 15);
+  assert.equal(result.similar.length, SIMILAR_LIMIT);
+});
+
+test('normalizeResult: 맛 표현이 없거나 모양이 다르면 비워요', () => {
+  const result = normalizeResult(
+    JSON.stringify({
+      isDrink: true,
+      name: '맥주',
+      drinkType: 'beer',
+      confidence: 'medium',
+      tags: [],
+      tasteNote: 3,
+      flavors: '쌉쌀함',
+      similar: { name: '카스' },
+    })
+  );
+  assert.equal(result.tasteNote, '');
+  assert.deepEqual(result.flavors, []);
+  assert.deepEqual(result.similar, []);
 });

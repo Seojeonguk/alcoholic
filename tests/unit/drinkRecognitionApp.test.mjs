@@ -3,9 +3,11 @@ import { test } from 'node:test';
 
 import { POST_LIMITS } from '../../constants/postLimits.js';
 import {
+  appendTasteNote,
   getRecognitionErrorText,
   getRecognitionPatch,
   getRecognitionToast,
+  getTasteCard,
 } from '../../lib/drinkRecognition.js';
 
 const emptyForm = { title: '', drinkType: null, tags: [] };
@@ -82,4 +84,48 @@ test('getRecognitionErrorText: 하루 횟수 · 인증 · 그 밖의 오류 문�
   ]);
   assert.equal(getRecognitionErrorText('PERMISSION_DENIED')[1], '앱을 다시 켜고 시도해 주세요.');
   assert.equal(getRecognitionErrorText('NETWORK')[1], '인터넷 연결을 확인하고 다시 시도해 주세요.');
+});
+
+test('getTasteCard: 맛 표현 · 맛 키워드 · 비슷한 술을 카드로 보여 줘요', () => {
+  const result = {
+    ...whisky,
+    tasteNote: '꿀 · 바닐라 향이 나요.',
+    flavors: ['꿀', '바닐라'],
+    similar: [
+      { name: '글렌피딕 12년', reason: '비슷해요.' },
+      { name: '', reason: '없음' },
+    ],
+  };
+  assert.deepEqual(getTasteCard(result), {
+    name: '발베니 12년 더블우드',
+    tasteNote: '꿀 · 바닐라 향이 나요.',
+    flavors: ['꿀', '바닐라'],
+    similar: [{ name: '글렌피딕 12년', reason: '비슷해요.' }],
+  });
+});
+
+test('getTasteCard: 술이 아니거나 예전 함수 답처럼 보여 줄 것이 없으면 null이에요', () => {
+  assert.equal(getTasteCard(null), null);
+  assert.equal(getTasteCard({ isDrink: false, tasteNote: '맛' }), null);
+  assert.equal(getTasteCard(whisky), null);
+  assert.equal(getTasteCard({ ...whisky, tasteNote: ' ', flavors: [], similar: [] }), null);
+});
+
+test('getTasteCard: 비슷한 술만 있어도 보여 줘요', () => {
+  const card = getTasteCard({ ...whisky, similar: [{ name: '맥캘란 12년', reason: '' }] });
+  assert.equal(card.tasteNote, '');
+  assert.deepEqual(card.flavors, []);
+  assert.equal(card.similar.length, 1);
+});
+
+test('appendTasteNote: 빈 본문이면 맛 표현만, 아니면 한 줄 띄우고 덧붙여요', () => {
+  assert.equal(appendTasteNote('', ' 묵직해요. '), '묵직해요.');
+  assert.equal(appendTasteNote(undefined, '묵직해요.'), '묵직해요.');
+  assert.equal(appendTasteNote('맛있었다\n', '묵직해요.'), '맛있었다\n\n묵직해요.');
+});
+
+test('appendTasteNote: 이미 들어 있거나 · 비었거나 · 상한을 넘으면 null이에요', () => {
+  assert.equal(appendTasteNote('좋았다\n\n묵직해요.', '묵직해요.'), null);
+  assert.equal(appendTasteNote('좋았다', ''), null);
+  assert.equal(appendTasteNote('가'.repeat(POST_LIMITS.CONTENT - 3), '묵직해요.'), null);
 });
